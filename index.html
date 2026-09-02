@@ -2466,8 +2466,15 @@
     });
     updateDriveBadge();
   }
+  function origineValide() { return location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1"; }
   function driveConnect(consent) {
     if (!driveConfigured()) { flash("Google Drive non configuré (voir le mode d'emploi)."); return; }
+    if (!origineValide()) {
+      alert("Google refuse de dialoguer avec une page ouverte directement depuis le disque dur.\n\n" +
+            "L'adresse actuelle commence par « " + location.protocol + " » : elle n'a pas d'origine reconnue, d'où l'erreur 400.\n\n" +
+            "Ouvrez l'application depuis son adresse Internet (https://…github.io/plan-de-classe/) ou depuis http://localhost, puis réessayez.");
+      updateDriveBadge("Local"); return;
+    }
     if (!drive.tokenClient) { initDrive(); flash("Initialisation Google… réessayez dans un instant."); return; }
     drive.tokenClient.requestAccessToken({ prompt: consent ? "consent" : "" });
   }
@@ -3642,6 +3649,13 @@
   function renderClassAdmin() {
     renderAdmClasses(); renderAdmEleves();
     try { $("admClientId").value = localStorage.getItem(KEY_CLIENTID) || ""; } catch (e) {}
+    if (!origineValide()) {
+      $("admBackupInfo").innerHTML = "<b>Cette page est ouverte depuis votre disque dur</b> (" + location.protocol
+        + ") : Google n'accepte pas ce mode et renverra une erreur 400. Ouvrez l'application depuis son adresse "
+        + "<code>https://…github.io/plan-de-classe/</code> ou <code>http://localhost</code> pour activer la sauvegarde Drive. "
+        + "La sauvegarde chiffrée en fichier, elle, fonctionne partout.";
+      return;
+    }
     $("admBackupInfo").textContent = driveConfigured()
       ? (tokenValid() ? "Connecté à Google Drive — sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
                       : "Identifiant enregistré. Touchez le badge ☁︎ de la barre de titre pour vous connecter.")
