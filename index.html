@@ -3359,12 +3359,17 @@
     // conserver la position de grille (disposition 5 groupes), sinon la carte retombe en haut à gauche
     nw.style.gridRow = old.style.gridRow; nw.style.gridColumn = old.style.gridColumn;
     old.replaceWith(nw);
+    fitNames(nw);   // sinon la place reconstruite repart en pleine taille et le nom se tronque
   }
   /* NOM et Prénom sur une seule ligne : on réduit la police jusqu'à ce que le texte tienne.
      Mesure de la largeur réelle par Range (scrollWidth arrondit et laisse passer des dépassements). */
   function fitNames(root){
     const rng = document.createRange();
-    (root || document).querySelectorAll(".seat .nom, .seat .prenom").forEach(function (el) {
+    var base = root || document;
+    var cibles = (base.matches && base.matches(".seat"))
+      ? base.querySelectorAll(".nom, .prenom")
+      : base.querySelectorAll(".seat .nom, .seat .prenom");
+    cibles.forEach(function (el) {
       el.style.fontSize = "";
       const cs = getComputedStyle(el);
       const avail = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) - 0.5;
