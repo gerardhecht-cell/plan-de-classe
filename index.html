@@ -302,6 +302,7 @@
   .cbtn,.sepbtn{font-size:.76rem; font-weight:700; border:1.6px solid var(--line); background:#fff; color:var(--ink-2); border-radius:9px; padding:8px 10px; min-height:38px;}
   .cbtn.on{background:#eaf2fb; border-color:var(--blue); color:var(--blue-d);}
   .sepbtn.on{background:var(--red-bg); border-color:var(--red); color:var(--red);}
+  .farbtns .sepbtn.on{background:#efe6f8; border-color:#7d57c4; color:#5b3a99;}
   .troubles{display:flex; flex-wrap:wrap; gap:6px;}
   .tbtn{font-size:.74rem; font-weight:800; color:#fff; border:2px solid transparent; border-radius:8px; padding:7px 9px; min-height:36px; opacity:.32; filter:grayscale(.4); text-align:left;}
   .tbtn.on{opacity:1; filter:none; box-shadow:0 2px 6px rgba(0,0,0,.18);} .tbtn small{font-weight:600; opacity:.85;}
@@ -396,6 +397,21 @@
   .ntabs button{flex:1; padding:9px; border-radius:9px; border:1.6px solid var(--line); background:#fff; font-weight:800; font-size:.8rem; color:var(--muted); min-height:40px;}
   .ntabs button.on{background:var(--ink); color:#fff; border-color:var(--ink);}
   /* --- Gestion des classes et des élèves --- */
+  /* --- Groupes d'activité --- */
+  .actbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:4px 0 8px;}
+  .actbar select{width:auto; min-width:70px;}
+  .actboard{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; margin:10px 0;}
+  .actcol{border:1px solid var(--line); border-radius:10px; background:#fff; overflow:hidden; display:flex; flex-direction:column;}
+  .actcol > h5{margin:0; font-family:inherit; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--blue); color:#fff; padding:7px 9px; display:flex; justify-content:space-between; gap:6px; cursor:pointer;}
+  .actcol.cible > h5{background:var(--green);}
+  .actcol .actbody{padding:6px; display:flex; flex-direction:column; gap:4px; min-height:44px;}
+  .actchip{border:1.5px solid var(--line); border-radius:8px; background:#fff; padding:6px 8px; font-size:.8rem;
+    font-weight:600; color:var(--ink); text-align:left; display:flex; align-items:center; gap:6px;}
+  .actchip .who{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .actchip.sel{background:#e8f1fa; border-color:var(--blue); box-shadow:0 0 0 2px rgba(47,111,176,.25);}
+  .actchip .bepdot{flex:none; font-size:.58rem; font-weight:800; border-radius:4px; padding:1px 5px;}
+  .actempty{color:var(--muted); font-size:.76rem; padding:6px 4px; font-style:italic;}
   .adm{border:1px solid var(--line); border-radius:10px; background:#fff; margin-top:6px; overflow:hidden;}
   .adm .row{display:flex; align-items:center; gap:8px; padding:7px 9px; border-bottom:1px solid #f0ece2;}
   .adm .row:last-child{border-bottom:none;}
@@ -568,7 +584,7 @@
       <div id="driveBox">
         <label>Identifiant client Google (Client ID OAuth)</label>
         <input type="text" id="admClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off">
-        <p class="hint">À créer une seule fois dans la console Google Cloud (identifiant OAuth « Application Web », origine autorisée = l'adresse d'où vous ouvrez ce fichier). Sans lui, l'application reste en local. Tout ce qui part sur Drive est <b>chiffré</b> : illisible sans cette application et votre phrase de récupération.</p>
+        <p class="hint">À créer une seule fois dans la console Google Cloud (identifiant OAuth « Application Web », origine autorisée = l'adresse d'où vous ouvrez ce fichier). <b>Le compte qui crée cet identifiant et le compte qui reçoit les sauvegardes peuvent être différents</b> : au moment d'autoriser, choisissez le compte Google du Drive voulu. Tout ce qui part sur Drive est <b>chiffré</b> : illisible sans cette application et votre phrase de récupération.</p>
         <div class="row2"><div><button class="admbtn" id="admSaveClientId" style="width:100%">Enregistrer l'identifiant</button></div><div><button class="admbtn" id="admDriveNow" style="width:100%">☁︎ Sauvegarder maintenant</button></div></div>
         <p class="hint" id="admBackupInfo" style="margin-top:8px"></p>
         <div class="adm" id="admBackupsWrap" style="display:none"><div class="admscroll" id="admBackups"></div></div>
@@ -606,6 +622,30 @@
 </div>
 
 <!-- Sexe G/F -->
+<div class="dlg" id="dlgAct">
+  <div class="panel" style="max-width:780px">
+    <div class="ph">Groupes d'activité <button class="x" id="dlgActX">✕</button></div>
+    <div class="pc">
+      <div class="actbar">
+        <label style="margin:0">Nombre de groupes</label>
+        <select id="actN"></select>
+        <button class="admbtn ok" id="actAuto">⚄ Composer automatiquement</button>
+        <button class="admbtn" id="actManuel">✋ Sur le plan</button>
+      </div>
+      <p class="hint" id="actInfo"></p>
+      <div class="actboard" id="actBoard"></div>
+      <p class="hint">Touchez un élève pour le sélectionner, puis un autre élève pour les échanger, ou le bandeau d'un groupe pour l'y déplacer.</p>
+      <div class="admadd">
+        <input type="text" id="actNom" placeholder="Nom de la configuration (ex. Config groupe 1)" autocomplete="off">
+        <button class="admbtn ok" id="actSave">Enregistrer</button>
+      </div>
+      <div class="secttl">Configurations enregistrées</div>
+      <div class="adm"><div class="admscroll" id="actList"></div></div>
+      <div class="actions"><button class="ghost2" id="actPrint">🖨️ Imprimer</button><button class="primary" id="actClose">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
 <div class="dlg" id="dlgNote">
   <div class="panel">
     <div class="ph">Annotations <button class="x" id="dlgNoteX">✕</button></div>
@@ -1478,11 +1518,91 @@
     return false;
   }
   function sepSet(students) {
-    // graphe de séparation symétrique
+    // graphe de séparation symétrique ; un éloignement demandé implique la séparation
     var g = {};
-    students.forEach(function (s) { g[s.id] = new Set((s.placement && s.placement.separer) || []); });
-    students.forEach(function (s) { ((s.placement && s.placement.separer) || []).forEach(function (o) { if (g[o]) g[o].add(s.id); }); });
+    function liens(s) { return ((s.placement && s.placement.separer) || []).concat((s.placement && s.placement.eloigner) || []); }
+    students.forEach(function (s) { g[s.id] = new Set(liens(s)); });
+    students.forEach(function (s) { liens(s).forEach(function (o) { if (g[o]) g[o].add(s.id); }); });
     return g;
+  }
+  function farSet(students) {
+    var g = {};
+    students.forEach(function (s) { g[s.id] = new Set((s.placement && s.placement.eloigner) || []); });
+    students.forEach(function (s) { ((s.placement && s.placement.eloigner) || []).forEach(function (o) { if (g[o]) g[o].add(s.id); }); });
+    return g;
+  }
+  /* ---------- Éloignement maximal : coordonnées approchées d'une place dans la salle ----------
+     Repère commun à tous les îlots : y = 0 au fond, y croissant vers le bureau ; x de gauche à
+     droite. Deux élèves à éloigner doivent finir aux extrémités opposées de ce repère. */
+  function roomXY(gi, order, capG, photo) {
+    var shape = photo ? clusterShape(gi, capG) : { cells: Array.from({ length: capG }, function (_, k) { return { o: k, r: 1, c: k + 1 }; }) };
+    var cell = null;
+    shape.cells.forEach(function (c) { if (c.o === order) cell = c; });
+    var cc = cell ? cell.c : (order + 1), cr = cell ? cell.r : 1;
+    if (photo) {
+      if (gi === 4) return { x: cc * 3, y: 0 };                       // fond, sur toute la largeur
+      var gx = (gi % 2 === 0) ? 0 : 14;                                // colonne gauche / droite
+      var gy = (gi < 2) ? 16 : 8;                                      // devant le bureau / milieu
+      return { x: gx + cc, y: gy + (3 - cr) };
+    }
+    return { x: gi * 8 + cc, y: 0 };
+  }
+  function distXY(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+  /* Après placement : échanges minimaux pour écarter au maximum les élèves à éloigner. */
+  function eloignerPass(students, n, photo, refs, conflicts) {
+    var frontIds = (refs.contraintesPlacement || []).filter(function (c) { return c.kind === "avant"; }).map(function (c) { return c.id; });
+    var far = farSet(students), sep = sepSet(students);
+    var paires = [];
+    students.forEach(function (a) {
+      far[a.id].forEach(function (bid) {
+        var b = null; students.forEach(function (x) { if (x.id === bid) b = x; });
+        if (b && a.id < b.id) paires.push([a, b]);
+      });
+    });
+    if (!paires.length) return;
+    function capOf(g) { var k = 0; students.forEach(function (s) { if (s.group === g) k++; }); return k; }
+    function pos(s) { return roomXY(s.group, s.order, capOf(s.group), photo); }
+    function sepOkDans(s, g, ignorer) {
+      var ok = true;
+      students.forEach(function (o) { if (o !== s && o !== ignorer && o.group === g && sep[s.id] && sep[s.id].has(o.id)) ok = false; });
+      return ok;
+    }
+    var CIBLE = photo ? 18 : 10;
+    for (var it = 0; it < 5; it++) {
+      var bouge = false;
+      paires.forEach(function (pr) {
+        var a = pr[0], b = pr[1];
+        if (distXY(pos(a), pos(b)) >= CIBLE) return;
+        // on cherche le meilleur échange possible, pour l'un OU l'autre des deux élèves
+        var meilleur = null, meilleurSujet = null, meilleureD = distXY(pos(a), pos(b));
+        [[a, b], [b, a]].forEach(function (duo) {
+          var sujet = duo[0], autre = duo[1];
+          if (needsFront(sujet, frontIds) || sujet.agitation) return;    // place imposée : on n'y touche pas
+          students.forEach(function (c) {
+            if (c === a || c === b) return;
+            if (far[c.id] && far[c.id].size) return;                     // ne pas casser un autre éloignement
+            if (needsFront(c, frontIds) || c.agitation) return;
+            if (!sepOkDans(sujet, c.group, c) || !sepOkDans(c, sujet.group, sujet)) return;
+            var sg = sujet.group, so = sujet.order, cg = c.group, co = c.order;
+            sujet.group = cg; sujet.order = co; c.group = sg; c.order = so;
+            var d = distXY(pos(sujet), pos(autre));
+            sujet.group = sg; sujet.order = so; c.group = cg; c.order = co;
+            if (d > meilleureD) { meilleureD = d; meilleur = c; meilleurSujet = sujet; }
+          });
+        });
+        if (meilleur) {
+          var sg2 = meilleurSujet.group, so2 = meilleurSujet.order;
+          meilleurSujet.group = meilleur.group; meilleurSujet.order = meilleur.order;
+          meilleur.group = sg2; meilleur.order = so2;
+          bouge = true;
+        }
+      });
+      if (!bouge) break;
+    }
+    paires.forEach(function (pr) {
+      if (distXY(pos(pr[0]), pos(pr[1])) < CIBLE / 2)
+        conflicts.push("Éloignement non tenu : " + pr[0].nom + " et " + pr[1].nom + " restent trop proches (contraintes trop nombreuses).");
+    });
   }
 // Géométrie exacte des îlots (identique au rendu à l'écran) : la queue du L part à DROITE
   // pour Lr, à GAUCHE pour Ll — les deux formes ne sont PAS de simples chaînes symétriques,
@@ -1732,6 +1852,7 @@
       }
     });
 
+    eloignerPass(students, n, photoMode, refs, conflicts);
     return { conflicts: conflicts, caps: cap };
   }
   /* ---------- Réparation ciblée (une permutation minimale, ne touche pas le reste) ----------
@@ -2306,7 +2427,9 @@
     if (!s.matieres) s.matieres = def.matieres;
     if (!s.uiPrefs) s.uiPrefs = def.uiPrefs;
     Object.keys(s.matieres).forEach(function (mid) { var m = s.matieres[mid]; if (!m.plans) m.plans = {}; if (!m.eleveData) m.eleveData = {}; if (!m.edt) m.edt = { paire: {}, impaire: {} }; if (!m.calage) m.calage = def.matieres.tech.calage; if (!m.sessionComp) m.sessionComp = []; if (m.courseIndex == null) m.courseIndex = 0; });
-    Object.keys(s.eleves || {}).forEach(function (eid) { var e = s.eleves[eid]; if (!e.bepNiveaux) e.bepNiveaux = {}; if (e.agitation === undefined) e.agitation = false; });
+    Object.keys(s.eleves || {}).forEach(function (eid) { var e = s.eleves[eid]; if (!e.bepNiveaux) e.bepNiveaux = {}; if (e.agitation === undefined) e.agitation = false;
+      if (!e.placement) e.placement = { types: [], separer: [], eloigner: [] };
+      if (!e.placement.eloigner) e.placement.eloigner = []; });
     return s;
   }
 
@@ -2324,7 +2447,7 @@
   function setKeyFromPhrase(phrase) { var raw = D.fromBase32(phrase); if (raw.length !== 32) throw new Error("phrase invalide"); deviceKeyRaw = raw; LS.setRaw(KEY_DEVICEKEY, D.toBase32(raw)); }
 
   /* ---------- Google Drive (drive.file, jeton navigateur via GIS) ---------- */
-  var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0 };
+  var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0, remoteModified: null, timer: null, enCours: false };
   function driveConfigured() { return !!GOOGLE_CLIENT_ID; }
   function gisLoaded() { return typeof google !== "undefined" && google.accounts && google.accounts.oauth2; }
   function tokenValid() { return drive.token && Date.now() < drive.expiresAt - 60000; }
@@ -2337,7 +2460,7 @@
       callback: function (resp) {
         if (resp && resp.access_token) {
           drive.token = resp.access_token; drive.expiresAt = Date.now() + (resp.expires_in || 3600) * 1000;
-          hideReconnectBanner(); updateDriveBadge(); driveSyncAfterConnect();
+          hideReconnectBanner(); updateDriveBadge(); driveSyncAfterConnect(); startDriveTimer();
         }
       }
     });
@@ -2368,7 +2491,8 @@
       var r = await fetch(url, { method: id ? "PATCH" : "POST", headers: { Authorization: "Bearer " + drive.token, "Content-Type": "multipart/related; boundary=" + boundary }, body: multipart });
       if (r.status === 401) { onTokenExpired(); return; }
       var j = await r.json(); if (j.id) drive.fileId = j.id;
-      dirty = false; updateDriveBadge("Sauvegardé");
+      drive.remoteModified = await driveModifiedTime();
+      dirty = false; updateDriveBadge("Sauvegardé " + heureCourte());
       driveBackupRotate();
     } catch (e) { updateDriveBadge("Erreur réseau"); }
   }
@@ -2378,13 +2502,59 @@
     var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
     if (r.status === 401) { onTokenExpired(); return; }
     var blob = await r.json();
-    try { await ensureDeviceKey(); state = migrate(await D.decryptJSON(blob, deviceKeyRaw)); LS.set(KEY_STATE, state); renderAll(); flash("Données chargées depuis Drive"); }
+    try { await ensureDeviceKey(); state = migrate(await D.decryptJSON(blob, deviceKeyRaw)); LS.set(KEY_STATE, state);
+      drive.remoteModified = await driveModifiedTime(); dirty = false;
+      renderAll(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
     catch (e) { flash("Drive : déchiffrement impossible (clé/phrase différente)."); }
   }
   async function driveSyncAfterConnect() {
     var id = await driveFindFile();
-    if (!id) await driveSave(); else if (dirty) await driveSave(); else await driveLoad();
+    if (!id) { await driveSave(); return; }
+    drive.remoteModified = await driveModifiedTime();
+    if (dirty) await driveSave(); else await driveLoad();
   }
+  function heureCourte() { var d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  async function driveModifiedTime() {
+    var id = await driveFindFile(); if (!id) return null;
+    try {
+      var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?fields=modifiedTime", { headers: await driveHeaders() });
+      if (!r.ok) return null;
+      var j = await r.json(); return j.modifiedTime || null;
+    } catch (e) { return null; }
+  }
+  /* Toutes les 3 minutes : on pousse ce qui a changé ici, et on récupère ce qui a changé
+     ailleurs — c'est ce second sens qui garde à jour les sessions ouvertes sur deux postes. */
+  async function driveSync(raison) {
+    if (!driveConfigured() || !tokenValid() || drive.enCours) return;
+    drive.enCours = true;
+    try {
+      var distant = await driveModifiedTime();
+      var plusRecentAilleurs = distant && drive.remoteModified && distant > drive.remoteModified;
+      if (!distant) { if (dirty) await driveSave(); }
+      else if (plusRecentAilleurs && !dirty) {
+        await driveLoad();
+        flash("Mise à jour reçue d'un autre poste", 2600);
+      } else if (plusRecentAilleurs && dirty) {
+        // modifications des deux côtés : on protège le travail distant avant d'écraser
+        updateDriveBadge("Conflit");
+        if (confirm("Des modifications ont été faites sur un autre poste pendant que vous travailliez ici.\n\n" +
+                    "OK : garder CE poste et écraser l'autre version.\n" +
+                    "Annuler : récupérer la version de l'autre poste et perdre les modifications faites ici.")) {
+          drive.remoteModified = distant; await driveSave();
+        } else { await driveLoad(); }
+      } else if (dirty) await driveSave();
+      else updateDriveBadge("À jour " + heureCourte());
+    } catch (e) { updateDriveBadge("Hors ligne"); }
+    drive.enCours = false;
+  }
+  function startDriveTimer() {
+    if (drive.timer) clearInterval(drive.timer);
+    drive.timer = setInterval(function () { driveSync("minuterie"); }, 180000);   // 3 minutes
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) driveSync("retour");            // reprise d'un onglet : on se remet à jour tout de suite
+  });
+  window.addEventListener("focus", function () { driveSync("focus"); });
   function scheduleDriveSave() { if (!driveConfigured() || !tokenValid()) return; clearTimeout(saveTimer); saveTimer = setTimeout(driveSave, 1200); }
   function onTokenExpired() { showReconnectBanner(); updateDriveBadge(); }
   function showReconnectBanner() { var b = $("reconnect"); if (b) b.classList.remove("hidden"); }
@@ -2421,7 +2591,7 @@
   }
   function makeEleve(stu) {
     var f = bepFlagsFor(stu);
-    return { id: uid("e"), nom: (stu.nom || "").toUpperCase(), prenom: stu.prenom || "", sexe: stu.sexe || "?", glasses: false, agitation: false, troubles: f.troubles, dispositifs: f.dispositifs, bepNiveaux: f.niveaux || {}, placement: { types: [], separer: [] } };
+    return { id: uid("e"), nom: (stu.nom || "").toUpperCase(), prenom: stu.prenom || "", sexe: stu.sexe || "?", glasses: false, agitation: false, troubles: f.troubles, dispositifs: f.dispositifs, bepNiveaux: f.niveaux || {}, placement: { types: [], separer: [], eloigner: [] } };
   }
   function findClassIdByName(nom) { return Object.keys(state.classes).find(function (id) { return D.stripAccents(state.classes[id].nom).toUpperCase() === D.stripAccents(nom).toUpperCase(); }); }
   function bepFlagsFor(stu) {
@@ -3428,6 +3598,7 @@
     var contraintes = state.refs.contraintesPlacement.map(function (c) { var on = (s.placement.types || []).indexOf(c.id) >= 0; return '<button class="cbtn ' + (on ? "on" : "") + '" data-ct="' + c.id + '">' + esc(c.label) + "</button>"; }).join("");
     var others = classEleves(curClassId()).filter(function (o) { return o.id !== s.id; });
     var sepList = others.map(function (o) { var on = (s.placement.separer || []).indexOf(o.id) >= 0; return '<button class="sepbtn ' + (on ? "on" : "") + '" data-sep="' + o.id + '">' + esc(o.nom) + " " + esc(o.prenom) + "</button>"; }).join("");
+    var farList = others.map(function (o) { var on = (s.placement.eloigner || []).indexOf(o.id) >= 0; return '<button class="sepbtn ' + (on ? "on" : "") + '" data-far="' + o.id + '">' + esc(o.nom) + " " + esc(o.prenom) + "</button>"; }).join("");
     body.innerHTML = '<div class="pedit">' +
       '<div class="block"><h4>Sexe</h4><div class="seg2" id="pSex">' +
       '<button data-s="F" class="' + (s.sexe === "F" ? "on" : "") + '">Fille</button>' +
@@ -3437,6 +3608,8 @@
       '<button class="glassesbtn ' + (s.agitation ? "on" : "") + '" id="pAgitation">🗣️ Agité(e) / bavard(e) — le moins de voisins possible ' + (s.agitation ? "✓" : "") + "</button></div>" +
       '<div class="block"><h4>Contraintes de placement (prioritaires)</h4><div class="cbtns">' + contraintes + "</div>" +
       '<h4 style="margin-top:10px">À séparer de…</h4><div class="sepbtns">' + (sepList || '<span class="hint">Aucun autre élève dans la classe.</span>') + "</div>" +
+      '<h4 style="margin-top:10px">À éloigner au maximum de…</h4><div class="sepbtns farbtns">' + (farList || '<span class="hint">Aucun autre élève dans la classe.</span>') + "</div>" +
+      '<p class="hint">« Éloigner » va plus loin que « séparer » : les deux élèves sont envoyés aux extrémités opposées de la salle, jamais dans le même îlot.</p>' +
       '<p class="hint">Le placement automatique respecte ces contraintes en priorité ; la mixité s\'applique ensuite. Un conflit insoluble est signalé, jamais ignoré.</p></div>' +
       '<div class="block"><h4>Troubles (BEP) — pastilles</h4><div class="troubles">' + trBtns + "</div>" +
       '<h4 style="margin-top:10px">Dispositifs</h4><div class="troubles">' + dpBtns + "</div>" +
@@ -3446,7 +3619,8 @@
     $("pAgitation").addEventListener("click", function () { s.agitation = !s.agitation; buildProfile(s); save(); refreshSeat(s.id); });
     body.querySelectorAll(".tbtn").forEach(function (b) { b.addEventListener("click", function () { var grp = b.dataset.grp, k = b.dataset.k; s[grp][k] = !s[grp][k]; b.classList.toggle("on", s[grp][k]); save(); refreshSeat(s.id); }); });
     body.querySelectorAll(".cbtn").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.ct, t = s.placement.types; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
-    body.querySelectorAll(".sepbtn").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.sep, t = s.placement.separer; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
+    body.querySelectorAll(".sepbtn[data-sep]").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.sep, t = s.placement.separer; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
+    body.querySelectorAll(".sepbtn[data-far]").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.far; if (!s.placement.eloigner) s.placement.eloigner = []; var t = s.placement.eloigner; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
   }
 
   /* ====================== MODE / LÉGENDE ====================== */
@@ -3469,7 +3643,7 @@
     renderAdmClasses(); renderAdmEleves();
     try { $("admClientId").value = localStorage.getItem(KEY_CLIENTID) || ""; } catch (e) {}
     $("admBackupInfo").textContent = driveConfigured()
-      ? (tokenValid() ? "Connecté à Google Drive — sauvegarde chiffrée automatique, plus une copie datée par jour (10 conservées)."
+      ? (tokenValid() ? "Connecté à Google Drive — sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
                       : "Identifiant enregistré. Touchez le badge ☁︎ de la barre de titre pour vous connecter.")
       : "Aucun identifiant : les données restent sur cet appareil uniquement.";
   }
@@ -3494,7 +3668,7 @@
         state.uiPrefs.classeActive = cid; save(); renderAll(); renderClassAdmin();
       });
       row.querySelector("[data-del]").addEventListener("click", function () {
-        deleteClass(cid); renderClassAdmin();
+        deleteClass(cid, true); renderClassAdmin();
       });
       box.appendChild(row);
     });
@@ -3879,8 +4053,187 @@
     }
   }
 
+
+  /* ====================== GROUPES D'ACTIVITÉ ======================
+     Composition automatique pour une activité : effectifs équilibrés, mixité respectée et
+     AU PLUS UN élève à PAP / PPS-GEVASCO / PPRE par groupe, pour que l'aide se répartisse.
+     Composition modifiable à la main, puis enregistrable sous un nom et rechargeable. */
+  var BEP_GROUPE = ["PAP", "PPS", "PPRE"];
+  var actState = { n: 4, groupes: [], sel: null };
+  function aBesoinAide(e) { return BEP_GROUPE.some(function (k) { return e.dispositifs && e.dispositifs[k]; }); }
+  function sigleAide(e) {
+    var k = BEP_GROUPE.filter(function (x) { return e.dispositifs && e.dispositifs[x]; })[0];
+    if (!k) return null;
+    var ref = state.refs.dispositifs.find(function (t) { return t.k === k; });
+    return ref || { k: k, c: "#7b8489" };
+  }
+  function melange(a) { var r = a.slice(); for (var i = r.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = r[i]; r[i] = r[j]; r[j] = t; } return r; }
+
+  function composerGroupes(n) {
+    var cid = curClassId(); if (!cid) return [];
+    var eleves = classEleves(cid);
+    var g = Array.from({ length: n }, function () { return []; });
+    var aide = melange(eleves.filter(aBesoinAide));
+    var reste = eleves.filter(function (e) { return !aBesoinAide(e); });
+    aide.forEach(function (e, i) { g[i % n].push(e.id); });          // un par groupe, puis on repart au début
+    // le reste : alternance filles/garçons, toujours dans le groupe le moins rempli
+    var F = melange(reste.filter(function (e) { return e.sexe === "F"; }));
+    var G = melange(reste.filter(function (e) { return e.sexe === "G"; }));
+    var U = melange(reste.filter(function (e) { return e.sexe !== "F" && e.sexe !== "G"; }));
+    var ordre = [], i2 = 0, j2 = 0;
+    while (i2 < F.length || j2 < G.length) { if (i2 < F.length) ordre.push(F[i2++]); if (j2 < G.length) ordre.push(G[j2++]); }
+    U.forEach(function (e) { ordre.push(e); });
+    ordre.forEach(function (e) {
+      var best = 0;
+      for (var k = 1; k < n; k++) if (g[k].length < g[best].length) best = k;
+      g[best].push(e.id);
+    });
+    return g;
+  }
+
+  function openActDlg() {
+    var cid = curClassId(); if (!cid) { flash("Affichez une classe d'abord"); return; }
+    var p = plan(cid);
+    if (!p.configsGroupes) p.configsGroupes = [];
+    var n = p.dernierNbGroupes || 4;
+    var sel = $("actN"); sel.innerHTML = "";
+    for (var k = 2; k <= 8; k++) sel.innerHTML += '<option value="' + k + '"' + (k === n ? " selected" : "") + ">" + k + "</option>";
+    actState.n = n; actState.sel = null;
+    actState.groupes = (p.compositionCourante && p.compositionCourante.length === n) ? p.compositionCourante.map(function (x) { return x.slice(); }) : composerGroupes(n);
+    renderActBoard(); renderActList();
+    closeAllDialogs(); $("dlgAct").classList.add("open");
+  }
+  function actSyncEleves() {
+    // écarte les élèves qui ne sont plus dans la classe, ajoute ceux qui manquent
+    var cid = curClassId(), ids = classEleves(cid).map(function (e) { return e.id; });
+    var vus = {};
+    actState.groupes = actState.groupes.map(function (grp) {
+      return grp.filter(function (id) { if (ids.indexOf(id) < 0 || vus[id]) return false; vus[id] = true; return true; });
+    });
+    ids.forEach(function (id) {
+      if (vus[id]) return;
+      var best = 0;
+      for (var k = 1; k < actState.groupes.length; k++) if (actState.groupes[k].length < actState.groupes[best].length) best = k;
+      actState.groupes[best].push(id);
+    });
+  }
+  function renderActBoard() {
+    actSyncEleves();
+    var board = $("actBoard"); board.innerHTML = "";
+    var trop = 0;
+    actState.groupes.forEach(function (grp, gi) {
+      var nbAide = grp.filter(function (id) { return aBesoinAide(state.eleves[id]); }).length;
+      if (nbAide > 1) trop++;
+      var col = document.createElement("div"); col.className = "actcol" + (actState.sel ? " cible" : "");
+      var f = grp.filter(function (id) { return state.eleves[id].sexe === "F"; }).length;
+      var h = document.createElement("h5");
+      h.innerHTML = "<span>Groupe " + (gi + 1) + "</span><span>" + grp.length + " él. · " + f + "F/" + (grp.length - f) + "G</span>";
+      h.addEventListener("click", function () {
+        if (!actState.sel) return;
+        actDeplacer(actState.sel, gi); actState.sel = null; renderActBoard();
+      });
+      col.appendChild(h);
+      var body = document.createElement("div"); body.className = "actbody";
+      if (!grp.length) body.innerHTML = '<span class="actempty">Groupe vide</span>';
+      grp.map(function (id) { return state.eleves[id]; }).sort(function (a, b) { return a.nom.localeCompare(b.nom); }).forEach(function (e) {
+        var sig = sigleAide(e);
+        var b = document.createElement("button");
+        b.className = "actchip" + (actState.sel === e.id ? " sel" : "");
+        b.innerHTML = '<span class="who">' + esc(e.nom) + " " + esc(e.prenom) + "</span>"
+          + (sig ? '<span class="bepdot" style="background:' + sig.c + ';color:' + textOn(sig.c) + '">' + esc(sig.k) + "</span>" : "");
+        b.addEventListener("click", function () {
+          if (!actState.sel) { actState.sel = e.id; }
+          else if (actState.sel === e.id) { actState.sel = null; }
+          else { actEchanger(actState.sel, e.id); actState.sel = null; }
+          renderActBoard();
+        });
+        body.appendChild(b);
+      });
+      col.appendChild(body); board.appendChild(col);
+    });
+    var nbAideTotal = classEleves(curClassId()).filter(aBesoinAide).length;
+    $("actInfo").innerHTML = nbAideTotal
+      ? (trop
+        ? "<b>" + nbAideTotal + " élève(s) à PAP / PPS / PPRE</b> pour " + actState.groupes.length + " groupes : "
+          + trop + " groupe(s) en accueillent plus d'un. Ajoutez un groupe pour les répartir un par un."
+        : "<b>" + nbAideTotal + " élève(s) à PAP / PPS / PPRE</b>, répartis à raison d'un par groupe au maximum.")
+      : "Aucun élève à PAP, PPS ou PPRE dans cette classe.";
+  }
+  function actEchanger(idA, idB) {
+    var ga = -1, gb = -1, ia = -1, ib = -1;
+    actState.groupes.forEach(function (grp, gi) {
+      var a = grp.indexOf(idA), b = grp.indexOf(idB);
+      if (a >= 0) { ga = gi; ia = a; } if (b >= 0) { gb = gi; ib = b; }
+    });
+    if (ga < 0 || gb < 0) return;
+    actState.groupes[ga][ia] = idB; actState.groupes[gb][ib] = idA;
+  }
+  function actDeplacer(id, versGi) {
+    actState.groupes.forEach(function (grp) { var i = grp.indexOf(id); if (i >= 0) grp.splice(i, 1); });
+    actState.groupes[versGi].push(id);
+  }
+  function actEnregistrer() {
+    var cid = curClassId(), p = plan(cid);
+    var nom = $("actNom").value.trim();
+    if (!nom) { flash("Donnez un nom à la configuration"); return; }
+    if (!p.configsGroupes) p.configsGroupes = [];
+    var exist = p.configsGroupes.filter(function (c) { return c.nom.toLowerCase() === nom.toLowerCase(); })[0];
+    var data = actState.groupes.map(function (g) { return g.slice(); });
+    if (exist) { if (!confirm("Remplacer la configuration « " + nom + " » ?")) return; exist.groupes = data; exist.ts = Date.now(); }
+    else p.configsGroupes.push({ id: "cfg_" + Math.random().toString(36).slice(2, 8), nom: nom, ts: Date.now(), groupes: data });
+    p.compositionCourante = data; p.dernierNbGroupes = actState.groupes.length;
+    save(); renderActList(); $("actNom").value = "";
+    flash("Configuration « " + nom + " » enregistrée");
+  }
+  function renderActList() {
+    var p = plan(curClassId()), box = $("actList");
+    box.innerHTML = "";
+    var list = p.configsGroupes || [];
+    if (!list.length) { box.innerHTML = '<div class="row"><span class="hint">Aucune configuration enregistrée pour cette classe.</span></div>'; return; }
+    list.slice().sort(function (a, b) { return b.ts - a.ts; }).forEach(function (c) {
+      var row = document.createElement("div"); row.className = "row";
+      row.innerHTML = '<span style="flex:1"><b>' + esc(c.nom) + "</b></span>"
+        + '<span class="nb">' + c.groupes.length + " groupes</span>"
+        + '<button class="admbtn" data-load="1">Charger</button><button class="admbtn del" data-del="1">✕</button>';
+      row.querySelector("[data-load]").addEventListener("click", function () {
+        actState.groupes = c.groupes.map(function (g) { return g.slice(); });
+        actState.n = c.groupes.length; actState.sel = null;
+        $("actN").value = String(c.groupes.length);
+        renderActBoard(); flash("Configuration « " + c.nom + " » chargée");
+      });
+      row.querySelector("[data-del]").addEventListener("click", function () {
+        if (!confirm("Supprimer la configuration « " + c.nom + " » ?")) return;
+        p.configsGroupes = p.configsGroupes.filter(function (x) { return x.id !== c.id; });
+        save(); renderActList();
+      });
+      box.appendChild(row);
+    });
+  }
+  function actImprimer() {
+    var cid = curClassId(), cl = state.classes[cid];
+    var cols = actState.groupes.map(function (grp, gi) {
+      var lignes = grp.map(function (id) { return state.eleves[id]; })
+        .sort(function (a, b) { return a.nom.localeCompare(b.nom); })
+        .map(function (e) { return "<li>" + esc(e.nom) + " " + esc(e.prenom) + "</li>"; }).join("");
+      return '<section><h2>Groupe ' + (gi + 1) + " <small>" + grp.length + " élèves</small></h2><ol>" + lignes + "</ol></section>";
+    }).join("");
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Groupes — ' + esc(cl ? cl.nom : "") + '</title>'
+      + '<style>body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#1f2a30;margin:22px}'
+      + 'h1{font-size:1.25rem;margin:0 0 4px}.sub{color:#7b8489;font-size:.85rem;margin-bottom:18px}'
+      + '.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}'
+      + 'section{border:1px solid #d9d4c8;border-radius:10px;padding:10px 12px;break-inside:avoid}'
+      + 'h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:#2f6fb0;margin:0 0 6px;display:flex;justify-content:space-between}'
+      + 'h2 small{color:#7b8489;font-weight:600}ol{margin:0;padding-left:1.2em;font-size:.92rem;line-height:1.55}'
+      + '@media print{.pbtn{display:none}}</style></head><body>'
+      + '<button class="pbtn" onclick="window.print()" style="float:right;padding:9px 15px;border:none;border-radius:8px;background:#2f6fb0;color:#fff;font-weight:700;cursor:pointer">🖨️ Imprimer</button>'
+      + "<h1>Groupes d'activité — " + esc(cl ? cl.nom : "") + "</h1>"
+      + '<div class="sub">' + actState.groupes.length + " groupes · édité le " + new Date().toLocaleString("fr-FR") + "</div>"
+      + '<div class="cols">' + cols + "</div></body></html>";
+    openPrintable(html, "groupes_" + slug(cl ? cl.nom : "classe") + ".html");
+  }
+
   function openConfig() { var c = curClass(); $("inClass").value = c ? c.nom : ""; $("inGroups").value = curClassId() ? plan(curClassId()).groups : 5; $("btnDeleteClass").classList.toggle("hidden", !curClassId()); renderClassAdmin(); $("dlgConfig").classList.add("open"); }
-  function deleteClass(cid) {
+  function deleteClass(cid, resterDansLeMenu) {
     if (!cid || !state.classes[cid]) return;
     var c = state.classes[cid];
     if (!confirm("Supprimer définitivement la classe « " + c.nom + " » (" + c.eleveIds.length + " élève(s)) ?\nLeur suivi (comportements, compétences, scores, aménagements) sera effacé.")) return;
@@ -3905,7 +4258,9 @@
       }
     });
     if (state.uiPrefs.classeActive === cid) state.uiPrefs.classeActive = Object.keys(state.classes)[0] || null;
-    save(); renderAll(); closeAllDialogs(); flash("Classe « " + c.nom + " » supprimée");
+    save(); renderAll();
+    if (!resterDansLeMenu) closeAllDialogs(); else $("dlgConfig").classList.add("open");
+    flash("Classe « " + c.nom + " » supprimée");
   }
   function closeAllDialogs() { document.querySelectorAll(".dlg").forEach(function (d) { d.classList.remove("open"); }); }
 
@@ -4144,7 +4499,11 @@
     (classes || []).forEach(function (cl) {
       const keep = (cl.students || []).filter(function (s) {
         const a = normPrenom(s.nom), b = normPrenom(s.prenom);
-        const bad = ADMIN_WORDS.has(a) || ADMIN_WORDS.has(b) || (!a && !b);
+        // une vraie ligne d'en-tête porte un intitulé des DEUX côtés (ou d'un seul, l'autre vide) ;
+        // un élève dont le nom ressemble par hasard à un intitulé n'est jamais écarté
+        const bad = (!a && !b)
+          || (ADMIN_WORDS.has(a) && (ADMIN_WORDS.has(b) || !b))
+          || (ADMIN_WORDS.has(b) && !a);
         if (bad) n++;
         return !bad;
       });
@@ -4484,7 +4843,15 @@
         (amChecked.length ? '<p><b>Aménagements ajoutés :</b> ' + amChecked.map(esc).join(", ") + "</p>" : "") +
         (d.amenagements.texte ? '<p><b>Note :</b> ' + esc(d.amenagements.texte) + "</p>" : "") +
         '<p class="rp-muted">Propre à ' + esc(m.nom) + ". Repères à adapter (PAP/PPS/GEVASCO, AESH, médecin scolaire). Aucun diagnostic.</p></div>" : "";
-      return '<section class="rp-card"><header class="rp-head"><div><h2>' + esc(s.nom) + " <span>" + esc(s.prenom) + "</span></h2>" +
+      var sigRefs = state.refs.troubles.concat(state.refs.dispositifs)
+        .filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); });
+      var sigles = sigRefs.map(function (t) {
+        var nv = s.bepNiveaux && s.bepNiveaux[t.k];
+        return '<span class="rp-past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</span>";
+      }).join("");
+      var papR = state.refs.dispositifs.find(function (t) { return t.k === "PAP"; });
+      var cadre = (s.dispositifs && s.dispositifs.PAP && papR) ? papR.c : (sigRefs.length ? sigRefs[0].c : "");
+      return '<section class="rp-card' + (cadre ? " rp-flag" : "") + '"' + (cadre ? ' style="border-left-color:' + cadre + '"' : "") + '><header class="rp-head"><div><h2>' + esc(s.nom) + " <span>" + esc(s.prenom) + "</span>" + (sigles ? '<span class="rp-sigles">' + sigles + "</span>" : "") + "</h2>" +
         '<div class="rp-tags"><span class="rp-tag">Groupe ' + (posOf(cid, s.id).group + 1) + "</span>" +
         '<span class="rp-tag">' + (s.sexe === "F" ? "Fille" : s.sexe === "G" ? "Garçon" : "—") + "</span>" +
         (s.glasses ? '<span class="rp-tag">👓 lunettes</span>' : "") +
@@ -4526,6 +4893,9 @@
       '.rp-journal{margin-top:10px}.rp-journal summary{cursor:pointer;font-weight:700;font-size:.82rem;color:#2f6fb0}.rp-journal table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.8rem}.rp-journal th,.rp-journal td{text-align:left;padding:5px 8px;border-bottom:1px solid #eee}.rp-journal th{color:#7b8489;font-size:.7rem;text-transform:uppercase}' +
       '.rp-bepbox{margin-top:12px;background:#f7f3ec;border:1px solid #e7ddcb;border-radius:10px;padding:10px 12px}.rp-bepbox h3{font-size:.72rem;text-transform:uppercase;color:#7b8489;margin:0 0 7px}.rp-bepi{display:flex;gap:8px;margin-bottom:7px;font-size:.84rem}.rp-bepi .rp-past{align-self:flex-start}' +
       '.rp-chartwrap{margin-top:12px}.rp-chartwrap h3{font-size:.72rem;text-transform:uppercase;color:#7b8489;margin:0 0 6px}.rp-chart{display:flex;gap:10px;align-items:flex-end;overflow-x:auto;padding-bottom:4px}.rp-bar{flex:none;width:40px;display:flex;flex-direction:column;align-items:center;gap:3px}.rp-bar span{font-size:.72rem;font-weight:800}.rp-bar .rp-bb{width:100%;background:#2f6fb0;border-radius:5px 5px 0 0;min-height:4px}.rp-bar .rp-bg{background:#1f2a30}.rp-bar small{font-size:.62rem;color:#7b8489}' +
+      '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '.rp-card.rp-flag{border-left-width:7px;border-left-style:solid}' +
+      '.rp-sigles{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}' +
       '@media print{.rp-top{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.rp-print{display:none}body{background:#fff}.rp-journal{break-inside:avoid}}' +
       '</style></head><body><div class="rp-top"><div><h1>Bilan — ' + esc(state.classes[cid].nom) + '</h1><div class="sub">' + classEleves(cid).length + ' élèves · ' + esc(m.nom) + ' · édité le ' + dateStr + '</div></div><button class="rp-print" onclick="window.print()">🖨️ Imprimer / PDF</button></div><main>' + cards + "</main></body></html>";
     var w = window.open("", "_blank");
@@ -4549,17 +4919,18 @@
     var sigles = state.refs.troubles.concat(state.refs.dispositifs);
     var sigleSansPap = sigles.filter(function (t) { return t.k !== "PAP"; });
 
-    function seatHtml(s) {
+    function seatHtml(s, gridStyle) {
       var tr = trendOf(s.id), sc = scoreCur(s.id);
       var past = sigleSansPap.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
         .map(function (t) { var nv = s.bepNiveaux && s.bepNiveaux[t.k]; return '<i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</i>"; }).join("");
       var tcls = tr.score > 0 ? "pp-up" : (tr.score < 0 ? "pp-down" : "");
-      var papStyle = "";
+      var styles = gridStyle ? [gridStyle] : [];
       if (s.dispositifs && s.dispositifs.PAP) {
         var papRef = sigles.find(function (t) { return t.k === "PAP"; });
-        if (papRef) papStyle = ' style="border-color:' + papRef.c + ';border-width:2px;background:' + pastel(papRef.c, 0.86) + '"';
+        if (papRef) styles.push("border-color:" + papRef.c + ";border-width:2.2px;background:" + pastel(papRef.c, 0.86));
       }
-      return '<div class="pp-seat ' + tcls + '"' + papStyle + '><b>' + esc(s.nom) + (tr.score > 0 ? " ▲" : tr.score < 0 ? " ▼" : "") + "</b><span>" + esc(s.prenom) + "</span>" +
+      var styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
+      return '<div class="pp-seat ' + tcls + '"' + styleAttr + '><b>' + esc(s.nom) + (tr.score > 0 ? " ▲" : tr.score < 0 ? " ▼" : "") + "</b><span>" + esc(s.prenom) + "</span>" +
         '<div class="pp-meta"><em>' + sc + " pt" + (sc > 1 ? "s" : "") + "</em>" + (past ? '<span class="pp-past">' + past + "</span>" : "") + "</div></div>";
     }
 
@@ -4572,15 +4943,17 @@
         inner = '<div class="pp-seats" style="grid-template-columns:repeat(' + shape.cols + ',1fr)">' +
           shape.cells.map(function (cell) {
             var s = byOrder[cell.o];
-            var el = s ? seatHtml(s) : '<div class="pp-empty"></div>';
-            return el.replace('class="pp-seat', 'style="grid-row:' + cell.r + ';grid-column:' + cell.c + '" class="pp-seat')
-                     .replace('class="pp-empty"', 'style="grid-row:' + cell.r + ';grid-column:' + cell.c + '" class="pp-empty"');
+            var g = "grid-row:" + cell.r + ";grid-column:" + cell.c;
+            return s ? seatHtml(s, g) : '<div class="pp-empty" style="' + g + '"></div>';
           }).join("") + "</div>";
       } else {
         inner = '<div class="pp-seats pp-flow">' + list.map(seatHtml).join("") + "</div>";
       }
       var note = photo ? (" · " + (GROUP_TITLES[gi] || "")) : (gi === n - 1 ? " — fond" : "");
-      return '<section class="pp-grp pg' + gi + '"><h2>Groupe ' + (gi + 1) + note + "</h2>" + inner + "</section>";
+      var f = list.filter(function (s) { return s.sexe === "F"; }).length;
+      var fond = photo ? (gi === 4) : (gi === n - 1);
+      return '<section class="pp-grp pg' + gi + '"><h2' + (fond ? ' class="pp-fond"' : "") + ">Groupe " + (gi + 1) + note
+        + '<span class="pp-eff">' + list.length + " él. · " + f + "F/" + (list.length - f) + "G</span></h2>" + inner + "</section>";
     }
 
     var roomHtml;
@@ -4593,7 +4966,8 @@
 
     var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Plan — ' + esc(state.classes[cid].nom) + '</title><style>' +
       '@page{size:A4 landscape;margin:8mm}' +
-      '*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#111;margin:0;padding:12px 16px;background:#fff}' +
+      '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#111;margin:0;padding:12px 16px;background:#fff}' +
       'header{display:flex;align-items:baseline;gap:14px;border-bottom:2.5px solid #111;padding-bottom:7px;margin-bottom:9px;flex-wrap:wrap}' +
       'header h1{font-size:1.15rem;margin:0}header .d{color:#555;font-size:.8rem}header .lg{margin-left:auto;font-size:.7rem;color:#555}' +
       '.pp-orient{text-align:center;color:#777;font-size:.68rem;letter-spacing:.14em;margin-bottom:7px}' +
@@ -4602,7 +4976,10 @@
       '.pp-grp.pg0{grid-area:p0}.pp-grp.pg1{grid-area:p1}.pp-grp.pg2{grid-area:p2}.pp-grp.pg3{grid-area:p3}.pp-grp.pg4{grid-area:p4}' +
       '.pp-room.pp-stack{grid-template-columns:1fr;grid-template-areas:none}.pp-stack .pp-grp{grid-area:auto}' +
       '.pp-grp{border:1.5px solid #999;border-radius:9px;overflow:hidden;break-inside:avoid}' +
-      '.pp-grp h2{margin:0;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;background:#eee;border-bottom:1.5px solid #999;padding:4px 9px}' +
+      '.pp-grp{border-color:#2f6fb0}' +
+      '.pp-grp h2{margin:0;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;background:#2f6fb0;color:#fff;border-bottom:none;padding:5px 9px;display:flex;justify-content:space-between;gap:8px}' +
+      '.pp-grp h2.pp-fond{background:#235688}' +
+      '.pp-eff{font-weight:600;letter-spacing:0;text-transform:none;color:#dce8f4}' +
       '.pp-seats{display:grid;gap:5px;padding:7px;grid-auto-rows:minmax(46px,auto)}' +
       '.pp-seats.pp-flow{display:flex;flex-wrap:wrap}' +
       '.pp-seat{border:1.4px solid #bbb;border-radius:7px;padding:4px 6px;line-height:1.12;background:#fff;min-width:0}' +
@@ -4741,7 +5118,21 @@
     $("btnRefs").addEventListener("click", openRefs);
     $("btnExport").addEventListener("click", openExport);
     $("btnRoomEdit").addEventListener("click", function () { if (roomEdit) stopRoomEdit(); else startRoomEdit(); });
-    $("btnGroupes").addEventListener("click", startGrpFlow);
+    $("btnGroupes").addEventListener("click", openActDlg);
+    $("dlgActX").addEventListener("click", closeAllDialogs);
+    $("actClose").addEventListener("click", closeAllDialogs);
+    $("actN").addEventListener("change", function () {
+      actState.n = +this.value; actState.sel = null;
+      actState.groupes = composerGroupes(actState.n); renderActBoard();
+    });
+    $("actAuto").addEventListener("click", function () {
+      actState.sel = null; actState.groupes = composerGroupes(actState.n);
+      renderActBoard(); flash("Groupes recomposés");
+    });
+    $("actManuel").addEventListener("click", function () { closeAllDialogs(); startGrpFlow(); });
+    $("actSave").addEventListener("click", actEnregistrer);
+    $("actNom").addEventListener("keydown", function (e) { if (e.key === "Enter") actEnregistrer(); });
+    $("actPrint").addEventListener("click", actImprimer);
     $("btnDashboard").addEventListener("click", openDashboard);
     $("dlgDashboardX").addEventListener("click", function () { $("dlgDashboard").classList.remove("open"); });
     // flux rapide bavardage : sélection directe sur le plan
@@ -4796,7 +5187,7 @@
     // config dialog
     $("dlgConfigX").addEventListener("click", closeAllDialogs);
     $("btnBuild").addEventListener("click", createOrUpdateClassFromText);
-    $("btnDeleteClass").addEventListener("click", function () { deleteClass(curClassId()); renderClassAdmin(); });
+    $("btnDeleteClass").addEventListener("click", function () { deleteClass(curClassId(), true); renderClassAdmin(); });
     $("admAddClass").addEventListener("click", function () { addEmptyClass($("admNewClass").value); $("admNewClass").value = ""; });
     $("admNewClass").addEventListener("keydown", function (e) { if (e.key === "Enter") $("admAddClass").click(); });
     $("admAddEleve").addEventListener("click", function () { addEleveToClass($("admNewNom").value, $("admNewPrenom").value); $("admNewNom").value = ""; $("admNewPrenom").value = ""; $("admNewNom").focus(); });
