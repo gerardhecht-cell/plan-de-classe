@@ -588,6 +588,7 @@
         <div class="row2"><div><button class="admbtn" id="admSaveClientId" style="width:100%">Enregistrer l'identifiant</button></div><div><button class="admbtn" id="admDriveNow" style="width:100%">☁︎ Sauvegarder maintenant</button></div></div>
         <p class="hint" id="admBackupInfo" style="margin-top:8px"></p>
         <div class="adm" id="admBackupsWrap" style="display:none"><div class="admscroll" id="admBackups"></div></div>
+        <button class="admbtn" id="admPull" style="width:100%;margin-top:8px">⬇︎ Récupérer la sauvegarde Drive (remplace ce poste)</button>
         <button class="admbtn" id="admListBackups" style="width:100%;margin-top:8px">🕘 Voir les sauvegardes datées sur Drive</button>
       </div>
 
@@ -2486,8 +2487,19 @@
     var j = await r.json(); if (j.files && j.files.length) drive.fileId = j.files[0].id;
     return drive.fileId;
   }
+  function etatVide() { return !state || !state.classes || Object.keys(state.classes).length === 0; }
+  var ecrasementAutorise = false;
   async function driveSave() {
     if (!tokenValid()) { onTokenExpired(); return; }
+    // Sécurité : une application vide ne doit jamais écraser une sauvegarde existante.
+    if (etatVide() && !ecrasementAutorise) {
+      var idExistant = await driveFindFile();
+      if (idExistant) {
+        updateDriveBadge("Protégé");
+        flash("Sauvegarde suspendue : l'application est vide alors qu'une sauvegarde existe sur Drive. Utilisez ⚙︎ Classe → Récupérer la sauvegarde Drive.", 7000);
+        return;
+      }
+    }
     try {
       await ensureDeviceKey();
       var blob = await D.encryptJSON(state, deviceKeyRaw), body = JSON.stringify(blob);
@@ -2518,6 +2530,7 @@
     var id = await driveFindFile();
     if (!id) { await driveSave(); return; }
     drive.remoteModified = await driveModifiedTime();
+    if (etatVide()) { await driveLoad(); return; }      // poste neuf : on récupère, on n'écrase jamais
     if (dirty) await driveSave(); else await driveLoad();
   }
   function heureCourte() { var d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
@@ -5222,7 +5235,15 @@
     $("admDriveNow").addEventListener("click", async function () {
       if (!driveConfigured()) { flash("Enregistrez d'abord votre identifiant client Google"); return; }
       if (!tokenValid()) { driveConnect(true); return; }
-      await driveSave(); backupDoneToday = ""; await driveBackupRotate(); flash("Sauvegarde envoyée sur Drive", 2500);
+      if (etatVide() && !confirm("L'application est vide sur ce poste.\nEnvoyer quand même ? Cela écrasera la sauvegarde Drive.")) return;
+      ecrasementAutorise = true;
+      await driveSave(); backupDoneToday = ""; await driveBackupRotate(); ecrasementAutorise = false;
+      flash("Sauvegarde envoyée sur Drive", 2500);
+    });
+    $("admPull").addEventListener("click", async function () {
+      if (!driveConfigured() || !tokenValid()) { flash("Connectez-vous à Drive d'abord (badge ☁︎)"); return; }
+      if (!etatVide() && !confirm("Remplacer les données de CE poste par celles de Drive ?\nCe qui est ici et pas encore sauvegardé sera perdu.")) return;
+      await driveLoad(); renderClassAdmin();
     });
     $("admListBackups").addEventListener("click", function () { renderDriveBackups(); });
     $("btnNote").addEventListener("click", openNoteDlg);
