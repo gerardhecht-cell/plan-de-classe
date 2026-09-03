@@ -2448,7 +2448,8 @@
   function setKeyFromPhrase(phrase) { var raw = D.fromBase32(phrase); if (raw.length !== 32) throw new Error("phrase invalide"); deviceKeyRaw = raw; LS.setRaw(KEY_DEVICEKEY, D.toBase32(raw)); }
 
   /* ---------- Google Drive (drive.file, jeton navigateur via GIS) ---------- */
-  var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0, remoteModified: null, timer: null, enCours: false };
+  var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0, remoteModified: null, timer: null, enCours: false, renewTimer: null };
+  var dernierRenouvellement = 0;
   function driveConfigured() { return !!GOOGLE_CLIENT_ID; }
   function gisLoaded() { return typeof google !== "undefined" && google.accounts && google.accounts.oauth2; }
   function tokenValid() { return drive.token && Date.now() < drive.expiresAt - 60000; }
@@ -2461,9 +2462,11 @@
       callback: function (resp) {
         if (resp && resp.access_token) {
           drive.token = resp.access_token; drive.expiresAt = Date.now() + (resp.expires_in || 3600) * 1000;
-          hideReconnectBanner(); updateDriveBadge(); driveSyncAfterConnect(); startDriveTimer();
+          hideReconnectBanner(); updateDriveBadge(); driveSyncAfterConnect(); startDriveTimer(); planifierRenouvellement();
         }
-      }
+      },
+      // échec d'un renouvellement silencieux : là seulement on sollicite l'utilisateur
+      error_callback: function () { showReconnectBanner(); updateDriveBadge("Reconnexion requise"); }
     });
     updateDriveBadge();
   }
@@ -2545,7 +2548,8 @@
   /* Toutes les 3 minutes : on pousse ce qui a changé ici, et on récupère ce qui a changé
      ailleurs — c'est ce second sens qui garde à jour les sessions ouvertes sur deux postes. */
   async function driveSync(raison) {
-    if (!driveConfigured() || !tokenValid() || drive.enCours) return;
+    if (!driveConfigured() || drive.enCours) return;
+    if (!tokenValid()) { renouvellerJeton(); return; }
     drive.enCours = true;
     try {
       var distant = await driveModifiedTime();
@@ -2575,8 +2579,22 @@
     if (!document.hidden) driveSync("retour");            // reprise d'un onglet : on se remet à jour tout de suite
   });
   window.addEventListener("focus", function () { driveSync("focus"); });
-  function scheduleDriveSave() { if (!driveConfigured() || !tokenValid()) return; clearTimeout(saveTimer); saveTimer = setTimeout(driveSave, 1200); }
-  function onTokenExpired() { showReconnectBanner(); updateDriveBadge(); }
+  function scheduleDriveSave() { if (!driveConfigured()) return; if (!tokenValid()) { renouvellerJeton(); return; } clearTimeout(saveTimer); saveTimer = setTimeout(driveSave, 1200); }
+  /* Le jeton Google ne vit qu'une heure. On le renouvelle en silence, sans fenêtre ni clic :
+     tant que la session Google du navigateur est ouverte et le consentement donné, c'est invisible. */
+  function renouvellerJeton() {
+    if (!drive.tokenClient) return false;
+    var maintenant = Date.now();
+    if (maintenant - dernierRenouvellement < 30000) return false;   // une tentative par 30 s au plus
+    dernierRenouvellement = maintenant;
+    try { drive.tokenClient.requestAccessToken({ prompt: "" }); return true; } catch (e) { return false; }
+  }
+  function planifierRenouvellement() {
+    if (drive.renewTimer) clearTimeout(drive.renewTimer);
+    var delai = Math.max(60000, drive.expiresAt - Date.now() - 300000);   // 5 minutes avant l'échéance
+    drive.renewTimer = setTimeout(function () { renouvellerJeton(); }, delai);
+  }
+  function onTokenExpired() { if (!renouvellerJeton()) { showReconnectBanner(); updateDriveBadge("Reconnexion requise"); } }
   function showReconnectBanner() { var b = $("reconnect"); if (b) b.classList.remove("hidden"); }
   function hideReconnectBanner() { var b = $("reconnect"); if (b) b.classList.add("hidden"); }
   function updateDriveBadge(msg) {
