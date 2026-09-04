@@ -419,6 +419,8 @@
     font-weight:600; color:var(--ink); text-align:left; display:flex; align-items:center; gap:6px;}
   .actchip .who{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .actchip.sel{background:#e8f1fa; border-color:var(--blue); box-shadow:0 0 0 2px rgba(47,111,176,.25);}
+  .actchip.bad{border-color:var(--red); border-width:2px; background:#fdecec;}
+  .actchip.bad .who::after{content:' ⇎'; color:var(--red); font-weight:900;}
   .actchip .bepdot{flex:none; font-size:.58rem; font-weight:800; border-radius:4px; padding:1px 5px;}
   .actempty{color:var(--muted); font-size:.76rem; padding:6px 4px; font-style:italic;}
   .adm{border:1px solid var(--line); border-radius:10px; background:#fff; margin-top:6px; overflow:hidden;}
@@ -642,8 +644,7 @@
         <label style="margin:0">Nombre de groupes</label>
         <select id="actN"></select>
         <button class="admbtn ok" id="actAuto">⚄ Composer automatiquement</button>
-        <button class="admbtn ok" id="actAfficher">👁 Afficher sur le plan</button>
-        <button class="admbtn" id="actManuel">✋ Sur le plan</button>
+        <button class="admbtn ok" id="actAfficher" title="Reporte les groupes composés ci-dessous sur le plan de classe : pastille G1, G2… sur chaque place">👁 Reporter ces groupes sur le plan</button>
       </div>
       <p class="hint" id="actInfo"></p>
       <div class="actboard" id="actBoard"></div>
@@ -654,6 +655,9 @@
       </div>
       <div class="secttl">Configurations enregistrées</div>
       <div class="adm"><div class="admscroll" id="actList"></div></div>
+      <div class="secttl">Autre usage</div>
+      <p class="hint" style="margin:2px 0 8px">Un <b>groupe nommé</b> est une chose différente : vous désignez vous-même les élèves un par un sur le plan (délégués, tutorat, atelier…). Cela ne touche pas aux groupes d'activité ci-dessus.</p>
+      <button class="admbtn" id="actManuel" style="width:100%">✋ Créer un groupe nommé en désignant les élèves</button>
       <div class="actions"><button class="ghost2" id="actPrint">🖨️ Imprimer</button><button class="primary" id="actClose">Fermer</button></div>
     </div>
   </div>
@@ -2425,7 +2429,7 @@
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04-c";
+  var APP_VERSION = "2026-09-04-e";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -3402,7 +3406,7 @@
   function startGrpFlow() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
     var p = plan(cid);
-    var nom = prompt("Nom du groupe" + (p.groupesLibres.length ? "\n(existants : " + p.groupesLibres.map(function (g) { return g.nom; }).join(", ") + ")" : ""), "");
+    var nom = prompt("GROUPE NOMMÉ (désignation à la main)\n\nVous allez nommer un groupe, puis toucher un par un les élèves concernés sur le plan.\nCe n'est pas la composition automatique — pour cela, fermez et utilisez « Composer automatiquement ».\n\nNom du groupe" + (p.groupesLibres.length ? "\n(existants : " + p.groupesLibres.map(function (g) { return g.nom; }).join(", ") + ")" : ""), "");
     if (nom === null) return;
     nom = nom.trim(); if (!nom) return;
     var g = p.groupesLibres.find(function (x) { return x.nom.toLowerCase() === nom.toLowerCase(); });
@@ -4296,25 +4300,114 @@
   }
   function melange(a) { var r = a.slice(); for (var i = r.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = r[i]; r[i] = r[j]; r[j] = t; } return r; }
 
+  /* ---- Incompatibilités entre élèves ----
+     Deux sources, toutes deux décidées par l'enseignant :
+       · placement.separer  — « à séparer » (les duos de bavardage convertis par 🔧 Corriger
+                              atterrissent ici, le comportement est donc bien pris en compte)
+       · placement.eloigner — « à éloigner » (contrainte plus forte encore)
+     Dans un groupe de travail, les uns comme les autres ne doivent pas se retrouver ensemble. */
+  function incompatMap(eleves) {
+    var m = {};
+    function lien(a, b) {
+      a = String(a); b = String(b); if (a === b) return;
+      if (!m[a]) m[a] = {}; if (!m[b]) m[b] = {};
+      m[a][b] = true; m[b][a] = true;
+    }
+    eleves.forEach(function (e) {
+      var pl = e.placement || {};
+      (pl.separer || []).forEach(function (o) { lien(e.id, o); });
+      (pl.eloigner || []).forEach(function (o) { lien(e.id, o); });
+    });
+    return m;
+  }
+  function conflitsDuGroupe(grp, inc) {
+    var out = [];
+    for (var i = 0; i < grp.length; i++) for (var j = i + 1; j < grp.length; j++) {
+      var a = String(grp[i]), b = String(grp[j]);
+      if (inc[a] && inc[a][b]) out.push([grp[i], grp[j]]);
+    }
+    return out;
+  }
+  function nomDe(id) { var e = state.eleves[id]; return e ? (e.prenom + " " + e.nom) : "?"; }
+
+  /* Composition automatique. Contraintes respectées, dans cet ordre :
+       1. jamais deux élèves à séparer ou à éloigner dans le même groupe
+       2. les élèves agités répartis, jamais regroupés
+       3. un seul PAP / PPS / PPRE par groupe tant que l'effectif le permet
+       4. groupes d'effectif égal et mixité équilibrée */
+  var dernierConflitsGroupes = [];
   function composerGroupes(n) {
     var cid = curClassId(); if (!cid) return [];
     var eleves = classEleves(cid);
-    var g = Array.from({ length: n }, function () { return []; });
+    var inc = incompatMap(eleves);
+    var g = [], i;
+    for (i = 0; i < n; i++) g.push([]);
+
+    function compatible(gi, id) {
+      var ennemis = inc[String(id)]; if (!ennemis) return true;
+      for (var k = 0; k < g[gi].length; k++) if (ennemis[String(g[gi][k])]) return false;
+      return true;
+    }
+    function compte(gi, test) {
+      var c = 0; for (var k = 0; k < g[gi].length; k++) { var e = state.eleves[g[gi][k]]; if (e && test(e)) c++; }
+      return c;
+    }
+    function poser(e, quota) {
+      var possibles = [], libres = [], k;
+      for (k = 0; k < n; k++) {
+        if (!compatible(k, e.id)) continue;
+        possibles.push(k);
+        if (!quota || compte(k, quota.test) < quota.max) libres.push(k);
+      }
+      // on relâche d'abord le quota, jamais l'incompatibilité — sauf s'il n'existe aucune place
+      var cands = libres.length ? libres : (possibles.length ? possibles : null);
+      if (!cands) { cands = []; for (k = 0; k < n; k++) cands.push(k); }
+      var best = cands[0];
+      for (k = 1; k < cands.length; k++) if (g[cands[k]].length < g[best].length) best = cands[k];
+      g[best].push(e.id);
+    }
+    function poserListe(liste, quota) { liste.forEach(function (e) { poser(e, quota); }); }
+
+    var estAgite = function (e) { return !!e.agitation; };
     var aide = melange(eleves.filter(aBesoinAide));
-    var reste = eleves.filter(function (e) { return !aBesoinAide(e); });
-    aide.forEach(function (e, i) { g[i % n].push(e.id); });          // un par groupe, puis on repart au début
-    // le reste : alternance filles/garçons, toujours dans le groupe le moins rempli
+    var agites = melange(eleves.filter(function (e) { return e.agitation && !aBesoinAide(e); }));
+    var reste = eleves.filter(function (e) { return !aBesoinAide(e) && !e.agitation; });
+    var totalAgites = eleves.filter(estAgite).length;
+
+    // 1) les élèves à dispositif : un par groupe tant que c'est possible
+    poserListe(aide, { test: aBesoinAide, max: Math.max(1, Math.ceil(aide.length / n)) });
+    // 2) les élèves agités : étalés de la même façon
+    poserListe(agites, { test: estAgite, max: Math.max(1, Math.ceil(totalAgites / n)) });
+    // 3) le reste, en alternant filles et garçons pour la mixité
     var F = melange(reste.filter(function (e) { return e.sexe === "F"; }));
     var G = melange(reste.filter(function (e) { return e.sexe === "G"; }));
     var U = melange(reste.filter(function (e) { return e.sexe !== "F" && e.sexe !== "G"; }));
     var ordre = [], i2 = 0, j2 = 0;
     while (i2 < F.length || j2 < G.length) { if (i2 < F.length) ordre.push(F[i2++]); if (j2 < G.length) ordre.push(G[j2++]); }
     U.forEach(function (e) { ordre.push(e); });
-    ordre.forEach(function (e) {
-      var best = 0;
-      for (var k = 1; k < n; k++) if (g[k].length < g[best].length) best = k;
-      g[best].push(e.id);
-    });
+    poserListe(ordre, null);
+
+    // 4) rattrapage : si une incompatibilité subsiste, on tente un échange avec un groupe sain
+    for (var passe = 0; passe < 3; passe++) {
+      var reparé = false;
+      for (var gi = 0; gi < n; gi++) {
+        var conf = conflitsDuGroupe(g[gi], inc);
+        if (!conf.length) continue;
+        var aBouger = conf[0][1];
+        for (var gj = 0; gj < n && !reparé; gj++) {
+          if (gj === gi) continue;
+          for (var q = 0; q < g[gj].length; q++) {
+            var cible = g[gj][q];
+            var futurGi = g[gi].filter(function (x) { return x !== aBouger; }).concat([cible]);
+            var futurGj = g[gj].filter(function (x) { return x !== cible; }).concat([aBouger]);
+            if (!conflitsDuGroupe(futurGi, inc).length && !conflitsDuGroupe(futurGj, inc).length) {
+              g[gi] = futurGi; g[gj] = futurGj; reparé = true; break;
+            }
+          }
+        }
+      }
+      if (!reparé) break;
+    }
     return g;
   }
 
@@ -4348,6 +4441,14 @@
     actSyncEleves();
     var board = $("actBoard"); board.innerHTML = "";
     var trop = 0;
+    var incNow = incompatMap(classEleves(curClassId()));
+    var enConflit = {}, listeConflits = [];
+    actState.groupes.forEach(function (grp, gi) {
+      conflitsDuGroupe(grp, incNow).forEach(function (pr) {
+        enConflit[pr[0]] = true; enConflit[pr[1]] = true;
+        listeConflits.push("G" + (gi + 1) + " : " + nomDe(pr[0]) + " et " + nomDe(pr[1]));
+      });
+    });
     actState.groupes.forEach(function (grp, gi) {
       var nbAide = grp.filter(function (id) { return aBesoinAide(state.eleves[id]); }).length;
       if (nbAide > 1) trop++;
@@ -4365,7 +4466,8 @@
       grp.map(function (id) { return state.eleves[id]; }).sort(function (a, b) { return a.nom.localeCompare(b.nom); }).forEach(function (e) {
         var sig = sigleAide(e);
         var b = document.createElement("button");
-        b.className = "actchip" + (actState.sel === e.id ? " sel" : "");
+        b.className = "actchip" + (actState.sel === e.id ? " sel" : "") + (enConflit[e.id] ? " bad" : "");
+        if (enConflit[e.id]) b.title = "Ne devrait pas être dans ce groupe (à séparer / à éloigner)";
         b.innerHTML = '<span class="who">' + esc(e.nom) + " " + esc(e.prenom) + "</span>"
           + (sig ? '<span class="bepdot" style="background:' + sig.c + ';color:' + textOn(sig.c) + '">' + esc(sig.k) + "</span>" : "");
         b.addEventListener("click", function () {
@@ -4385,6 +4487,13 @@
           + trop + " groupe(s) en accueillent plus d'un. Ajoutez un groupe pour les répartir un par un."
         : "<b>" + nbAideTotal + " élève(s) à PAP / PPS / PPRE</b>, répartis à raison d'un par groupe au maximum.")
       : "Aucun élève à PAP, PPS ou PPRE dans cette classe.";
+    if (listeConflits.length) {
+      $("actInfo").innerHTML += '<br><span style="color:var(--red);font-weight:800">⇎ '
+        + listeConflits.length + " incompatibilité(s) non résolue(s) — " + listeConflits.map(esc).join(" · ")
+        + ".</span> Ajoutez un groupe ou déplacez l'un des deux.";
+    } else {
+      $("actInfo").innerHTML += '<br><span style="color:var(--green);font-weight:700">✓ Aucun élève à séparer ou à éloigner ne se retrouve dans le même groupe.</span>';
+    }
   }
   function actEchanger(idA, idB) {
     var ga = -1, gb = -1, ia = -1, ib = -1;
@@ -4394,10 +4503,12 @@
     });
     if (ga < 0 || gb < 0) return;
     actState.groupes[ga][ia] = idB; actState.groupes[gb][ib] = idA;
+    if (compoActive(curClassId())) afficherGroupes(curClassId(), actState.groupes);
   }
   function actDeplacer(id, versGi) {
     actState.groupes.forEach(function (grp) { var i = grp.indexOf(id); if (i >= 0) grp.splice(i, 1); });
     actState.groupes[versGi].push(id);
+    if (compoActive(curClassId())) afficherGroupes(curClassId(), actState.groupes);
   }
   function actEnregistrer() {
     var cid = curClassId(), p = plan(cid);
@@ -5357,7 +5468,10 @@
     });
     $("actAuto").addEventListener("click", function () {
       actState.sel = null; actState.groupes = composerGroupes(actState.n);
-      renderActBoard(); flash("Groupes recomposés");
+      renderActBoard();
+      var cid = curClassId();                      // la composition part aussitôt sur le plan
+      if (cid) afficherGroupes(cid, actState.groupes);
+      flash("Groupes composés et reportés sur le plan", 2600);
     });
     $("actAfficher").addEventListener("click", function () {
       var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
