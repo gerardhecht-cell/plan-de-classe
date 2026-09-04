@@ -528,9 +528,9 @@
     <button class="iconbtn" id="btnUndo" title="Annuler la dernière action (Ctrl+Z)" disabled>↩︎ Annuler</button>
     <button class="iconbtn" id="btnRedo" title="Rétablir l'action annulée (Ctrl+Y)" disabled>↪︎ Rétablir</button>
     <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
-    <button class="iconbtn" id="btnGroupes" title="Créer un groupe nommé en sélectionnant les élèves sur le plan">👥 Groupe</button>
+    <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes d'activité</button>
     <span class="vsep"></span>
-    <button class="iconbtn" id="btnDashboard">📊 Groupes</button>
+    <button class="iconbtn" id="btnDashboard" title="Climat et profils de chaque îlot du plan">📊 Tableau de bord</button>
     <button class="iconbtn" id="btnExport">📤 Bilans</button>
     <button class="iconbtn" id="btnRefs">📚 Listes</button>
     <div class="legend" id="legend"></div>
@@ -644,7 +644,7 @@
         <label style="margin:0">Nombre de groupes</label>
         <select id="actN"></select>
         <button class="admbtn ok" id="actAuto">⚄ Composer automatiquement</button>
-        <button class="admbtn ok" id="actAfficher" title="Reporte les groupes composés ci-dessous sur le plan de classe : pastille G1, G2… sur chaque place">👁 Reporter ces groupes sur le plan</button>
+        <button class="admbtn ok" id="actAfficher" title="Installe chaque groupe sur un îlot de la salle et le signale par sa couleur">🪑 Installer les groupes dans la salle</button>
       </div>
       <p class="hint" id="actInfo"></p>
       <div class="actboard" id="actBoard"></div>
@@ -2429,7 +2429,7 @@
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04-e";
+  var APP_VERSION = "2026-09-04-g";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -3388,6 +3388,76 @@
     p.montrerGroupes = true;
     save(); renderRoom();
   }
+  /* Assied physiquement chaque groupe d'activité dans un îlot de la salle.
+     Les groupes qui comptent le plus d'élèves à placer devant occupent les îlots
+     les plus proches du bureau ; à l'intérieur d'un îlot, les élèves à besoins
+     particuliers et à lunettes prennent le rang avant, les élèves agités le fond. */
+  function placerCompositionDansSalle(cid, grs) {
+    var p = plan(cid), n = p.groups;
+    var prox = D.deskProximity(n);
+    var ordreIlots = [];
+    for (var i = 0; i < n; i++) ordreIlots.push(i);
+    ordreIlots.sort(function (a2, b2) { return prox[a2] - prox[b2] || a2 - b2; });
+    var besoin = grs.map(function (grp, gi) {
+      return { gi: gi, n: grp.filter(function (id) {
+        var e = state.eleves[id]; return e && (eleveBep(e) || e.glasses); }).length };
+    });
+    besoin.sort(function (a2, b2) { return b2.n - a2.n || a2.gi - b2.gi; });
+    p.pos = {};
+    besoin.forEach(function (bg, k) {
+      var ilot = ordreIlots[k % ordreIlots.length];
+      var membres = grs[bg.gi].slice().sort(function (x, y) {
+        var sx = state.eleves[x], sy = state.eleves[y];
+        if (!sx || !sy) return 0;
+        var px = (eleveBep(sx) || sx.glasses) ? 0 : (sx.agitation ? 2 : 1);
+        var py = (eleveBep(sy) || sy.glasses) ? 0 : (sy.agitation ? 2 : 1);
+        return px - py || String(sx.nom).localeCompare(String(sy.nom));
+      });
+      membres.forEach(function (id, o) {
+        p.pos[id] = { group: ilot, order: o };
+        var e = state.eleves[id]; if (e) { e.group = ilot; e.order = o; }
+      });
+    });
+    p.compositionCourante = grs.map(function (grp) { return grp.slice(); });
+    p.montrerGroupes = true;
+    p.lastConflicts = [];
+  }
+  /* Point d'entrée : vérifie que les groupes tiennent dans les îlots, recompose si besoin. */
+  function asseoirGroupes(silencieux) {
+    var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return false; }
+    if (customOn(cid)) {
+      afficherGroupes(cid, actState.groupes);
+      if (!silencieux) flash("Salle personnalisée : les groupes sont signalés par leur pastille de couleur ; l'installation par îlot demande la disposition en îlots.", 6000);
+      return false;
+    }
+    var p = plan(cid), eleves = classEleves(cid), n = p.groups;
+    var caps = D.capsFor(n, eleves.length);
+    var grs = actState.groupes || [];
+    var neVaPas = grs.length !== n || grs.some(function (grp, i) { return grp.length > caps[i]; });
+    if (neVaPas) {
+      if (!silencieux && !confirm(
+        "Votre salle compte " + n + " îlot(s) de " + caps.join(", ") + " places.\n" +
+        "Vos groupes (" + grs.map(function (x) { return x.length; }).join(", ") + ") n'y entrent pas tels quels.\n\n" +
+        "Recomposer " + n + " groupes à la taille des îlots ?\nToutes vos contraintes seront respectées.")) return false;
+      actState.n = n; actState.sel = null;
+      var sel = $("actN"); if (sel) sel.value = String(n);
+      actState.groupes = composerGroupes(n, caps);
+      grs = actState.groupes;
+    }
+    act("Installer les groupes dans la salle");
+    placerCompositionDansSalle(cid, grs);
+    save(); renderRoom();
+    return true;
+  }
+  function retourPlanHabituel() {
+    var cid = curClassId(); if (!cid) return;
+    if (!confirm("Revenir au plan de classe habituel ?\nLes élèves reprennent leur place pédagogique ; la composition des groupes reste enregistrée.")) return;
+    act("Retour au plan de classe habituel");
+    plan(cid).montrerGroupes = false;
+    rebuildPlan(cid, false);
+    save(); renderRoom();
+    flash("Plan de classe habituel rétabli", 2800);
+  }
   function masquerGroupes() {
     var cid = curClassId(); if (!cid) return;
     plan(cid).montrerGroupes = false; save(); renderRoom(); flash("Groupes masqués");
@@ -3400,7 +3470,9 @@
     var puces = compo.map(function (g, i) {
       return '<span class="lg"><span class="dot" style="background:' + GRP_COLORS[i % GRP_COLORS.length] + '"></span>G' + (i + 1) + " · " + g.length + "</span>";
     }).join(" ");
-    bar.innerHTML = "\uD83D\uDC65 Groupes d'activit\u00e9 sur le plan " + puces + ' <button id="actgHide">Masquer</button>';
+    bar.innerHTML = "\uD83D\uDC65 Groupes d'activit\u00e9 sur le plan " + puces
+      + ' <button id="actgPlan">\u21ba Plan habituel</button><button id="actgHide" style="margin-left:6px">Masquer les couleurs</button>';
+    $("actgPlan").addEventListener("click", retourPlanHabituel);
     $("actgHide").addEventListener("click", masquerGroupes);
   }
   function startGrpFlow() {
@@ -4336,12 +4408,13 @@
        3. un seul PAP / PPS / PPRE par groupe tant que l'effectif le permet
        4. groupes d'effectif égal et mixité équilibrée */
   var dernierConflitsGroupes = [];
-  function composerGroupes(n) {
+  function composerGroupes(n, caps) {
     var cid = curClassId(); if (!cid) return [];
     var eleves = classEleves(cid);
     var inc = incompatMap(eleves);
     var g = [], i;
     for (i = 0; i < n; i++) g.push([]);
+    function marge(gi) { return caps ? (caps[gi] - g[gi].length) : -g[gi].length; }
 
     function compatible(gi, id) {
       var ennemis = inc[String(id)]; if (!ennemis) return true;
@@ -4353,17 +4426,20 @@
       return c;
     }
     function poser(e, quota) {
-      var possibles = [], libres = [], k;
+      var nonPleins = [], possibles = [], libres = [], k, plein;
       for (k = 0; k < n; k++) {
-        if (!compatible(k, e.id)) continue;
+        plein = caps && g[k].length >= caps[k];
+        if (!plein) nonPleins.push(k);
+        if (plein || !compatible(k, e.id)) continue;
         possibles.push(k);
         if (!quota || compte(k, quota.test) < quota.max) libres.push(k);
       }
-      // on relâche d'abord le quota, jamais l'incompatibilité — sauf s'il n'existe aucune place
-      var cands = libres.length ? libres : (possibles.length ? possibles : null);
+      // on relâche d'abord le quota, puis la capacité, jamais l'incompatibilité —
+      // sauf s'il n'existe absolument aucune place sans conflit
+      var cands = libres.length ? libres : (possibles.length ? possibles : (nonPleins.length ? nonPleins : null));
       if (!cands) { cands = []; for (k = 0; k < n; k++) cands.push(k); }
       var best = cands[0];
-      for (k = 1; k < cands.length; k++) if (g[cands[k]].length < g[best].length) best = cands[k];
+      for (k = 1; k < cands.length; k++) if (marge(cands[k]) > marge(best)) best = cands[k];
       g[best].push(e.id);
     }
     function poserListe(liste, quota) { liste.forEach(function (e) { poser(e, quota); }); }
@@ -4415,7 +4491,7 @@
     var cid = curClassId(); if (!cid) { flash("Affichez une classe d'abord"); return; }
     var p = plan(cid);
     if (!p.configsGroupes) p.configsGroupes = [];
-    var n = p.dernierNbGroupes || 4;
+    var n = p.dernierNbGroupes || Math.min(8, Math.max(2, p.groups || 4));
     var sel = $("actN"); sel.innerHTML = "";
     for (var k = 2; k <= 8; k++) sel.innerHTML += '<option value="' + k + '"' + (k === n ? " selected" : "") + ">" + k + "</option>";
     actState.n = n; actState.sel = null;
@@ -4503,12 +4579,12 @@
     });
     if (ga < 0 || gb < 0) return;
     actState.groupes[ga][ia] = idB; actState.groupes[gb][ib] = idA;
-    if (compoActive(curClassId())) afficherGroupes(curClassId(), actState.groupes);
+    if (compoActive(curClassId())) { act("Échange de deux élèves entre groupes"); placerCompositionDansSalle(curClassId(), actState.groupes); save(); renderRoom(); }
   }
   function actDeplacer(id, versGi) {
     actState.groupes.forEach(function (grp) { var i = grp.indexOf(id); if (i >= 0) grp.splice(i, 1); });
     actState.groupes[versGi].push(id);
-    if (compoActive(curClassId())) afficherGroupes(curClassId(), actState.groupes);
+    if (compoActive(curClassId())) { act("Déplacement d'un élève vers un autre groupe"); placerCompositionDansSalle(curClassId(), actState.groupes); save(); renderRoom(); }
   }
   function actEnregistrer() {
     var cid = curClassId(), p = plan(cid);
@@ -4520,7 +4596,7 @@
     if (exist) { if (!confirm("Remplacer la configuration « " + nom + " » ?")) return; exist.groupes = data; exist.ts = Date.now(); }
     else p.configsGroupes.push({ id: "cfg_" + Math.random().toString(36).slice(2, 8), nom: nom, ts: Date.now(), groupes: data });
     p.compositionCourante = data; p.dernierNbGroupes = actState.groupes.length;
-    p.montrerGroupes = true;                     // ce qu'on vient de composer doit se voir sur le plan
+    p.montrerGroupes = true;
     save(); renderActList(); renderRoom(); $("actNom").value = "";
     flash("Configuration « " + nom + " » enregistrée");
   }
@@ -4538,8 +4614,9 @@
         actState.groupes = c.groupes.map(function (g) { return g.slice(); });
         actState.n = c.groupes.length; actState.sel = null;
         $("actN").value = String(c.groupes.length);
-        afficherGroupes(curClassId(), c.groupes);   // charger une config, c'est l'appliquer au plan
-        renderActBoard(); flash("Configuration « " + c.nom + " » chargée et affichée sur le plan", 2800);
+        renderActBoard();
+        asseoirGroupes(true);                       // charger une config, c'est asseoir la classe
+        flash("Configuration « " + c.nom + " » chargée — élèves installés", 3000);
       });
       row.querySelector("[data-del]").addEventListener("click", function () {
         if (!confirm("Supprimer la configuration « " + c.nom + " » ?")) return;
@@ -5467,17 +5544,19 @@
       actState.groupes = composerGroupes(actState.n); renderActBoard();
     });
     $("actAuto").addEventListener("click", function () {
-      actState.sel = null; actState.groupes = composerGroupes(actState.n);
+      var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
+      var p = plan(cid), caps = customOn(cid) ? null : D.capsFor(p.groups, classEleves(cid).length);
+      // par défaut on compose à la taille des îlots : les élèves vont réellement s'asseoir ensemble
+      if (caps && actState.n === p.groups) { actState.groupes = composerGroupes(actState.n, caps); }
+      else { actState.groupes = composerGroupes(actState.n); }
+      actState.sel = null;
       renderActBoard();
-      var cid = curClassId();                      // la composition part aussitôt sur le plan
-      if (cid) afficherGroupes(cid, actState.groupes);
-      flash("Groupes composés et reportés sur le plan", 2600);
+      if (asseoirGroupes(false)) flash("Groupes composés — les élèves ont été installés dans la salle", 3200);
+      else flash("Groupes composés", 2400);
     });
     $("actAfficher").addEventListener("click", function () {
-      var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
       if (!actState.groupes || !actState.groupes.length) { flash("Composez d'abord les groupes"); return; }
-      afficherGroupes(cid, actState.groupes); closeAllDialogs();
-      flash("Groupes affich\u00e9s sur le plan de classe", 2600);
+      if (asseoirGroupes(false)) { closeAllDialogs(); flash("Les élèves sont installés par groupe dans la salle", 3000); }
     });
     $("actManuel").addEventListener("click", function () { closeAllDialogs(); startGrpFlow(); });
     $("actSave").addEventListener("click", actEnregistrer);
