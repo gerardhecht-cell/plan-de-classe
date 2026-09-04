@@ -44,6 +44,7 @@
   select.classchip{background:#fff; color:var(--ink); font-weight:800; font-size:.8rem; padding:5px 8px; border-radius:8px; min-width:78px; border:none; flex:none;}
   .iconbtn{background:var(--ink-2); color:#fff; border-radius:8px; padding:5px 9px; font-size:.72rem; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:5px; min-height:30px; flex:none;}
   .iconbtn:active{transform:scale(.97);} .iconbtn.ghost{background:transparent; border:1px solid #45545c;}
+  .iconbtn:disabled{opacity:.34; cursor:default;} .iconbtn:disabled:active{transform:none;}
   .weekbadge{flex:none; background:#3a4a52; color:#fff; border-radius:8px; padding:5px 9px; font-size:.66rem; font-weight:800; min-height:30px; white-space:nowrap; display:inline-flex; align-items:center;}
   .weekbadge[data-p="impaire"]{background:#5b4a6e;}
   .drivebadge{flex:none; border-radius:8px; padding:5px 9px; font-size:.66rem; font-weight:700; min-height:30px; white-space:nowrap; border:1px solid #45545c; color:#fff;}
@@ -514,7 +515,8 @@
     <span class="vsep"></span>
     <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger</button>
     <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe (nouvelle disposition à chaque clic)">⇄ Tout replacer</button>
-    <button class="iconbtn hidden" id="btnUndo" title="Revenir à la disposition précédente">↩︎ Annuler</button>
+    <button class="iconbtn" id="btnUndo" title="Annuler la dernière action (Ctrl+Z)" disabled>↩︎ Annuler</button>
+    <button class="iconbtn" id="btnRedo" title="Rétablir l'action annulée (Ctrl+Y)" disabled>↪︎ Rétablir</button>
     <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
     <button class="iconbtn" id="btnGroupes" title="Créer un groupe nommé en sélectionnant les élèves sur le plan">👥 Groupe</button>
     <span class="vsep"></span>
@@ -2411,8 +2413,86 @@
     setRaw: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { _mem["raw_" + k] = v; } }
   };
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
+  /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
+     le même programme (⚙︎ Classe, en bas du bloc Drive). */
+  var APP_VERSION = "2026-09-04";
   var saveTimer = null, dirty = false;
-  function save() { if (!state) return; LS.set(KEY_STATE, state); dirty = true; scheduleDriveSave(); }
+
+  /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
+     Chaque appel à save() compare l'état courant au dernier état enregistré. S'ils
+     diffèrent, l'ancien part sur la pile « passé ». Aucune action n'a donc besoin
+     d'être instrumentée pour devenir annulable : un clic de bavardage, une note,
+     une correction de placement ou un déplacement d'élève sont tous couverts.
+     Le libellé sert uniquement à annoncer à l'enseignant ce qu'il vient d'annuler. */
+  var HIST_MAX = 40, HIST_OCTETS_MAX = 24 * 1024 * 1024;   // garde-fou mémoire sur les grosses bases
+  var histPasse = [], histFutur = [], etatSerialise = null, libelleAction = null;
+  function elaguerHistorique(pile) {
+    while (pile.length > HIST_MAX) pile.shift();
+    var total = 0, i;
+    for (i = 0; i < pile.length; i++) total += pile[i].etat.length;
+    while (pile.length > 1 && total > HIST_OCTETS_MAX) { total -= pile[0].etat.length; pile.shift(); }
+  }
+  function act(l) { libelleAction = l; }            // à appeler juste avant une action nommée
+  function nomCourt(id) { var e = state && state.eleves ? state.eleves[id] : null; return e ? (e.prenom || e.nom || "élève") : "élève"; }
+  function majBoutonsHistorique() {
+    var bu = $("btnUndo"), br = $("btnRedo");
+    if (bu) {
+      bu.disabled = !histPasse.length;
+      bu.title = histPasse.length
+        ? "Annuler : " + histPasse[histPasse.length - 1].label + "  (Ctrl+Z)"
+        : "Rien à annuler  (Ctrl+Z)";
+    }
+    if (br) {
+      br.disabled = !histFutur.length;
+      br.title = histFutur.length
+        ? "Rétablir : " + histFutur[histFutur.length - 1].label + "  (Ctrl+Y)"
+        : "Rien à rétablir  (Ctrl+Y)";
+    }
+  }
+  function historiqueRAZ() {   // après un chargement Drive ou un import : le passé n'a plus de sens
+    histPasse = []; histFutur = [];
+    etatSerialise = state ? JSON.stringify(state) : null;
+    majBoutonsHistorique();
+  }
+  function appliquerEtat(txt) {
+    state = migrate(JSON.parse(txt));
+    etatSerialise = txt;
+    LS.set(KEY_STATE, state); dirty = true; scheduleDriveSave();
+    renderAll();
+  }
+  function annuler() {
+    if (!histPasse.length) { flash("Rien à annuler"); return; }
+    var e = histPasse.pop();
+    histFutur.push({ etat: etatSerialise, label: e.label });
+    elaguerHistorique(histFutur);
+    appliquerEtat(e.etat);
+    majBoutonsHistorique();
+    flash("Annulé : " + e.label, 2600);
+  }
+  function retablir() {
+    if (!histFutur.length) { flash("Rien à rétablir"); return; }
+    var e = histFutur.pop();
+    histPasse.push({ etat: etatSerialise, label: e.label });
+    elaguerHistorique(histPasse);
+    appliquerEtat(e.etat);
+    majBoutonsHistorique();
+    flash("Rétabli : " + e.label, 2600);
+  }
+
+  function save() {
+    if (!state) return;
+    var courant = JSON.stringify(state);
+    if (etatSerialise === null) { etatSerialise = courant; }
+    else if (courant !== etatSerialise) {
+      histPasse.push({ etat: etatSerialise, label: libelleAction || "Modification" });
+      elaguerHistorique(histPasse);
+      histFutur = [];                                  // une nouvelle action ferme la branche rétablie
+      etatSerialise = courant;
+    }
+    libelleAction = null;
+    LS.set(KEY_STATE, state); dirty = true; scheduleDriveSave();
+    majBoutonsHistorique();
+  }
   function loadLocal() { var s = LS.get(KEY_STATE); if (s && s.eleves) state = migrate(s); }
   function migrate(s) {
     var def = blankState();
@@ -2560,7 +2640,7 @@
     if (!data) { updateDriveBadge("Phrase requise"); return; }
     try { state = migrate(data); LS.set(KEY_STATE, state);
       drive.remoteModified = await driveModifiedTime(); dirty = false;
-      renderAll(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
+      renderAll(); historiqueRAZ(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
     catch (e) { flash("Drive : sauvegarde illisible."); }
   }
   async function driveSyncAfterConnect() {
@@ -2727,8 +2807,9 @@
     lastSnapshot = null;
     return true;
   }
-  function showUndo() { var b = $("btnUndo"); if (b) b.classList.remove("hidden"); }
-  function hideUndo() { var b = $("btnUndo"); if (b) b.classList.add("hidden"); }
+  /* Conservés pour les anciens appels : l'annulation est désormais générale et permanente. */
+  function showUndo() { majBoutonsHistorique(); }
+  function hideUndo() { majBoutonsHistorique(); }
   function rebuildPlan(cid, doShuffle) {
     var p = plan(cid), eleves = classEleves(cid);
     eleves.forEach(function (s) { s.bep = eleveBep(s); });
@@ -2838,6 +2919,7 @@
   }
   function bavardTapSeat(id) {
     if (bavardMode.step === "who") {
+      act("Bavardage — " + nomCourt(id));
       logBehavior(id, "neg", "bavard", "leger"); // intensité légère (niveau 1) automatique
       refreshSeat(id);
       bavardMode.step = "with"; bavardMode.whoId = id;
@@ -2848,6 +2930,7 @@
       var d = eData(whoId); d.avecQui[id] = (d.avecQui[id] || 0) + 1;
       var od = eData(id); od.avecQui[whoId] = (od.avecQui[whoId] || 0) + 1; // symétrique
       logBehavior(id, "neg", "bavard", "leger"); // le camarade aussi
+      act("Bavardage à deux");
       save(); refreshSeat(whoId); refreshSeat(id);
       flash("Bavardage noté entre les deux");
       bavardMode.step = "who"; bavardMode.whoId = null; // prêt pour le suivant
@@ -3730,6 +3813,7 @@
       ? (tokenValid() ? "Connecté à Google Drive — sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
                       : "Identifiant enregistré. Touchez le badge ☁︎ de la barre de titre pour vous connecter.")
       : "Aucun identifiant : les données restent sur cet appareil uniquement.";
+    $("admBackupInfo").textContent += "  •  Version du programme : " + APP_VERSION;
   }
 
   function renderAdmClasses() {
@@ -3895,7 +3979,7 @@
       var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde du " + jour);
       if (!data) return;
       state = migrate(data);
-      LS.set(KEY_STATE, state); renderAll(); closeAllDialogs();
+      LS.set(KEY_STATE, state); renderAll(); historiqueRAZ(); closeAllDialogs();
       flash("Sauvegarde du " + jour + " restaurée", 3000);
     } catch (e) { flash("Restauration impossible : fichier illisible", 4000); }
   }
@@ -4803,7 +4887,7 @@
       } else if (t.dataset.ct) {
         p.cpos[id] = { t: t.dataset.ct, s: +t.dataset.cs };
       } else return;
-      save(); renderRoom(); hideUndo(); flash("Élève déplacé");
+      act("Déplacement d'élève"); save(); renderRoom(); hideUndo(); flash("Élève déplacé");
       return;
     }
     var s = state.eleves[id], ps = p.pos[id];
@@ -4815,7 +4899,7 @@
       ps.group = +t.dataset.group; ps.order = (t.dataset.order !== undefined ? +t.dataset.order : 999);
     }
     if (s) { s.group = ps.group; s.order = ps.order; } // garder l'objet élève synchronisé avec le cache de rendu
-    save(); renderRoom(); hideUndo(); flash("Élève déplacé");
+    act("Déplacement d'élève"); save(); renderRoom(); hideUndo(); flash("Élève déplacé");
   }
   function endDrag() {
     if (drag && drag.clone) drag.clone.remove(); if (drag && drag.seat) drag.seat.classList.remove("dragging-src");
@@ -5140,7 +5224,7 @@
         var blob = JSON.parse(e.target.result);
         var data = await dechiffrerOuDemanderPhrase(blob, "Ce fichier de sauvegarde");
         if (!data) return;
-        state = migrate(data); save(); renderAll(); closeAllDialogs(); flash("Sauvegarde restaurée");
+        state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée");
       } catch (err) { flash("Fichier illisible"); }
     };
     reader.readAsText(file);
@@ -5230,10 +5314,22 @@
       flash("Nouveau cours : Cours " + (mat().courseIndex + 1));
     });
     $("modeSeg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.m); }); });
-    $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée — " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée — nouvelle disposition"); });
-    $("btnUndo").addEventListener("click", function () { if (restoreSnapshot()) { save(); renderRoom(); hideUndo(); flash("Disposition précédente rétablie"); } else { hideUndo(); } });
+    $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée — " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée — nouvelle disposition"); });
+    $("btnUndo").addEventListener("click", annuler);
+    $("btnRedo").addEventListener("click", retablir);
+    /* Ctrl+Z / Ctrl+Y — inactifs pendant une saisie ou un tirage au sort en cours. */
+    document.addEventListener("keydown", function (e) {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      var c = e.target, tag = c && c.tagName ? c.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select" || (c && c.isContentEditable)) return;
+      if (document.body.classList.contains("tirage")) return;
+      var k = (e.key || "").toLowerCase();
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); annuler(); }
+      else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); retablir(); }
+    });
     $("btnRepair").addEventListener("click", function () {
       var cid = curClassId(); if (!cid) return;
+      act("Correction du placement");
       snapshotPlan(cid);
       // 1) convertir les bavardages notés (duos ayant atteint le seuil) en séparations effectives
       //    et marquer les deux élèves « agité » — c'est ici, sur commande, jamais automatiquement
@@ -5358,6 +5454,7 @@
     if (!state) { try { state = blankState(); } catch (e) { console.error("blankState", e); } }
     try { setMode("suivi"); } catch (e) { console.error("setMode", e); }
     try { renderAll(); } catch (e) { console.error("renderAll", e); }
+    try { historiqueRAZ(); } catch (e) { console.error("historiqueRAZ", e); }
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
