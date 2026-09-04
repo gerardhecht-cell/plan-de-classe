@@ -100,6 +100,14 @@
   .redit-tools button.tool.on{background:#fff; color:var(--ink);}
   .grp-band{position:absolute; left:4px; right:4px; bottom:2px; height:4px; border-radius:2px; z-index:2;}
   .seat.grp-sel{outline:3px solid #7c3aad; outline-offset:1px;}
+  /* Groupes d'activité affichés sur le plan : pastille en haut à droite + liseré de couleur */
+  .seat .actg{position:absolute; top:6px; right:7px; z-index:3; color:#fff; font-size:.6rem; font-weight:800;
+              border-radius:6px; padding:1px 5px; letter-spacing:.02em; box-shadow:0 1px 2px rgba(0,0,0,.22);}
+  .seat.has-actg{box-shadow:inset 4px 0 0 var(--actg-c);}
+  .actgbar{background:#0e7fa8; color:#fff; padding:7px 16px; font-size:.78rem; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .actgbar .dot{width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:4px; vertical-align:-1px;}
+  .actgbar .lg{background:rgba(255,255,255,.16); border-radius:6px; padding:2px 7px; font-weight:800;}
+  .actgbar button{background:#fff; color:#0e7fa8; border-radius:7px; padding:4px 10px; font-weight:800; font-size:.74rem; margin-left:auto;}
 
 
   /* ---------- Salle ---------- */
@@ -533,6 +541,7 @@
 <div class="bavardbar hidden" id="bavardBar"></div>
 <div class="bavardbar hidden" id="roomEditBar" style="background:var(--ink-2)"></div>
 <div class="bavardbar hidden" id="grpBar" style="background:#7c3aad"></div>
+<div class="actgbar hidden" id="actgBar"></div>
 <div class="oralbar hidden" id="oralBar"></div>
 <div class="oralbar hidden" id="leconBar" style="background:#2f6fb0"></div>
 
@@ -633,6 +642,7 @@
         <label style="margin:0">Nombre de groupes</label>
         <select id="actN"></select>
         <button class="admbtn ok" id="actAuto">⚄ Composer automatiquement</button>
+        <button class="admbtn ok" id="actAfficher">👁 Afficher sur le plan</button>
         <button class="admbtn" id="actManuel">✋ Sur le plan</button>
       </div>
       <p class="hint" id="actInfo"></p>
@@ -2415,7 +2425,7 @@
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04";
+  var APP_VERSION = "2026-09-04-c";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -3354,6 +3364,41 @@
   /* ==================== GROUPES NOMMÉS (sélection directe) ==================== */
   var grpMode = null; // null | {gid}
   var GRP_COLORS = ["#7c3aad", "#0e7fa8", "#c05621", "#2f855a", "#b7327a", "#5a67d8", "#8a6d1a", "#c53030"];
+
+  /* ---- Groupes d'activité affichés sur le plan de classe ----
+     La composition vit dans plan(cid).compositionCourante ; montrerGroupes dit
+     si le plan doit la matérialiser (pastille G1, G2… et liseré de couleur). */
+  function compoActive(cid) {
+    if (!cid) return null;
+    var p = plan(cid);
+    return (p.montrerGroupes && p.compositionCourante && p.compositionCourante.length) ? p.compositionCourante : null;
+  }
+  function groupeActivDe(id) {
+    var compo = compoActive(curClassId()); if (!compo) return null;
+    for (var i = 0; i < compo.length; i++) if (compo[i].indexOf(id) >= 0) return { gi: i };
+    return null;
+  }
+  function afficherGroupes(cid, compo) {
+    var p = plan(cid);
+    p.compositionCourante = compo.map(function (g) { return g.slice(); });
+    p.montrerGroupes = true;
+    save(); renderRoom();
+  }
+  function masquerGroupes() {
+    var cid = curClassId(); if (!cid) return;
+    plan(cid).montrerGroupes = false; save(); renderRoom(); flash("Groupes masqués");
+  }
+  function updateActgBar() {
+    var bar = $("actgBar"); if (!bar) return;
+    var compo = compoActive(curClassId());
+    if (!compo) { bar.classList.add("hidden"); return; }
+    bar.classList.remove("hidden");
+    var puces = compo.map(function (g, i) {
+      return '<span class="lg"><span class="dot" style="background:' + GRP_COLORS[i % GRP_COLORS.length] + '"></span>G' + (i + 1) + " · " + g.length + "</span>";
+    }).join(" ");
+    bar.innerHTML = "\uD83D\uDC65 Groupes d'activit\u00e9 sur le plan " + puces + ' <button id="actgHide">Masquer</button>';
+    $("actgHide").addEventListener("click", masquerGroupes);
+  }
   function startGrpFlow() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
     var p = plan(cid);
@@ -3397,6 +3442,7 @@
 
   function renderRoom() {
     var wrap = $("roomWrap"), empty = $("emptyState");
+    updateActgBar();
     if (!state || !curClassId() || !curClass()) { empty.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
     empty.classList.add("hidden"); wrap.classList.remove("hidden");
     var cid = curClassId(), p = plan(cid), n = p.groups, eleves = classEleves(cid);
@@ -3481,6 +3527,18 @@
       '<span class="prenom">' + esc(s.prenom) + "</span>" +
       (past ? '<span class="pastilles">' + past + "</span>" : "") +
       '<span class="tally"><span class="r ' + (tr.neg ? "show" : "") + '">−' + tr.neg + '</span><span class="g ' + (tr.pos ? "show" : "") + '">+' + tr.pos + '</span><span class="q ' + (qtot ? "show" : "") + '">?' + qtot + "</span></span>";
+    // groupes d'activité : pastille G1, G2… en haut à droite + liseré de couleur à gauche
+    var gAct = groupeActivDe(s.id);
+    if (gAct) {
+      var couleur = GRP_COLORS[gAct.gi % GRP_COLORS.length];
+      b.classList.add("has-actg");
+      b.style.setProperty("--actg-c", couleur);
+      var pastille = document.createElement("span");
+      pastille.className = "actg"; pastille.style.background = couleur;
+      pastille.textContent = "G" + (gAct.gi + 1);
+      pastille.title = "Groupe d'activité " + (gAct.gi + 1);
+      b.appendChild(pastille);
+    }
     // groupes nommés : bande colorée en bas + surbrillance si en cours de sélection
     var cid2 = curClassId();
     if (cid2) {
@@ -4351,7 +4409,8 @@
     if (exist) { if (!confirm("Remplacer la configuration « " + nom + " » ?")) return; exist.groupes = data; exist.ts = Date.now(); }
     else p.configsGroupes.push({ id: "cfg_" + Math.random().toString(36).slice(2, 8), nom: nom, ts: Date.now(), groupes: data });
     p.compositionCourante = data; p.dernierNbGroupes = actState.groupes.length;
-    save(); renderActList(); $("actNom").value = "";
+    p.montrerGroupes = true;                     // ce qu'on vient de composer doit se voir sur le plan
+    save(); renderActList(); renderRoom(); $("actNom").value = "";
     flash("Configuration « " + nom + " » enregistrée");
   }
   function renderActList() {
@@ -4368,7 +4427,8 @@
         actState.groupes = c.groupes.map(function (g) { return g.slice(); });
         actState.n = c.groupes.length; actState.sel = null;
         $("actN").value = String(c.groupes.length);
-        renderActBoard(); flash("Configuration « " + c.nom + " » chargée");
+        afficherGroupes(curClassId(), c.groupes);   // charger une config, c'est l'appliquer au plan
+        renderActBoard(); flash("Configuration « " + c.nom + " » chargée et affichée sur le plan", 2800);
       });
       row.querySelector("[data-del]").addEventListener("click", function () {
         if (!confirm("Supprimer la configuration « " + c.nom + " » ?")) return;
@@ -5098,8 +5158,14 @@
         var papRef = sigles.find(function (t) { return t.k === "PAP"; });
         if (papRef) styles.push("border-color:" + papRef.c + ";border-width:2.2px;background:" + pastel(papRef.c, 0.86));
       }
+      var gAct = groupeActivDe(s.id), badge = "";
+      if (gAct) {
+        var cAct = GRP_COLORS[gAct.gi % GRP_COLORS.length];
+        styles.push("box-shadow:inset 4px 0 0 " + cAct);
+        badge = '<u style="background:' + cAct + '">G' + (gAct.gi + 1) + "</u>";
+      }
       var styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
-      return '<div class="pp-seat ' + tcls + '"' + styleAttr + '><b>' + esc(s.nom) + (tr.score > 0 ? " ▲" : tr.score < 0 ? " ▼" : "") + "</b><span>" + esc(s.prenom) + "</span>" +
+      return '<div class="pp-seat ' + tcls + '"' + styleAttr + '>' + badge + "<b>" + esc(s.nom) + (tr.score > 0 ? " ▲" : tr.score < 0 ? " ▼" : "") + "</b><span>" + esc(s.prenom) + "</span>" +
         '<div class="pp-meta"><em>' + sc + " pt" + (sc > 1 ? "s" : "") + "</em>" + (past ? '<span class="pp-past">' + past + "</span>" : "") + "</div></div>";
     }
 
@@ -5152,6 +5218,8 @@
       '.pp-seats{display:grid;gap:5px;padding:7px;grid-auto-rows:minmax(46px,auto)}' +
       '.pp-seats.pp-flow{display:flex;flex-wrap:wrap}' +
       '.pp-seat{border:1.4px solid #bbb;border-radius:7px;padding:4px 6px;line-height:1.12;background:#fff;min-width:0}' +
+      '.pp-seat{position:relative}' +
+      '.pp-seat u{position:absolute;top:3px;right:3px;color:#fff;font-size:7.4px;font-weight:800;border-radius:4px;padding:0 3px;text-decoration:none;line-height:1.5}' +
       '.pp-flow .pp-seat{flex:1 1 110px;max-width:160px}' +
       '.pp-seat b{font-size:.74rem;display:block;word-break:break-word}.pp-seat>span{font-size:.68rem;color:#333}' +
       '.pp-empty{border:1.4px dashed #ddd;border-radius:7px}' +
@@ -5290,6 +5358,12 @@
     $("actAuto").addEventListener("click", function () {
       actState.sel = null; actState.groupes = composerGroupes(actState.n);
       renderActBoard(); flash("Groupes recomposés");
+    });
+    $("actAfficher").addEventListener("click", function () {
+      var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
+      if (!actState.groupes || !actState.groupes.length) { flash("Composez d'abord les groupes"); return; }
+      afficherGroupes(cid, actState.groupes); closeAllDialogs();
+      flash("Groupes affich\u00e9s sur le plan de classe", 2600);
     });
     $("actManuel").addEventListener("click", function () { closeAllDialogs(); startGrpFlow(); });
     $("actSave").addEventListener("click", actEnregistrer);
