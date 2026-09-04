@@ -2447,6 +2447,38 @@
   function recoveryPhrase() { return deviceKeyRaw ? D.toBase32(deviceKeyRaw) : (LS.raw(KEY_DEVICEKEY) || ""); }
   function setKeyFromPhrase(phrase) { var raw = D.fromBase32(phrase); if (raw.length !== 32) throw new Error("phrase invalide"); deviceKeyRaw = raw; LS.setRaw(KEY_DEVICEKEY, D.toBase32(raw)); }
 
+  /* Déchiffre une sauvegarde. Sur un poste neuf la clé locale vient d'être tirée au
+     hasard : elle ne peut pas convenir. On demande alors la phrase de récupération,
+     et si elle fonctionne ce poste l'adopte définitivement — sans quoi la prochaine
+     sauvegarde repartirait avec une clé différente et rendrait le fichier illisible
+     depuis l'autre poste. Renvoie les données, ou null si l'utilisateur renonce. */
+  async function dechiffrerOuDemanderPhrase(blob, contexte) {
+    await ensureDeviceKey();
+    try { return await D.decryptJSON(blob, deviceKeyRaw); } catch (e) { /* clé locale inadaptée */ }
+    var essais = 0;
+    while (essais < 3) {
+      essais++;
+      var phrase = prompt(
+        (contexte || "Cette sauvegarde") + " a été chiffrée sur un autre poste.\n\n" +
+        "Collez votre phrase de récupération.\n" +
+        "Sur votre poste habituel : ⚙︎ Classe → « 🗝️ Afficher ma phrase de récupération ».\n" +
+        (essais > 1 ? "\n⚠ Phrase refusée, nouvel essai (" + essais + "/3).\n" : ""), "");
+      if (phrase === null) { flash("Restauration annulée", 2500); return null; }
+      var raw = D.fromBase32(phrase);
+      if (raw.length !== 32) { flash("Phrase incomplète : recopiez-la en entier, tirets compris.", 4000); continue; }
+      var data = null;
+      try { data = await D.decryptJSON(blob, raw); } catch (err) { data = null; }
+      if (data) {
+        deviceKeyRaw = raw; LS.setRaw(KEY_DEVICEKEY, D.toBase32(raw));
+        flash("Phrase acceptée — ce poste utilise désormais la même clé.", 3500);
+        return data;
+      }
+      flash("Phrase incorrecte pour ce fichier.", 3000);
+    }
+    flash("Déchiffrement abandonné après 3 essais.", 4000);
+    return null;
+  }
+
   /* ---------- Google Drive (drive.file, jeton navigateur via GIS) ---------- */
   var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0, remoteModified: null, timer: null, enCours: false, renewTimer: null };
   var dernierRenouvellement = 0;
@@ -2524,10 +2556,12 @@
     var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
     if (r.status === 401) { onTokenExpired(); return; }
     var blob = await r.json();
-    try { await ensureDeviceKey(); state = migrate(await D.decryptJSON(blob, deviceKeyRaw)); LS.set(KEY_STATE, state);
+    var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde Drive");
+    if (!data) { updateDriveBadge("Phrase requise"); return; }
+    try { state = migrate(data); LS.set(KEY_STATE, state);
       drive.remoteModified = await driveModifiedTime(); dirty = false;
       renderAll(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
-    catch (e) { flash("Drive : déchiffrement impossible (clé/phrase différente)."); }
+    catch (e) { flash("Drive : sauvegarde illisible."); }
   }
   async function driveSyncAfterConnect() {
     var id = await driveFindFile();
@@ -3858,11 +3892,12 @@
     try {
       var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
       var blob = await r.json();
-      await ensureDeviceKey();
-      state = migrate(await D.decryptJSON(blob, deviceKeyRaw));
+      var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde du " + jour);
+      if (!data) return;
+      state = migrate(data);
       LS.set(KEY_STATE, state); renderAll(); closeAllDialogs();
       flash("Sauvegarde du " + jour + " restaurée", 3000);
-    } catch (e) { flash("Restauration impossible : clé ou phrase de récupération différente", 4000); }
+    } catch (e) { flash("Restauration impossible : fichier illisible", 4000); }
   }
 
 
@@ -5103,17 +5138,10 @@
     reader.onload = async function (e) {
       try {
         var blob = JSON.parse(e.target.result);
-        var key = deviceKeyRaw || (LS.raw(KEY_DEVICEKEY) ? D.fromBase32(LS.raw(KEY_DEVICEKEY)) : null);
-        var data;
-        try { if (!key) throw new Error("no key"); data = await D.decryptJSON(blob, key); }
-        catch (err) {
-          var phrase = prompt("Cette sauvegarde a été chiffrée sur un appareil dont la clé n'est pas présente ici.\nCollez votre phrase de récupération :", "");
-          if (!phrase) { flash("Restauration annulée"); return; }
-          data = await D.decryptJSON(blob, D.fromBase32(phrase));
-          LS.setRaw(KEY_DEVICEKEY, D.toBase32(D.fromBase32(phrase))); deviceKeyRaw = D.fromBase32(phrase);
-        }
+        var data = await dechiffrerOuDemanderPhrase(blob, "Ce fichier de sauvegarde");
+        if (!data) return;
         state = migrate(data); save(); renderAll(); closeAllDialogs(); flash("Sauvegarde restaurée");
-      } catch (err) { flash("Fichier illisible ou phrase incorrecte"); }
+      } catch (err) { flash("Fichier illisible"); }
     };
     reader.readAsText(file);
   }
