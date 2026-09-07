@@ -56,6 +56,9 @@
   .seg button{padding:5px 11px; border-radius:7px; font-size:.72rem; font-weight:700; color:#c4ccd0; min-height:28px; white-space:nowrap;}
   .seg button.on{background:#fff; color:var(--ink);}
   .legend{margin-left:auto; display:flex; gap:10px; font-size:.7rem; color:#aeb8bd; flex-wrap:nowrap; white-space:nowrap; padding-left:8px;}
+  /* La barre d'outils prime sur la légende : sous 1850 px celle-ci s'efface plutôt que
+     de pousser les boutons hors champ. La clé de lecture complète figure sur le plan imprimé. */
+  @media (max-width:1960px){ .legend{display:none;} }
   .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
 
   /* ---------- Bandeaux ---------- */
@@ -528,7 +531,7 @@
     <button class="iconbtn" id="btnUndo" title="Annuler la dernière action (Ctrl+Z)" disabled>↩︎ Annuler</button>
     <button class="iconbtn" id="btnRedo" title="Rétablir l'action annulée (Ctrl+Y)" disabled>↪︎ Rétablir</button>
     <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
-    <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes d'activité</button>
+    <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnDashboard" title="Climat et profils de chaque îlot du plan">📊 Tableau de bord</button>
     <button class="iconbtn" id="btnExport">📤 Bilans</button>
@@ -2412,7 +2415,7 @@
   function plan(cid) { var m = mat(); if (!m.plans[cid]) m.plans[cid] = { groups: 5, pos: {} }; var p = m.plans[cid]; if (!p.cpos) p.cpos = {}; if (!p.groupesLibres) p.groupesLibres = []; return p; }
   /* Dispositifs matérialisés par la couleur du cadre de la place, par ordre de priorité.
      Un élève qui cumule PAP et PPS reçoit le cadre du premier, l'autre restant en pastille. */
-  var CADRE_DISPOSITIFS = ["PAP", "PPS"];
+  var CADRE_DISPOSITIFS = ["PAP", "PPS", "PPRE"];
   function cadreDe(s) {
     if (!s || !s.dispositifs) return null;
     for (var i = 0; i < CADRE_DISPOSITIFS.length; i++) {
@@ -2443,7 +2446,7 @@
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04-h";
+  var APP_VERSION = "2026-09-04-i";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -3940,11 +3943,7 @@
     document.body.dataset.mode = m; $("modeSeg").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b.dataset.m === m); });
     $("legend").innerHTML = (m === "competence")
       ? '<span><i style="background:var(--c1)"></i>I</span><span><i style="background:var(--c2)"></i>F</span><span><i style="background:var(--c3)"></i>S</span><span><i style="background:var(--c4)"></i>TS</span>'
-      : '<span><i style="background:var(--green)"></i>tendance +</span><span><i style="background:var(--red)"></i>tendance −</span>'
-        + CADRE_DISPOSITIFS.map(function (k) {
-            var r = (state.refs.dispositifs || []).find(function (t) { return t.k === k; });
-            return r ? '<span><i style="background:transparent;border:2px solid ' + r.c + '"></i>cadre ' + esc(r.k) + '</span>' : "";
-          }).join("");
+      : '<span><i style="background:var(--green)"></i>tendance +</span><span><i style="background:var(--red)"></i>tendance −</span>';
   }
 
   /* ====================== CONFIG / IMPORT ====================== */
@@ -5399,6 +5398,28 @@
         + '<span class="pp-eff">' + list.length + " él. · " + f + "F/" + (list.length - f) + "G</span></h2>" + inner + "</section>";
     }
 
+    /* Clé de lecture imprimée : sans elle, les couleurs ne disent rien à un collègue
+       ou à un remplaçant qui découvre le plan. */
+    function legendeHtml() {
+      var items = [];
+      CADRE_DISPOSITIFS.forEach(function (k) {
+        var r = sigles.find(function (t) { return t.k === k; });
+        if (r && eleves.some(function (s) { return s.dispositifs && s.dispositifs[k]; }))
+          items.push('<span><b style="border:2.2px solid ' + r.c + ';background:' + pastel(r.c, 0.86) + '"></b>place entourée : ' + esc(r.name || r.k) + '</span>');
+      });
+      sigles.forEach(function (t) {
+        if (CADRE_DISPOSITIFS.indexOf(t.k) >= 0) return;
+        if (!eleves.some(function (s) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })) return;
+        items.push('<span><i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + '</i>' + esc(t.name || t.k) + '</span>');
+      });
+      var compo = compoActive(cid);
+      if (compo) compo.forEach(function (grp, gi) {
+        items.push('<span><b style="border:1.4px solid #bbb;box-shadow:inset 4px 0 0 ' + GRP_COLORS[gi % GRP_COLORS.length] + '"></b>groupe d\'activité G' + (gi + 1) + '</span>');
+      });
+      items.push('<span>▲ démarche positive sur 7 jours · ▼ à surveiller · badge bleu = score du cours</span>');
+      return '<div class="pp-leg"><h3>Légende</h3>' + items.join("") + '</div>';
+    }
+
     var roomHtml;
     if (photo) {
       roomHtml = '<div class="pp-room">' + [0, 1, 2, 3, 4].map(groupHtml).join("") + "</div>";
@@ -5437,12 +5458,17 @@
       '.pp-past i{font-style:normal;font-size:.55rem;font-weight:800;color:#fff;border-radius:3px;padding:1px 3px;margin-right:2px}' +
       '.bureau{text-align:center;margin-top:7px}.bureau span{display:inline-block;background:#111;color:#fff;font-weight:800;letter-spacing:.14em;padding:6px 40px;border-radius:8px;font-size:.76rem}' +
       '.pbtn{position:fixed;top:10px;right:12px;background:#2f6fb0;color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}' +
+      '.pp-leg{margin-top:9px;padding-top:6px;border-top:1px solid #ccc;display:flex;flex-wrap:wrap;gap:5px 14px;align-items:center;font-size:.62rem;color:#444;break-inside:avoid}' +
+      '.pp-leg h3{margin:0 6px 0 0;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:#111}' +
+      '.pp-leg span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}' +
+      '.pp-leg b{display:inline-block;width:15px;height:11px;border-radius:3px}' +
+      '.pp-leg i{font-style:normal;font-size:.55rem;font-weight:800;border-radius:3px;padding:1px 3px}' +
       '@media print{.pbtn{display:none}body{padding:0}}' +
       '</style></head><body>' +
       '<button class="pbtn" onclick="window.print()">🖨️ Imprimer</button>' +
-      '<header><h1>Plan de classe — ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + esc(m.nom) + " · " + eleves.length + " élèves · " + new Date().toLocaleDateString("fr-FR") + '</span><span class="lg">▲ démarche positive (7 j) · ▼ à surveiller · badge bleu = score du cours</span></header>' +
+      '<header><h1>Plan de classe — ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + esc(m.nom) + " · " + eleves.length + " élèves · " + new Date().toLocaleDateString("fr-FR") + '</span></header>' +
       '<div class="pp-orient">↑ FOND DE CLASSE</div>' +
-      roomHtml + '<div class="bureau"><span>BUREAU</span></div></body></html>';
+      roomHtml + '<div class="bureau"><span>BUREAU</span></div>' + legendeHtml() + '</body></html>';
     openPrintable(html, "plan_" + slug(state.classes[cid].nom) + "_" + today() + ".html");
   }
 
