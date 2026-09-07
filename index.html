@@ -142,8 +142,8 @@
   .tarr{font-size:.62rem; vertical-align:1px;}
   .tarr.up{color:var(--green);} .tarr.down{color:var(--red);}
   .seat.front{box-shadow:inset 0 -3px 0 #bcd2ea;}
-  .seat.pap-flag{border-color:var(--pap-c); border-width:2px; background:var(--pap-bg);}
-  .seat.pap-flag.front{box-shadow:inset 0 -3px 0 var(--pap-c);}
+  .seat.cadre-bep{border-color:var(--cadre-c); border-width:2px; background:var(--cadre-bg);}
+  .seat.cadre-bep.front{box-shadow:inset 0 -3px 0 var(--cadre-c);}
   .seat .nom{font-weight:800; font-size:1.02rem; line-height:1.2; border-radius:5px; padding:0 3px; margin:0 -3px;
     align-self:stretch; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; word-break:normal;}
   .seat .nom.tend-pos{background:rgba(47,158,111,.26); box-shadow:inset 0 0 0 1px rgba(47,158,111,.5);}
@@ -359,8 +359,8 @@
   body.oral-discret .seat .glasses,
   body.oral-discret .seat .agit,
   body.oral-discret .seat .sepmark{display:none !important;}
-  body.oral-discret .seat.pap-flag{border-color:var(--line) !important; border-width:1.5px !important; background:#fff !important;}
-  body.oral-discret .seat.pap-flag.front{box-shadow:inset 0 -3px 0 #bcd2ea !important;}
+  body.oral-discret .seat.cadre-bep{border-color:var(--line) !important; border-width:1.5px !important; background:#fff !important;}
+  body.oral-discret .seat.cadre-bep.front{box-shadow:inset 0 -3px 0 #bcd2ea !important;}
 
   body.tirage .seat > *:not(.nom):not(.prenom){display:none !important;}
   body.tirage .seat .tarr{display:none !important;}          /* flèches de tendance */
@@ -2410,6 +2410,20 @@
     return m.eleveData[eleveId];
   }
   function plan(cid) { var m = mat(); if (!m.plans[cid]) m.plans[cid] = { groups: 5, pos: {} }; var p = m.plans[cid]; if (!p.cpos) p.cpos = {}; if (!p.groupesLibres) p.groupesLibres = []; return p; }
+  /* Dispositifs matérialisés par la couleur du cadre de la place, par ordre de priorité.
+     Un élève qui cumule PAP et PPS reçoit le cadre du premier, l'autre restant en pastille. */
+  var CADRE_DISPOSITIFS = ["PAP", "PPS"];
+  function cadreDe(s) {
+    if (!s || !s.dispositifs) return null;
+    for (var i = 0; i < CADRE_DISPOSITIFS.length; i++) {
+      var k = CADRE_DISPOSITIFS[i];
+      if (s.dispositifs[k]) {
+        var ref = (state.refs.dispositifs || []).find(function (t) { return t.k === k; });
+        if (ref) return ref;
+      }
+    }
+    return null;
+  }
   function customOn(cid) { var p = plan(cid); return !!(p.custom && p.custom.on && p.custom.desk); }
   function eleveBep(s) {
     if (!s) return false;
@@ -2429,7 +2443,7 @@
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04-g";
+  var APP_VERSION = "2026-09-04-h";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -3586,11 +3600,15 @@
     var b = document.createElement("button"); b.className = "seat"; b.dataset.id = s.id; b.dataset.c = compTint(s.id);
     if (eleveBep(s) || s.glasses) b.classList.add("front");
     if (tr.score < 0) b.classList.add("neg"); else if (tr.score > 0) b.classList.add("pos");
-    if (s.dispositifs && s.dispositifs.PAP) {
-      var papRef = state.refs.dispositifs.find(function (t) { return t.k === "PAP"; });
-      if (papRef) { b.classList.add("pap-flag"); b.style.setProperty("--pap-c", papRef.c); b.style.setProperty("--pap-bg", pastel(papRef.c, 0.86)); }
+    var cadre = cadreDe(s);
+    if (cadre) {
+      b.classList.add("cadre-bep");
+      b.style.setProperty("--cadre-c", cadre.c);
+      b.style.setProperty("--cadre-bg", pastel(cadre.c, 0.86));
+      b.title = cadre.name || cadre.k;
     }
-    var pastSrc = state.refs.troubles.concat(state.refs.dispositifs).filter(function (t) { return t.k !== "PAP"; }); // PAP déjà signalé par le cadre
+    // le sigle porté par le cadre n'est pas répété en pastille ; les autres le sont
+    var pastSrc = state.refs.troubles.concat(state.refs.dispositifs).filter(function (t) { return !cadre || t.k !== cadre.k; });
     var past = pastSrc.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); }).map(function (t) { var nv = s.bepNiveaux && s.bepNiveaux[t.k]; return '<span class="past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</span>"; }).join("");
     var needComp = mat().sessionComp.length > 0 && !compValidated(s.id);
     var sep = (s.placement && s.placement.separer && s.placement.separer.length) ? '<span class="sepmark" title="À séparer">⇎</span>' : "";
@@ -3922,7 +3940,11 @@
     document.body.dataset.mode = m; $("modeSeg").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b.dataset.m === m); });
     $("legend").innerHTML = (m === "competence")
       ? '<span><i style="background:var(--c1)"></i>I</span><span><i style="background:var(--c2)"></i>F</span><span><i style="background:var(--c3)"></i>S</span><span><i style="background:var(--c4)"></i>TS</span>'
-      : '<span><i style="background:var(--green)"></i>tendance +</span><span><i style="background:var(--red)"></i>tendance −</span>';
+      : '<span><i style="background:var(--green)"></i>tendance +</span><span><i style="background:var(--red)"></i>tendance −</span>'
+        + CADRE_DISPOSITIFS.map(function (k) {
+            var r = (state.refs.dispositifs || []).find(function (t) { return t.k === k; });
+            return r ? '<span><i style="background:transparent;border:2px solid ' + r.c + '"></i>cadre ' + esc(r.k) + '</span>' : "";
+          }).join("");
   }
 
   /* ====================== CONFIG / IMPORT ====================== */
@@ -5334,18 +5356,16 @@
     var caps = D.capsFor(n, eleves.length);
     var GROUP_TITLES = { 0: "devant le bureau", 1: "devant le bureau", 2: "milieu", 3: "milieu", 4: "fond" };
     var sigles = state.refs.troubles.concat(state.refs.dispositifs);
-    var sigleSansPap = sigles.filter(function (t) { return t.k !== "PAP"; });
 
     function seatHtml(s, gridStyle) {
       var tr = trendOf(s.id), sc = scoreCur(s.id);
-      var past = sigleSansPap.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
+      var cadre = cadreDe(s);                       // PAP puis PPS : le sigle qui colore le cadre
+      var past = sigles.filter(function (t) { return !cadre || t.k !== cadre.k; })
+        .filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
         .map(function (t) { var nv = s.bepNiveaux && s.bepNiveaux[t.k]; return '<i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</i>"; }).join("");
       var tcls = tr.score > 0 ? "pp-up" : (tr.score < 0 ? "pp-down" : "");
       var styles = gridStyle ? [gridStyle] : [];
-      if (s.dispositifs && s.dispositifs.PAP) {
-        var papRef = sigles.find(function (t) { return t.k === "PAP"; });
-        if (papRef) styles.push("border-color:" + papRef.c + ";border-width:2.2px;background:" + pastel(papRef.c, 0.86));
-      }
+      if (cadre) styles.push("border-color:" + cadre.c + ";border-width:2.2px;background:" + pastel(cadre.c, 0.86));
       var gAct = groupeActivDe(s.id), badge = "";
       if (gAct) {
         var cAct = GRP_COLORS[gAct.gi % GRP_COLORS.length];
