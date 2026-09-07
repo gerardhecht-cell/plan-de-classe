@@ -423,6 +423,29 @@
   .actchip .who{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .actchip.sel{background:#e8f1fa; border-color:var(--blue); box-shadow:0 0 0 2px rgba(47,111,176,.25);}
   .actchip.bad{border-color:var(--red); border-width:2px; background:#fdecec;}
+  .apwrap{max-height:34vh; overflow:auto; border:1px solid var(--line); border-radius:10px; padding:8px;}
+  .apgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:6px;}
+  .apchip{border:1.6px solid var(--line); border-radius:9px; background:#fff; padding:7px 9px; font-size:.8rem;
+          font-weight:600; text-align:left; display:flex; align-items:center; gap:7px; min-height:38px;}
+  .apchip .st{flex:none; width:15px; height:15px; border-radius:4px; border:1.6px solid var(--line); background:#fff;}
+  .apchip.abs{border-color:var(--red); background:#fdecec; color:var(--red);}
+  .apchip.abs .st{background:var(--red); border-color:var(--red);}
+  .apchip small{display:block; font-weight:600; color:var(--muted); font-size:.66rem;}
+  .seat.absent{opacity:.42; filter:grayscale(1);}
+  .seat.absent .actg{right:42px;}
+  .seat .absmark{position:absolute; top:6px; right:7px; z-index:4; background:var(--red); color:#fff;
+                 font-size:.56rem; font-weight:800; border-radius:5px; padding:1px 4px; letter-spacing:.03em;}
+  .bcwrap{max-height:46vh; overflow:auto; border:1px solid var(--line); border-radius:10px;}
+  .bctab{width:100%; border-collapse:collapse; font-size:.82rem;}
+  .bctab th{position:sticky; top:0; background:var(--ink); color:#fff; font-size:.68rem; padding:6px 5px; text-align:center; white-space:nowrap; z-index:1;}
+  .bctab th.el{text-align:left; padding-left:10px;}
+  .bctab td{border-bottom:1px solid var(--line); padding:3px 5px; text-align:center;}
+  .bctab td.el{text-align:left; padding-left:10px; white-space:nowrap; font-weight:600;}
+  .bctab tr:nth-child(even) td{background:#f6f8fa;}
+  .bctab input{width:17px; height:17px; accent-color:var(--blue); cursor:pointer;}
+  .bcrow0 td.el{color:var(--muted); font-weight:500;}
+  .bcbadge{display:inline-block; min-width:22px; border-radius:5px; padding:1px 5px; font-size:.68rem; font-weight:800; color:#fff;}
+  .bcvide{color:var(--red); font-weight:800;}
   .actchip.bad .who::after{content:' ⇎'; color:var(--red); font-weight:900;}
   .actchip .bepdot{flex:none; font-size:.58rem; font-weight:800; border-radius:4px; padding:1px 5px;}
   .actempty{color:var(--muted); font-size:.76rem; padding:6px 4px; font-style:italic;}
@@ -522,18 +545,19 @@
     <button class="iconbtn" id="btnFastLecon" style="background:#2f6fb0">📖 Leçons</button>
     <button class="iconbtn" id="btnFastBavard" style="background:var(--red)">🗣️ Bavardage</button>
     <button class="iconbtn" id="btnNote" style="background:#7d57c4">📝 Annoter</button>
+    <button class="iconbtn" id="btnAppel" style="background:#8a6d1a" title="Appel : noter les élèves absents pour cette heure">📋 Appel</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnComp">🎯 Compétences</button>
     <button class="iconbtn" id="btnCourse">➕ Cours</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger</button>
-    <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe (nouvelle disposition à chaque clic)">⇄ Tout replacer</button>
+    <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe : nouvelle disposition à chaque clic">⇄ Replacer</button>
     <button class="iconbtn" id="btnUndo" title="Annuler la dernière action (Ctrl+Z)" disabled>↩︎ Annuler</button>
     <button class="iconbtn" id="btnRedo" title="Rétablir l'action annulée (Ctrl+Y)" disabled>↪︎ Rétablir</button>
     <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
     <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes</button>
     <span class="vsep"></span>
-    <button class="iconbtn" id="btnDashboard" title="Climat et profils de chaque îlot du plan">📊 Tableau de bord</button>
+    <button class="iconbtn" id="btnDashboard" title="Climat et profils de chaque îlot du plan">📊 Bilan îlots</button>
     <button class="iconbtn" id="btnExport">📤 Bilans</button>
     <button class="iconbtn" id="btnRefs">📚 Listes</button>
     <div class="legend" id="legend"></div>
@@ -596,6 +620,8 @@
       </div>
       <p class="hint">Le sexe d'un élève ajouté est déduit de son prénom. <b>BEP</b> ouvre sa fiche : troubles, dispositifs, niveaux, contraintes de placement et séparations.</p>
 
+      <button class="admbtn" id="admVerifBep" style="width:100%;margin-bottom:10px">🧩 Vérifier et saisir les dispositifs de toutes les classes</button>
+
       <div class="secttl">Sauvegarde Google Drive</div>
       <div id="driveBox">
         <label>Identifiant client Google (Client ID OAuth)</label>
@@ -634,6 +660,49 @@
       <label class="ccheck" style="margin-top:4px"><input type="checkbox" id="recapBepSync" checked><span>Mettre à jour les marques <b>BEP / dispositifs</b> des élèves conservés d'après le fichier (remplace les marques actuelles — le suivi comportement/compétences est intact)</span></label>
       <p class="hint">Les départs présumés ne sont <b>jamais</b> supprimés automatiquement : leur suivi est conservé sauf si vous demandez la suppression.</p>
       <div class="actions"><button class="ghost2" id="recapConfirmDel">Appliquer + retirer les départs</button><button class="primary" id="recapConfirm">Appliquer (conserver tout)</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Appel : absents de l'heure + cumul -->
+<div class="dlg" id="dlgAppel">
+  <div class="panel" style="max-width:820px">
+    <div class="ph">Appel <button class="x" id="dlgAppelX">✕</button></div>
+    <div class="pc">
+      <div class="actbar" style="margin-bottom:8px">
+        <b id="apEntete">—</b>
+        <label style="margin:0 0 0 auto">Durée</label>
+        <select id="apDuree"><option value="1">1 h</option><option value="1.5">1 h 30</option><option value="2">2 h</option></select>
+        <button class="admbtn ok" id="apTousLa">✓ Tout le monde est là</button>
+      </div>
+      <p class="hint">Touchez les élèves <b>absents</b>. L'enregistrement est immédiat ; un élève absent est grisé sur le plan et retiré des tirages au sort.</p>
+      <div class="apwrap"><div class="apgrid" id="apGrid"></div></div>
+      <div class="secttl">Cumul — <span id="apPeriodeNom">trimestre en cours</span></div>
+      <div class="actbar" style="margin-bottom:6px">
+        <label style="margin:0">Période</label>
+        <select id="apPeriode"><option value="tri">Trimestre en cours</option><option value="an">Depuis le début de l'année</option></select>
+      </div>
+      <div class="adm"><div class="admscroll" id="apCumul"></div></div>
+      <div class="actions"><button class="ghost2" id="apPrint">🖨️ Imprimer le relevé</button><button class="primary" id="apClose">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Vérification / saisie rapide des dispositifs -->
+<div class="dlg" id="dlgBepCheck">
+  <div class="panel" style="max-width:900px">
+    <div class="ph">Dispositifs — vérification de toutes les classes <button class="x" id="dlgBepCheckX">✕</button></div>
+    <div class="pc">
+      <div class="secttl">Compte par classe</div>
+      <div class="adm"><div class="admscroll" id="bcResume"></div></div>
+      <p class="hint">Une classe entièrement à zéro signale presque toujours un import où les marques n'ont pas été reprises. Choisissez-la ci-dessous pour saisir directement.</p>
+      <div class="secttl">Saisie rapide — <span id="bcClasseNom">—</span></div>
+      <div class="actbar" style="margin-bottom:8px">
+        <label style="margin:0">Classe</label><select id="bcClasse"></select>
+        <span class="hint" style="margin:0">Cochez, c'est enregistré aussitôt.</span>
+      </div>
+      <div class="bcwrap"><table class="bctab" id="bcTable"></table></div>
+      <div class="actions"><button class="ghost2" id="bcPrint">🖨️ Imprimer la synthèse</button><button class="primary" id="bcClose">Fermer</button></div>
     </div>
   </div>
 </div>
@@ -2444,9 +2513,13 @@
     setRaw: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { _mem["raw_" + k] = v; } }
   };
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
+  /* Horodatage du fichier Drive tel qu'il était lors de la dernière synchronisation RÉUSSIE
+     de CE poste. Conservé en local : sans lui, un poste qui redémarre ne sait pas si le Drive
+     a bougé entre-temps et peut écraser le travail fait ailleurs. */
+  var KEY_REMOTEMOD = "pdc_remotemod";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-04-i";
+  var APP_VERSION = "2026-09-07-b";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -2594,6 +2667,15 @@
   var drive = { token: null, tokenClient: null, fileId: null, expiresAt: 0, remoteModified: null, timer: null, enCours: false, renewTimer: null };
   var dernierRenouvellement = 0;
   function driveConfigured() { return !!GOOGLE_CLIENT_ID; }
+  function remoteModifConnu() { return LS.raw(KEY_REMOTEMOD) || null; }
+  function memoriserRemoteModif(t) { if (t) { LS.setRaw(KEY_REMOTEMOD, t); drive.remoteModified = t; } }
+  /* Le fichier distant a-t-il changé depuis notre dernière synchronisation ?
+     Un horodatage inconnu compte comme « a changé » : on ne présume jamais être à jour. */
+  function distantAChange(distant) {
+    if (!distant) return false;
+    var connu = remoteModifConnu();
+    return !connu || distant > connu;
+  }
   function gisLoaded() { return typeof google !== "undefined" && google.accounts && google.accounts.oauth2; }
   function tokenValid() { return drive.token && Date.now() < drive.expiresAt - 60000; }
   function initDrive() {
@@ -2635,8 +2717,14 @@
   }
   function etatVide() { return !state || !state.classes || Object.keys(state.classes).length === 0; }
   var ecrasementAutorise = false;
-  async function driveSave() {
+  async function driveSave(forcer) {
     if (!tokenValid()) { onTokenExpired(); return; }
+    /* Garde-fou principal : si le fichier Drive a bougé depuis la dernière synchronisation
+       de ce poste, c'est qu'un autre ordinateur a travaillé. On n'écrase jamais à l'aveugle. */
+    if (!forcer && !ecrasementAutorise) {
+      var distantAvant = await driveModifiedTime();
+      if (distantAChange(distantAvant)) { await resoudreConflit(distantAvant); return; }
+    }
     // Sécurité : une application vide ne doit jamais écraser une sauvegarde existante.
     if (etatVide() && !ecrasementAutorise) {
       var idExistant = await driveFindFile();
@@ -2656,10 +2744,41 @@
       var r = await fetch(url, { method: id ? "PATCH" : "POST", headers: { Authorization: "Bearer " + drive.token, "Content-Type": "multipart/related; boundary=" + boundary }, body: multipart });
       if (r.status === 401) { onTokenExpired(); return; }
       var j = await r.json(); if (j.id) drive.fileId = j.id;
-      drive.remoteModified = await driveModifiedTime();
+      memoriserRemoteModif(await driveModifiedTime());
       dirty = false; updateDriveBadge("Sauvegardé " + heureCourte());
       driveBackupRotate();
     } catch (e) { updateDriveBadge("Erreur réseau"); }
+  }
+  /* Copie le fichier Drive actuel sous un nom daté AVANT de l'écraser : même si l'enseignant
+     choisit d'imposer sa version, l'autre n'est jamais perdue. */
+  async function archiverDistantAvantEcrasement() {
+    try {
+      var id = await driveFindFile(); if (!id) return null;
+      var d = new Date();
+      var nom = "plan-de-classe-avant-ecrasement-" + d.toISOString().slice(0, 10)
+        + "-" + String(d.getHours()).padStart(2, "0") + "h" + String(d.getMinutes()).padStart(2, "0") + ".pdc.json";
+      var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "/copy", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + drive.token, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nom })
+      });
+      return r.ok ? nom : null;
+    } catch (e) { return null; }
+  }
+  async function resoudreConflit(distantActuel) {
+    updateDriveBadge("Conflit");
+    var garder = confirm(
+      "La sauvegarde Google Drive a changé depuis la dernière synchronisation de ce poste.\n" +
+      "Un autre ordinateur a probablement travaillé entre-temps.\n\n" +
+      "OK  : récupérer la version du Drive (recommandé).\n" +
+      "Annuler : imposer la version de CE poste — une copie datée de la version Drive sera\n" +
+      "conservée avant remplacement, rien ne sera perdu.");
+    if (garder) { memoriserRemoteModif(distantActuel); await driveLoad(); return; }
+    var archive = await archiverDistantAvantEcrasement();
+    memoriserRemoteModif(distantActuel);
+    ecrasementAutorise = true;
+    try { await driveSave(true); } finally { ecrasementAutorise = false; }
+    flash(archive ? ("Version Drive conservée sous « " + archive + " »") : "Version de ce poste envoyée", 6000);
   }
   async function driveLoad() {
     if (!tokenValid()) { onTokenExpired(); return; }
@@ -2670,16 +2789,22 @@
     var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde Drive");
     if (!data) { updateDriveBadge("Phrase requise"); return; }
     try { state = migrate(data); LS.set(KEY_STATE, state);
-      drive.remoteModified = await driveModifiedTime(); dirty = false;
+      memoriserRemoteModif(await driveModifiedTime()); dirty = false;
       renderAll(); historiqueRAZ(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
     catch (e) { flash("Drive : sauvegarde illisible."); }
   }
   async function driveSyncAfterConnect() {
     var id = await driveFindFile();
-    if (!id) { await driveSave(); return; }
-    drive.remoteModified = await driveModifiedTime();
-    if (etatVide()) { await driveLoad(); return; }      // poste neuf : on récupère, on n'écrase jamais
-    if (dirty) await driveSave(); else await driveLoad();
+    if (!id) { await driveSave(); return; }             // rien sur Drive : on dépose
+    var distant = await driveModifiedTime();
+    if (etatVide()) { memoriserRemoteModif(distant); await driveLoad(); return; }
+    if (distantAChange(distant)) {
+      // le Drive a bougé depuis notre dernière synchro (ou nous ne l'avons jamais synchronisé) :
+      // on récupère, et on ne demande que si du travail non envoyé existe ici.
+      if (dirty) { await resoudreConflit(distant); return; }
+      memoriserRemoteModif(distant); await driveLoad(); return;
+    }
+    if (dirty) await driveSave(); else { memoriserRemoteModif(distant); updateDriveBadge("À jour " + heureCourte()); }
   }
   function heureCourte() { var d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
   async function driveModifiedTime() {
@@ -2698,19 +2823,13 @@
     drive.enCours = true;
     try {
       var distant = await driveModifiedTime();
-      var plusRecentAilleurs = distant && drive.remoteModified && distant > drive.remoteModified;
+      var plusRecentAilleurs = distantAChange(distant);
       if (!distant) { if (dirty) await driveSave(); }
       else if (plusRecentAilleurs && !dirty) {
-        await driveLoad();
+        memoriserRemoteModif(distant); await driveLoad();
         flash("Mise à jour reçue d'un autre poste", 2600);
       } else if (plusRecentAilleurs && dirty) {
-        // modifications des deux côtés : on protège le travail distant avant d'écraser
-        updateDriveBadge("Conflit");
-        if (confirm("Des modifications ont été faites sur un autre poste pendant que vous travailliez ici.\n\n" +
-                    "OK : garder CE poste et écraser l'autre version.\n" +
-                    "Annuler : récupérer la version de l'autre poste et perdre les modifications faites ici.")) {
-          drive.remoteModified = distant; await driveSave();
-        } else { await driveLoad(); }
+        await resoudreConflit(distant);          // travail des deux côtés : arbitrage explicite
       } else if (dirty) await driveSave();
       else updateDriveBadge("À jour " + heureCourte());
     } catch (e) { updateDriveBadge("Hors ligne"); }
@@ -2721,7 +2840,9 @@
     drive.timer = setInterval(function () { driveSync("minuterie"); }, 180000);   // 3 minutes
   }
   document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) driveSync("retour");            // reprise d'un onglet : on se remet à jour tout de suite
+    if (document.hidden) return;
+    driveSync("retour");                                  // reprise d'un onglet : on se remet à jour tout de suite
+    try { tickEmploiDuTemps(); } catch (e) {}             // et l'heure a pu changer pendant l'absence
   });
   window.addEventListener("focus", function () { driveSync("focus"); });
   function scheduleDriveSave() { if (!driveConfigured()) return; if (!tokenValid()) { renouvellerJeton(); return; } clearTimeout(saveTimer); saveTimer = setTimeout(driveSave, 1200); }
@@ -3190,8 +3311,64 @@
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
     $("btnCourse").innerHTML = "➕ Cours " + ((m.courseIndex || 0) + 1);
     var par = D.weekParity(m.calage, new Date());
-    $("weekBadge").innerHTML = "Sem. " + par; $("weekBadge").dataset.p = par;
+    $("weekBadge").dataset.p = par;
+    majHorloge(par);
     updateDriveBadge();
+  }
+
+  /* ============ HORLOGE ET BASCULE AUTOMATIQUE DE CLASSE ============
+     Le badge de semaine porte aussi l'heure et le créneau en cours. Toutes les 30 secondes,
+     l'application compare le créneau de l'emploi du temps à la classe affichée et bascule
+     d'elle-même — jamais au milieu d'une saisie, et jamais contre un choix manuel. */
+  var creneauApplique = null, horlogeTimer = null;
+  function creneauCourant(quand) {
+    quand = quand || new Date();
+    if (!state) return null;
+    var m = mat(); if (!m) return null;
+    var par = D.weekParity(m.calage, quand);
+    var jour = ((quand.getDay() + 6) % 7) + 1;
+    var mins = quand.getHours() * 60 + quand.getMinutes();
+    var grille = (m.edt && m.edt[par] && m.edt[par][jour]) || {};
+    var best = null, bestStart = -1, bestKey = null;
+    Object.keys(grille).forEach(function (debut) {
+      var q = debut.split(":"), sm = (+q[0]) * 60 + (+q[1] || 0);
+      if (sm <= mins && mins < sm + 90 && sm > bestStart) { bestStart = sm; best = grille[debut]; bestKey = par + "-" + jour + "-" + debut; }
+    });
+    if (!best || !state.classes[best]) return null;
+    return { cle: bestKey, cid: best, debut: bestStart };
+  }
+  function majHorloge(par) {
+    var el = $("weekBadge"); if (!el || !state) return;
+    if (par === undefined) par = D.weekParity(mat().calage, new Date());
+    var cr = creneauCourant();
+    el.innerHTML = "Sem. " + par + " · " + heureCourte() + (cr ? " · " + esc(state.classes[cr.cid].nom) : "");
+    el.title = cr
+      ? ("Cours en ce moment : " + state.classes[cr.cid].nom + " — clic pour ouvrir l'emploi du temps")
+      : "Aucun cours à cette heure d'après l'emploi du temps — clic pour l'ouvrir";
+  }
+  function saisieEnCours() {
+    return !!(bavardMode || oralMode || leconMode || grpMode || roomEdit)
+      || document.body.classList.contains("tirage")
+      || !!document.querySelector(".dlg.open");
+  }
+  function tickEmploiDuTemps() {
+    if (!state) return;
+    majHorloge();
+    var cr = creneauCourant();
+    if (!cr) { creneauApplique = null; return; }
+    if (cr.cle === creneauApplique) return;      // créneau déjà traité, ou classe choisie à la main
+    if (saisieEnCours()) return;                 // on ne coupe jamais une saisie en cours
+    creneauApplique = cr.cle;
+    if (curClassId() === cr.cid) return;
+    state.uiPrefs.classeActive = cr.cid;
+    act("Changement de classe (emploi du temps)");
+    save(); renderAll();
+    flash("Créneau suivant — classe " + state.classes[cr.cid].nom + " affichée", 3200);
+  }
+  function demarrerHorloge() {
+    if (horlogeTimer) clearInterval(horlogeTimer);
+    tickEmploiDuTemps();
+    horlogeTimer = setInterval(tickEmploiDuTemps, 30000);
   }
   var GROUP_TITLES = { 0: "devant le bureau", 1: "devant le bureau", 2: "milieu", 3: "milieu", 4: "fond" };
   function openDashboard() {
@@ -3603,6 +3780,8 @@
     var b = document.createElement("button"); b.className = "seat"; b.dataset.id = s.id; b.dataset.c = compTint(s.id);
     if (eleveBep(s) || s.glasses) b.classList.add("front");
     if (tr.score < 0) b.classList.add("neg"); else if (tr.score > 0) b.classList.add("pos");
+    var estAbsent = estAbsentMaintenant(s.id);
+    if (estAbsent) b.classList.add("absent");
     var cadre = cadreDe(s);
     if (cadre) {
       b.classList.add("cadre-bep");
@@ -3624,6 +3803,11 @@
       '<span class="prenom">' + esc(s.prenom) + "</span>" +
       (past ? '<span class="pastilles">' + past + "</span>" : "") +
       '<span class="tally"><span class="r ' + (tr.neg ? "show" : "") + '">−' + tr.neg + '</span><span class="g ' + (tr.pos ? "show" : "") + '">+' + tr.pos + '</span><span class="q ' + (qtot ? "show" : "") + '">?' + qtot + "</span></span>";
+    if (estAbsent) {
+      var mk = document.createElement("span"); mk.className = "absmark";
+      mk.textContent = "ABS"; mk.title = "Absent(e) à cette heure";
+      b.appendChild(mk);
+    }
     // groupes d'activité : pastille G1, G2… en haut à droite + liseré de couleur à gauche
     var gAct = groupeActivDe(s.id);
     if (gAct) {
@@ -3743,6 +3927,16 @@
       html += '<div class="nocomp">Aucune compétence de séance. <button id="pickComp">Choisir (2 max)</button></div>';
     }
 
+    // Absences (uniquement si l'élève en a)
+    var cumEl = cumulAbsences(curClassId(), "tri")[s.id];
+    var cumAn = cumulAbsences(curClassId(), "an")[s.id];
+    if (cumAn && cumAn.seances) {
+      html += '<div class="block"><h4><span class="dot" style="background:#8a6d1a"></span>Absences</h4>'
+        + '<div class="crow"><span class="cname"><b>' + (cumEl ? cumEl.seances : 0) + ' cours</b> manqués ce trimestre — '
+        + heuresTxt(cumEl ? cumEl.heures : 0) + "</span></div>"
+        + '<div class="crow"><span class="cname">' + cumAn.seances + " sur l'année — " + heuresTxt(cumAn.heures) + "</span></div>"
+        + '<p class="hint">' + esc(cumAn.dates.slice(-8).join(" · ")) + "</p></div>";
+    }
     // Attitude positive (vert) puis négative (rouge)
     html += behaviorBlock("pos", "Attitude positive", "var(--green)", d);
     html += behaviorBlock("neg", "Comportement à reprendre", "var(--red)", d);
@@ -3936,6 +4130,228 @@
     body.querySelectorAll(".cbtn").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.ct, t = s.placement.types; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
     body.querySelectorAll(".sepbtn[data-sep]").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.sep, t = s.placement.separer; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
     body.querySelectorAll(".sepbtn[data-far]").forEach(function (b) { b.addEventListener("click", function () { var id = b.dataset.far; if (!s.placement.eloigner) s.placement.eloigner = []; var t = s.placement.eloigner; var i = t.indexOf(id); if (i >= 0) t.splice(i, 1); else t.push(id); b.classList.toggle("on", t.indexOf(id) >= 0); save(); refreshSeat(s.id); }); });
+  }
+
+  /* ====================== APPEL : ABSENTS DE L'HEURE ET CUMUL ======================
+     Une séance = un enregistrement { date, heure de début, durée, liste des absents }, rangé
+     dans le plan de la classe. Les cumuls par élève en découlent : nombre de séances manquées,
+     nombre d'heures, et les dates. Le trimestre suit le découpage scolaire courant :
+     T1 septembre→décembre, T2 janvier→mars, T3 avril→août. */
+  function appels(cid) { var p = plan(cid); if (!p.appels) p.appels = []; return p.appels; }
+  function jourISO(d) { d = d || new Date(); return d.toISOString().slice(0, 10); }
+  function trimestreDe(iso) {
+    var m = +String(iso).slice(5, 7);
+    if (m >= 9) return String(iso).slice(0, 4) + "-T1";
+    if (m <= 3) return (+String(iso).slice(0, 4) - 1) + "-T2";
+    return (+String(iso).slice(0, 4) - 1) + "-T3";
+  }
+  function anneeScolaireDe(iso) {
+    var y = +String(iso).slice(0, 4), m = +String(iso).slice(5, 7);
+    return (m >= 9 ? y : y - 1) + "-" + (m >= 9 ? y + 1 : y);
+  }
+  function libelleTrimestre(t) { return "Trimestre " + t.slice(-1) + " (" + t.slice(0, 4) + "-" + (+t.slice(0, 4) + 1) + ")"; }
+  /* La séance en cours : celle du créneau de l'emploi du temps, sinon l'heure ronde courante. */
+  function seanceCourante(cid) {
+    var cr = creneauCourant();
+    var d = new Date();
+    var h = cr ? (String(Math.floor(cr.debut / 60)).padStart(2, "0") + ":" + String(cr.debut % 60).padStart(2, "0"))
+               : (String(d.getHours()).padStart(2, "0") + ":00");
+    var jour = jourISO(d);
+    var liste = appels(cid);
+    var trouve = liste.filter(function (a2) { return a2.d === jour && a2.h === h; })[0];
+    if (!trouve) { trouve = { d: jour, h: h, dur: 1, abs: [] }; liste.push(trouve); }
+    return trouve;
+  }
+  function estAbsentMaintenant(eid) {
+    var cid = curClassId(); if (!cid) return false;
+    var jour = jourISO(), cr = creneauCourant();
+    var d = new Date();
+    var h = cr ? (String(Math.floor(cr.debut / 60)).padStart(2, "0") + ":" + String(cr.debut % 60).padStart(2, "0"))
+               : (String(d.getHours()).padStart(2, "0") + ":00");
+    return appels(cid).some(function (a2) { return a2.d === jour && a2.h === h && a2.abs.indexOf(eid) >= 0; });
+  }
+  function cumulAbsences(cid, periode) {
+    var ref = jourISO(), tri = trimestreDe(ref), an = anneeScolaireDe(ref), out = {};
+    classEleves(cid).forEach(function (e) { out[e.id] = { seances: 0, heures: 0, dates: [] }; });
+    appels(cid).forEach(function (a2) {
+      if (periode === "tri" && trimestreDe(a2.d) !== tri) return;
+      if (periode === "an" && anneeScolaireDe(a2.d) !== an) return;
+      (a2.abs || []).forEach(function (eid) {
+        if (!out[eid]) return;
+        out[eid].seances++;
+        out[eid].heures += (+a2.dur || 1);
+        out[eid].dates.push(a2.d + " " + a2.h);
+      });
+    });
+    return out;
+  }
+  function heuresTxt(h) {
+    var ent = Math.floor(h), dem = Math.round((h - ent) * 60);
+    return ent + " h" + (dem ? " " + String(dem).padStart(2, "0") : "");
+  }
+  function openAppel() {
+    var cid = curClassId(); if (!cid) { flash("Aucune classe affichée"); return; }
+    var se = seanceCourante(cid);
+    $("apDuree").value = String(se.dur || 1);
+    var d = new Date();
+    $("apEntete").textContent = state.classes[cid].nom + " · " + d.toLocaleDateString("fr-FR") + " · " + se.h;
+    renderAppelGrid(); renderAppelCumul();
+    closeAllDialogs(); $("dlgAppel").classList.add("open");
+  }
+  function renderAppelGrid() {
+    var cid = curClassId(); if (!cid) return;
+    var se = seanceCourante(cid), box = $("apGrid");
+    var cum = cumulAbsences(cid, "tri");
+    box.innerHTML = "";
+    classEleves(cid).slice().sort(function (a2, b2) { return a2.nom.localeCompare(b2.nom); }).forEach(function (e) {
+      var absent = se.abs.indexOf(e.id) >= 0;
+      var c = cum[e.id] || { seances: 0 };
+      var b = document.createElement("button");
+      b.className = "apchip" + (absent ? " abs" : "");
+      b.innerHTML = '<span class="st"></span><span>' + esc(e.nom) + " " + esc(e.prenom)
+        + (c.seances ? "<small>" + c.seances + " absence" + (c.seances > 1 ? "s" : "") + " ce trimestre</small>" : "") + "</span>";
+      b.addEventListener("click", function () {
+        var i = se.abs.indexOf(e.id);
+        if (i >= 0) se.abs.splice(i, 1); else se.abs.push(e.id);
+        act((i >= 0 ? "Présence" : "Absence") + " — " + e.prenom + " " + e.nom);
+        save(); refreshSeat(e.id); renderAppelGrid(); renderAppelCumul();
+      });
+      box.appendChild(b);
+    });
+  }
+  function renderAppelCumul() {
+    var cid = curClassId(); if (!cid) return;
+    var periode = $("apPeriode").value;
+    $("apPeriodeNom").textContent = periode === "an" ? "année scolaire " + anneeScolaireDe(jourISO()) : libelleTrimestre(trimestreDe(jourISO()));
+    var cum = cumulAbsences(cid, periode), box = $("apCumul");
+    box.innerHTML = "";
+    var liste = classEleves(cid).filter(function (e) { return cum[e.id] && cum[e.id].seances; })
+      .sort(function (a2, b2) { return cum[b2.id].seances - cum[a2.id].seances || a2.nom.localeCompare(b2.nom); });
+    if (!liste.length) { box.innerHTML = '<div class="row"><span class="hint">Aucune absence enregistrée sur la période.</span></div>'; return; }
+    liste.forEach(function (e) {
+      var c = cum[e.id];
+      var row = document.createElement("div"); row.className = "row";
+      row.innerHTML = '<span style="flex:1"><b>' + esc(e.nom) + " " + esc(e.prenom) + "</b></span>"
+        + '<span class="nb">' + c.seances + ' cours</span><span class="nb">' + heuresTxt(c.heures) + "</span>"
+        + '<span class="hint" style="max-width:290px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'
+        + esc(c.dates.join(" · ")) + '">' + esc(c.dates.slice(-4).join(" · ")) + "</span>";
+      box.appendChild(row);
+    });
+  }
+  function printAppel() {
+    var cid = curClassId(); if (!cid) return;
+    var periode = $("apPeriode").value;
+    var titre = periode === "an" ? "année scolaire " + anneeScolaireDe(jourISO()) : libelleTrimestre(trimestreDe(jourISO()));
+    var cum = cumulAbsences(cid, periode);
+    var lignes = classEleves(cid).filter(function (e) { return cum[e.id].seances; })
+      .sort(function (a2, b2) { return a2.nom.localeCompare(b2.nom); })
+      .map(function (e) {
+        var c = cum[e.id];
+        return "<tr><td><b>" + esc(e.nom) + " " + esc(e.prenom) + "</b></td><td>" + c.seances + "</td><td>"
+          + heuresTxt(c.heures) + '</td><td class="dt">' + esc(c.dates.join(" · ")) + "</td></tr>";
+      }).join("");
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Absences — '
+      + esc(state.classes[cid].nom) + '</title><style>'
+      + "body{font-family:-apple-system,Segoe UI,sans-serif;margin:22px;color:#111}"
+      + "h1{font-size:1.2rem;margin:0 0 3px}p{color:#555;font-size:.8rem;margin:0 0 14px}"
+      + "table{border-collapse:collapse;width:100%;font-size:.8rem}"
+      + "th,td{border:1px solid #ccc;padding:5px 8px;vertical-align:top}th{background:#1f4e79;color:#fff;text-align:left}"
+      + "td:nth-child(2),td:nth-child(3){text-align:center;white-space:nowrap}.dt{color:#555;font-size:.72rem}"
+      + "</style></head><body><h1>Absences — " + esc(state.classes[cid].nom) + "</h1><p>" + esc(titre)
+      + " · édité le " + new Date().toLocaleString("fr-FR") + "</p>"
+      + "<table><tr><th>Élève</th><th>Cours manqués</th><th>Heures</th><th>Dates</th></tr>"
+      + (lignes || '<tr><td colspan="4">Aucune absence enregistrée.</td></tr>') + "</table></body></html>";
+    openPrintable(html, "absences_" + slug(state.classes[cid].nom) + "_" + today() + ".html");
+  }
+
+  /* ============ VÉRIFICATION ET SAISIE RAPIDE DES DISPOSITIFS ============
+     Un import « conserver tout » sans reprise des marques laisse une classe sans aucun
+     dispositif. Cet écran compte les marques classe par classe — l'anomalie saute aux yeux —
+     et permet de les saisir en une grille de cases à cocher plutôt qu'une fiche par élève. */
+  function openBepCheck() {
+    if (!state || !Object.keys(state.classes).length) { flash("Aucune classe"); return; }
+    var sel = $("bcClasse"); sel.innerHTML = "";
+    Object.keys(state.classes).forEach(function (cid) {
+      sel.innerHTML += '<option value="' + cid + '"' + (cid === curClassId() ? " selected" : "") + ">" + esc(state.classes[cid].nom) + "</option>";
+    });
+    renderBepResume(); renderBepGrid();
+    closeAllDialogs(); $("dlgBepCheck").classList.add("open");
+  }
+  function comptesDispositifs(cid) {
+    var c = {}, eleves = classEleves(cid);
+    state.refs.dispositifs.forEach(function (d) {
+      c[d.k] = eleves.filter(function (e) { return e.dispositifs && e.dispositifs[d.k]; }).length;
+    });
+    c._total = eleves.length;
+    c._marques = eleves.filter(function (e) {
+      return Object.keys(e.dispositifs || {}).some(function (k) { return e.dispositifs[k]; })
+          || Object.keys(e.troubles || {}).some(function (k) { return e.troubles[k]; });
+    }).length;
+    return c;
+  }
+  function renderBepResume() {
+    var box = $("bcResume"); box.innerHTML = "";
+    Object.keys(state.classes).forEach(function (cid) {
+      var c = comptesDispositifs(cid);
+      var puces = state.refs.dispositifs.map(function (d) {
+        return c[d.k] ? '<span class="bcbadge" style="background:' + d.c + ';color:' + textOn(d.c) + '">' + esc(d.k) + " " + c[d.k] + "</span>" : "";
+      }).filter(Boolean).join(" ");
+      var row = document.createElement("div"); row.className = "row";
+      row.innerHTML = '<span style="flex:1"><b>' + esc(state.classes[cid].nom) + "</b> <span class=\"hint\">" + c._total + " élèves</span></span>"
+        + (puces || '<span class="bcvide">aucun dispositif enregistré</span>')
+        + '<button class="admbtn" data-cid="' + cid + '">Saisir</button>';
+      row.querySelector("button").addEventListener("click", function () {
+        $("bcClasse").value = cid; renderBepGrid();
+        $("bcTable").scrollIntoView({ block: "nearest" });
+      });
+      box.appendChild(row);
+    });
+  }
+  function renderBepGrid() {
+    var cid = $("bcClasse").value; if (!cid) return;
+    $("bcClasseNom").textContent = state.classes[cid].nom;
+    var disp = state.refs.dispositifs, tab = $("bcTable");
+    var head = '<tr><th class="el">Élève</th>' + disp.map(function (d) {
+      return '<th style="background:' + d.c + ';color:' + textOn(d.c) + '">' + esc(d.k) + "</th>";
+    }).join("") + "</tr>";
+    var corps = classEleves(cid).slice().sort(function (a2, b2) { return a2.nom.localeCompare(b2.nom); }).map(function (e) {
+      var rien = !disp.some(function (d) { return e.dispositifs && e.dispositifs[d.k]; });
+      return '<tr class="' + (rien ? "bcrow0" : "") + '"><td class="el">' + esc(e.nom) + " " + esc(e.prenom) + "</td>"
+        + disp.map(function (d) {
+            return '<td><input type="checkbox" data-e="' + e.id + '" data-k="' + d.k + '"'
+              + (e.dispositifs && e.dispositifs[d.k] ? " checked" : "") + "></td>";
+          }).join("") + "</tr>";
+    }).join("");
+    tab.innerHTML = head + corps;
+    tab.querySelectorAll("input[type=checkbox]").forEach(function (b) {
+      b.addEventListener("change", function () {
+        var e = state.eleves[b.dataset.e]; if (!e) return;
+        if (!e.dispositifs) e.dispositifs = {};
+        if (b.checked) e.dispositifs[b.dataset.k] = true; else delete e.dispositifs[b.dataset.k];
+        act("Dispositif " + b.dataset.k + " — " + e.prenom + " " + e.nom);
+        save(); refreshSeat(e.id); renderBepResume();
+        b.closest("tr").classList.toggle("bcrow0", !state.refs.dispositifs.some(function (d) { return e.dispositifs[d.k]; }));
+      });
+    });
+  }
+  function printBepCheck() {
+    var lignes = Object.keys(state.classes).map(function (cid) {
+      var c = comptesDispositifs(cid);
+      return "<tr><td><b>" + esc(state.classes[cid].nom) + "</b></td><td>" + c._total + "</td>"
+        + state.refs.dispositifs.map(function (d) { return "<td>" + (c[d.k] || "—") + "</td>"; }).join("")
+        + "<td>" + c._marques + "</td></tr>";
+    }).join("");
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Dispositifs par classe</title><style>'
+      + "body{font-family:-apple-system,Segoe UI,sans-serif;margin:24px;color:#111}"
+      + "h1{font-size:1.2rem;margin:0 0 4px}p{color:#555;font-size:.8rem;margin:0 0 14px}"
+      + "table{border-collapse:collapse;width:100%;font-size:.82rem}"
+      + "th,td{border:1px solid #ccc;padding:5px 8px;text-align:center}th{background:#1f4e79;color:#fff}"
+      + "td:first-child,th:first-child{text-align:left}"
+      + "</style></head><body><h1>Dispositifs par classe</h1><p>" + new Date().toLocaleString("fr-FR") + "</p>"
+      + "<table><tr><th>Classe</th><th>Élèves</th>"
+      + state.refs.dispositifs.map(function (d) { return "<th>" + esc(d.k) + "</th>"; }).join("")
+      + "<th>Élèves marqués</th></tr>" + lignes + "</table></body></html>";
+    openPrintable(html, "dispositifs_" + today() + ".html");
   }
 
   /* ====================== MODE / LÉGENDE ====================== */
@@ -4134,7 +4550,9 @@
       var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde du " + jour);
       if (!data) return;
       state = migrate(data);
-      LS.set(KEY_STATE, state); renderAll(); historiqueRAZ(); closeAllDialogs();
+      LS.set(KEY_STATE, state); dirty = true;
+      LS.setRaw(KEY_REMOTEMOD, "");             // volontairement inconnu : la prochaine synchro arbitrera
+      renderAll(); historiqueRAZ(); closeAllDialogs();
       flash("Sauvegarde du " + jour + " restaurée", 3000);
     } catch (e) { flash("Restauration impossible : fichier illisible", 4000); }
   }
@@ -4145,7 +4563,8 @@
      sur un élève. Pendant toute l'animation, la classe ne voit que NOM et Prénom :
      scores, pastilles BEP, tendances et compteurs sont masqués. */
   function roulettePool(cid, kind) {
-    var eleves = classEleves(cid);
+    var eleves = classEleves(cid).filter(function (s) { return !estAbsentMaintenant(s.id); });
+    if (!eleves.length) eleves = classEleves(cid);     // appel non fait ou classe entière absente
     if (eleves.length < 2) return eleves;
     var champ = (kind === "oral") ? "lastOralTs" : "lastLeconTs";
     var now = Date.now(), RECENT = 20 * 60 * 1000;
@@ -5228,6 +5647,15 @@
   function today() { return new Date().toISOString().slice(0, 10); }
 
   /* Bloc « Annotations » d'un élève dans le bilan imprimable */
+  /* Bloc absences du bilan imprimé, muet si l'élève n'en a aucune. */
+  function absHtml(eid) {
+    var cid = curClassId(); if (!cid) return "";
+    var t = cumulAbsences(cid, "tri")[eid], a2 = cumulAbsences(cid, "an")[eid];
+    if (!a2 || !a2.seances) return "";
+    return '<div class="rp-notes"><h3>Absences</h3><p><b>' + (t ? t.seances : 0) + " cours</b> manqués ce trimestre ("
+      + heuresTxt(t ? t.heures : 0) + ") · <b>" + a2.seances + "</b> sur l'année (" + heuresTxt(a2.heures) + ")</p>"
+      + '<p style="color:#555;font-size:.78rem">' + esc(a2.dates.join(" · ")) + "</p></div>";
+  }
   function notesHtml(eid) {
     var out = [];
     Object.keys(state.matieres).forEach(function (mid) {
@@ -5302,7 +5730,7 @@
         '<div><h3>Attitude positive</h3><p>' + posList + "</p></div>" +
         '<div><h3>Comportement à reprendre</h3><p>' + negList + "</p></div>" +
         '<div class="rp-q2"><h3>Questions & leçons orales</h3><p>Questions : ✓ ' + q.bonne + " · ✗ " + q.mauvaise + " · – " + q.pas + " &nbsp;|&nbsp; Leçons orales : ✓ " + d.oral.bonne + " · ✗ " + d.oral.mauvaise + " · – " + d.oral.pas + "</p></div></div>" +
-        bep +
+        bep + absHtml(s.id) +
         '<div class="rp-chartwrap"><h3>Score par cours</h3><div class="rp-chart">' + bars + "</div></div>" +
         notesHtml(s.id) +
         '<details class="rp-journal"><summary>Journal horodaté (' + log.length + ")</summary><table><thead><tr><th>Date & heure</th><th>Type</th><th>Détail</th></tr></thead><tbody>" + journal + "</tbody></table></details></section>";
@@ -5534,15 +5962,18 @@
 
   /* ====================== DONNÉES DE DÉMONSTRATION ====================== */
   function demoClass() {
-    var NOMS = ["MARTIN", "BERNARD", "THOMAS", "PETIT", "ROBERT", "RICHARD", "DURAND", "DUBOIS", "MOREAU", "LAURENT", "SIMON", "MICHEL", "LEROY", "ROUX", "DAVID", "BERTRAND", "FOURNIER", "GIRARD", "BONNET", "DUPONT", "LAMBERT", "FONTAINE", "ROUSSEAU", "VINCENT", "FAURE"];
-    var PF = ["Emma", "Jade", "Louise", "Alice", "Chloé", "Lina", "Léa", "Manon", "Inès", "Anna", "Camille", "Zoé", "Lola", "Sarah"];
-    var PG = ["Gabriel", "Raphaël", "Léo", "Louis", "Lucas", "Adam", "Arthur", "Hugo", "Jules", "Maël", "Tom", "Nathan", "Noah", "Robin"];
+    /* Identités volontairement impossibles : noms d'étoiles, prénoms numérotés. Aucune chance
+       de les confondre avec un élève réel, ni de polluer une vraie classe par erreur. */
+    var NOMS = ["ORION", "VEGA", "SIRIUS", "ALTAIR", "RIGEL", "ANTARES", "POLARIS", "ALDEBARAN",
+                "CAPELLA", "ARCTURUS", "DENEB", "MIZAR", "BELLATRIX", "ALCOR", "PROCYON", "CANOPUS",
+                "SPICA", "REGULUS", "BETELGEUSE", "ACRUX", "HADAR", "ACHERNAR", "FOMALHAUT", "MARKAB"];
     var n = 24, students = [], fi = 0, gi = 0;
     for (var i = 0; i < n; i++) {
-      var sx = Math.random() < 0.5 ? "F" : "G";
-      students.push({ nom: NOMS[i % NOMS.length], prenom: sx === "F" ? PF[fi++ % PF.length] : PG[gi++ % PG.length], sexe: sx, bepRaw: "" });
+      var sx = (i % 2 === 0) ? "F" : "G";                 // mixité exacte, utile pour la démonstration
+      var num = String((sx === "F" ? ++fi : ++gi)).padStart(2, "0");
+      students.push({ nom: NOMS[i % NOMS.length], prenom: (sx === "F" ? "Élève-F" : "Élève-G") + num, sexe: sx, bepRaw: "" });
     }
-    var cid = uid("c"); state.classes[cid] = { nom: "6e2 démo", eleveIds: [] };
+    var cid = uid("c"); state.classes[cid] = { nom: "DÉMO (exemple)", eleveIds: [] };
     students.forEach(function (stu) { var e = makeEleve(stu); state.eleves[e.id] = e; state.classes[cid].eleveIds.push(e.id); });
     // quelques profils + contraintes
     var ids = state.classes[cid].eleveIds;
@@ -5575,9 +6006,35 @@
   /* ====================== CÂBLAGE ====================== */
   function openExport() { if (!curClassId()) { flash("Aucune classe"); return; } $("dlgExport").classList.add("open"); }
   function wire() {
-    $("classSelect").addEventListener("change", function () { state.uiPrefs.classeActive = this.value; save(); renderAll(); });
+    $("classSelect").addEventListener("change", function () {
+      state.uiPrefs.classeActive = this.value;
+      var cr = creneauCourant();
+      if (cr) creneauApplique = cr.cle;          // choix manuel : on ne le contredit pas avant le créneau suivant
+      save(); renderAll();
+    });
     $("btnStart").addEventListener("click", openConfig);
     $("btnConfig").addEventListener("click", openConfig);
+    $("btnAppel").addEventListener("click", openAppel);
+    $("dlgAppelX").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); });
+    $("apClose").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); renderRoom(); });
+    $("apPeriode").addEventListener("change", renderAppelCumul);
+    $("apPrint").addEventListener("click", printAppel);
+    $("apDuree").addEventListener("change", function () {
+      var cid = curClassId(); if (!cid) return;
+      seanceCourante(cid).dur = +this.value; act("Durée de la séance"); save(); renderAppelCumul();
+    });
+    $("apTousLa").addEventListener("click", function () {
+      var cid = curClassId(); if (!cid) return;
+      var se = seanceCourante(cid);
+      if (se.abs.length) { act("Appel : tout le monde présent"); se.abs = []; save(); }
+      renderAppelGrid(); renderAppelCumul(); renderRoom();
+      flash("Appel enregistré : classe complète", 2400);
+    });
+    $("admVerifBep").addEventListener("click", openBepCheck);
+    $("dlgBepCheckX").addEventListener("click", function () { $("dlgBepCheck").classList.remove("open"); });
+    $("bcClose").addEventListener("click", function () { $("dlgBepCheck").classList.remove("open"); });
+    $("bcClasse").addEventListener("change", renderBepGrid);
+    $("bcPrint").addEventListener("click", printBepCheck);
     $("btnComp").addEventListener("click", openCompPicker);
     $("btnRefs").addEventListener("click", openRefs);
     $("btnExport").addEventListener("click", openExport);
@@ -5625,6 +6082,9 @@
       if (curClassId()) classEleves(curClassId()).forEach(function (st) { refreshSeat(st.id); });
       if (ui.activeEleve && !ui.profileFace) buildTracking(state.eleves[ui.activeEleve]); renderHeader();
       flash("Nouveau cours : Cours " + (mat().courseIndex + 1));
+      if (curClassId()) setTimeout(function () {
+        if (confirm("Nouvelle heure démarrée.\n\nFaire l'appel maintenant ?")) openAppel();
+      }, 250);
     });
     $("modeSeg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.m); }); });
     $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée — " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée — nouvelle disposition"); });
@@ -5710,7 +6170,19 @@
     $("nSave").addEventListener("click", saveNote);
     $("nPrint").addEventListener("click", printNotes);
     wireRecapEditor();
-    $("btnDemo").addEventListener("click", demoClass);
+    $("btnDemo").addEventListener("click", function () {
+      var deja = Object.keys(state.classes || {}).filter(function (c) { return /^DÉMO/.test(state.classes[c].nom); });
+      if (deja.length) {
+        state.uiPrefs.classeActive = deja[0]; save(); renderAll(); closeAllDialogs();
+        flash("La classe de démonstration existe déjà — elle est affichée", 3000);
+        return;
+      }
+      if (!confirm("Créer une classe de DÉMONSTRATION ?\n\n" +
+                   "Élèves fictifs (noms d'étoiles, prénoms numérotés) : aucun risque de confusion\n" +
+                   "avec vos vraies classes. Supprimez-la quand vous voulez avec\n" +
+                   "« 🗑 Supprimer la classe affichée ».")) return;
+      demoClass();
+    });
     $("inFile").addEventListener("change", function (e) { var f = e.target.files[0]; if (f) handleFile(f); e.target.value = ""; });
     // recap
     $("recapConfirm").addEventListener("click", function () { confirmImport(false); });
@@ -5771,6 +6243,7 @@
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
+    try { demarrerHorloge(); } catch (e) { console.error("horloge", e); }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init(); // DOM déjà prêt (script chargé tardivement) : démarrer tout de suite
