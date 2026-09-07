@@ -2371,6 +2371,32 @@
     { k: "AH", name: "TDAH", c: "#ff0000" }, { k: "pHo", name: "Phobie scolaire", c: "#00c8c8" },
     { k: "HP", name: "Haut potentiel", c: "#9dc3e6" }
   ];
+  /* Classe de démonstration : personnages de fiction, aucun risque de confusion avec un élève réel.
+     Aucun de ces patronymes n'est un nom de famille répandu en France. 12 filles, 12 garçons. */
+  var ELEVES_FICTIFS = [
+    { nom: "GRANGER", prenom: "Hermione", sexe: "F" }, { nom: "POTTER", prenom: "Harry", sexe: "G" },
+    { nom: "WEASLEY", prenom: "Ginny", sexe: "F" },    { nom: "WEASLEY", prenom: "Ron", sexe: "G" },
+    { nom: "LOVEGOOD", prenom: "Luna", sexe: "F" },    { nom: "LONDUBAT", prenom: "Neville", sexe: "G" },
+    { nom: "CHANG", prenom: "Cho", sexe: "F" },        { nom: "MALEFOY", prenom: "Drago", sexe: "G" },
+    { nom: "PATIL", prenom: "Parvati", sexe: "F" },    { nom: "FINNIGAN", prenom: "Seamus", sexe: "G" },
+    { nom: "JOHNSON", prenom: "Angelina", sexe: "F" }, { nom: "DIGGORY", prenom: "Cedric", sexe: "G" },
+    { nom: "SPINNET", prenom: "Alicia", sexe: "F" },   { nom: "LUPIN", prenom: "Remus", sexe: "G" },
+    { nom: "ABBOT", prenom: "Hannah", sexe: "F" },     { nom: "ROGUE", prenom: "Severus", sexe: "G" },
+    { nom: "BONES", prenom: "Susan", sexe: "F" },      { nom: "DUMBLEDORE", prenom: "Albus", sexe: "G" },
+    { nom: "TONKS", prenom: "Nymphadora", sexe: "F" }, { nom: "HAGRID", prenom: "Rubeus", sexe: "G" },
+    { nom: "MCGONAGALL", prenom: "Minerva", sexe: "F" }, { nom: "KRUM", prenom: "Viktor", sexe: "G" },
+    { nom: "DELACOUR", prenom: "Fleur", sexe: "F" },   { nom: "ZABINI", prenom: "Blaise", sexe: "G" }
+  ];
+  var NOM_CLASSE_DEMO = "DÉMO — Poudlard";
+  /* Anciennes classes de démonstration produites par les versions précédentes : leurs élèves
+     portaient des patronymes français très courants, source de confusion avec de vrais élèves. */
+  var DEMO_ANCIENS_NOMS_CLASSE = ["6e2 démo", "DÉMO (exemple)"];
+  var DEMO_ANCIENS_PATRONYMES = ["MARTIN", "BERNARD", "THOMAS", "PETIT", "ROBERT", "RICHARD", "DURAND",
+    "DUBOIS", "MOREAU", "LAURENT", "SIMON", "MICHEL", "LEROY", "ROUX", "DAVID", "BERTRAND", "FOURNIER",
+    "GIRARD", "BONNET", "DUPONT", "LAMBERT", "FONTAINE", "ROUSSEAU", "VINCENT", "FAURE",
+    "ORION", "VEGA", "SIRIUS", "ALTAIR", "RIGEL", "ANTARES", "POLARIS", "ALDEBARAN", "CAPELLA",
+    "ARCTURUS", "DENEB", "MIZAR", "BELLATRIX", "ALCOR", "PROCYON", "CANOPUS", "SPICA", "REGULUS",
+    "BETELGEUSE", "ACRUX", "HADAR", "ACHERNAR", "FOMALHAUT", "MARKAB"];
   var DEF_DISPOSITIFS = [
     { k: "PAP", name: "PAP", c: "#ed7d31" }, { k: "PPS", name: "PPS / GEVASCO", c: "#0070c0" },
     { k: "PPRE", name: "PPRE", c: "#70ad47" }, { k: "PAI", name: "PAI", c: "#ffff00" },
@@ -2519,7 +2545,7 @@
   var KEY_REMOTEMOD = "pdc_remotemod";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-07-b";
+  var APP_VERSION = "2026-09-07-e";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
@@ -2598,8 +2624,28 @@
     majBoutonsHistorique();
   }
   function loadLocal() { var s = LS.get(KEY_STATE); if (s && s.eleves) state = migrate(s); }
+  /* Les anciennes classes de démonstration portaient des noms d'élèves français très courants.
+     On les réécrit avec les personnages de fiction, en gardant les identifiants : le plan,
+     le suivi et l'historique restent intacts, seul l'affichage change. */
+  var migrationDemoFaite = false;
+  function migrerAncienneDemo(s) {
+    Object.keys(s.classes || {}).forEach(function (cid) {
+      var cl = s.classes[cid];
+      if (DEMO_ANCIENS_NOMS_CLASSE.indexOf(cl.nom) < 0) return;
+      cl.nom = NOM_CLASSE_DEMO; migrationDemoFaite = true;
+      (cl.eleveIds || []).forEach(function (eid, i) {
+        var e = s.eleves[eid]; if (!e) return;
+        var ancien = DEMO_ANCIENS_PATRONYMES.indexOf(String(e.nom || "").toUpperCase()) >= 0
+                  || /^Élève-[FG]\d+$/.test(String(e.prenom || ""));
+        if (!ancien) return;                       // saisie personnelle : on n'y touche pas
+        var f = ELEVES_FICTIFS[i % ELEVES_FICTIFS.length];
+        e.nom = f.nom; e.prenom = f.prenom; e.sexe = f.sexe;
+      });
+    });
+  }
   function migrate(s) {
     var def = blankState();
+    try { migrerAncienneDemo(s); } catch (e) { /* jamais bloquant */ }
     if (!s.refs) s.refs = def.refs;
     ["troubles", "dispositifs", "amenagements", "contraintesPlacement", "comportements"].forEach(function (k) { if (!s.refs[k]) s.refs[k] = def.refs[k]; });
     // resynchroniser la couleur des sigles CONNUS avec les valeurs à jour (l'app n'expose pas
@@ -3789,8 +3835,9 @@
       b.style.setProperty("--cadre-bg", pastel(cadre.c, 0.86));
       b.title = cadre.name || cadre.k;
     }
-    // le sigle porté par le cadre n'est pas répété en pastille ; les autres le sont
-    var pastSrc = state.refs.troubles.concat(state.refs.dispositifs).filter(function (t) { return !cadre || t.k !== cadre.k; });
+    /* Le sigle reste TOUJOURS lisible en pastille à côté du nom : le cadre coloré s'y ajoute,
+       il ne le remplace pas. Un dispositif doit se lire, pas seulement se deviner. */
+    var pastSrc = state.refs.troubles.concat(state.refs.dispositifs);
     var past = pastSrc.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); }).map(function (t) { var nv = s.bepNiveaux && s.bepNiveaux[t.k]; return '<span class="past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</span>"; }).join("");
     var needComp = mat().sessionComp.length > 0 && !compValidated(s.id);
     var sep = (s.placement && s.placement.separer && s.placement.separer.length) ? '<span class="sepmark" title="À séparer">⇎</span>' : "";
@@ -5786,9 +5833,8 @@
 
     function seatHtml(s, gridStyle) {
       var tr = trendOf(s.id), sc = scoreCur(s.id);
-      var cadre = cadreDe(s);                       // PAP puis PPS : le sigle qui colore le cadre
-      var past = sigles.filter(function (t) { return !cadre || t.k !== cadre.k; })
-        .filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
+      var cadre = cadreDe(s);                       // PAP, PPS ou PPRE : le sigle qui colore le cadre
+      var past = sigles.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
         .map(function (t) { var nv = s.bepNiveaux && s.bepNiveaux[t.k]; return '<i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + (nv ? "·" + nv : "") + "</i>"; }).join("");
       var tcls = tr.score > 0 ? "pp-up" : (tr.score < 0 ? "pp-down" : "");
       var styles = gridStyle ? [gridStyle] : [];
@@ -5962,18 +6008,11 @@
 
   /* ====================== DONNÉES DE DÉMONSTRATION ====================== */
   function demoClass() {
-    /* Identités volontairement impossibles : noms d'étoiles, prénoms numérotés. Aucune chance
-       de les confondre avec un élève réel, ni de polluer une vraie classe par erreur. */
-    var NOMS = ["ORION", "VEGA", "SIRIUS", "ALTAIR", "RIGEL", "ANTARES", "POLARIS", "ALDEBARAN",
-                "CAPELLA", "ARCTURUS", "DENEB", "MIZAR", "BELLATRIX", "ALCOR", "PROCYON", "CANOPUS",
-                "SPICA", "REGULUS", "BETELGEUSE", "ACRUX", "HADAR", "ACHERNAR", "FOMALHAUT", "MARKAB"];
-    var n = 24, students = [], fi = 0, gi = 0;
-    for (var i = 0; i < n; i++) {
-      var sx = (i % 2 === 0) ? "F" : "G";                 // mixité exacte, utile pour la démonstration
-      var num = String((sx === "F" ? ++fi : ++gi)).padStart(2, "0");
-      students.push({ nom: NOMS[i % NOMS.length], prenom: (sx === "F" ? "Élève-F" : "Élève-G") + num, sexe: sx, bepRaw: "" });
-    }
-    var cid = uid("c"); state.classes[cid] = { nom: "DÉMO (exemple)", eleveIds: [] };
+    var FICTIFS = ELEVES_FICTIFS;
+    var students = FICTIFS.map(function (f) {
+      return { nom: f.nom, prenom: f.prenom, sexe: f.sexe, bepRaw: "" };
+    });
+    var cid = uid("c"); state.classes[cid] = { nom: NOM_CLASSE_DEMO, eleveIds: [] };
     students.forEach(function (stu) { var e = makeEleve(stu); state.eleves[e.id] = e; state.classes[cid].eleveIds.push(e.id); });
     // quelques profils + contraintes
     var ids = state.classes[cid].eleveIds;
@@ -5997,7 +6036,7 @@
         for (a = 0; a < nq; a++) { var lvl = 1 + Math.floor(Math.random() * 4); if (Math.random() < 0.6) { d.q.bonne++; d.courseScores[0] = (d.courseScores[0] || 0) + lvl; d.behavior.push({ t: "q", id: "bonne", lvl: lvl, ts: now - s * DAY, ci: 0 }); } else d.q.mauvaise++; }
       }
     });
-    save(); renderAll(); closeAllDialogs(); flash(n + " élèves · classe démo");
+    save(); renderAll(); closeAllDialogs(); flash(students.length + " élèves fictifs · classe de démonstration", 3000);
   }
 
   /* ====================== TOAST ====================== */
@@ -6178,9 +6217,8 @@
         return;
       }
       if (!confirm("Créer une classe de DÉMONSTRATION ?\n\n" +
-                   "Élèves fictifs (noms d'étoiles, prénoms numérotés) : aucun risque de confusion\n" +
-                   "avec vos vraies classes. Supprimez-la quand vous voulez avec\n" +
-                   "« 🗑 Supprimer la classe affichée ».")) return;
+                   "24 personnages de fiction : aucun risque de confusion avec vos vraies classes.\n" +
+                   "Supprimez-la quand vous voulez avec « 🗑 Supprimer la classe affichée ».")) return;
       demoClass();
     });
     $("inFile").addEventListener("change", function (e) { var f = e.target.files[0]; if (f) handleFile(f); e.target.value = ""; });
@@ -6239,6 +6277,7 @@
     if (!state) { try { state = blankState(); } catch (e) { console.error("blankState", e); } }
     try { setMode("suivi"); } catch (e) { console.error("setMode", e); }
     try { renderAll(); } catch (e) { console.error("renderAll", e); }
+    try { if (migrationDemoFaite) save(); } catch (e) { console.error("migrationDemo", e); }
     try { historiqueRAZ(); } catch (e) { console.error("historiqueRAZ", e); }
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
