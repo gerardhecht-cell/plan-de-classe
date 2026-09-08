@@ -644,7 +644,7 @@
       <p class="hint">Excel : <b>un onglet = une classe</b> (le nom de l'onglet devient le nom de la classe). Colonnes repérées par leur <b>intitulé</b> : <b>NOM</b>, <b>Prénom</b>, <b>Sexe</b>, <b>BEP</b> (casse/accents tolérés) — sinon détection automatique sans en-têtes. Réimport en cours d'année = <b>fusion</b> (jamais d'écrasement) avec récapitulatif.</p>
       <p class="hint">🧩 <b>Marques BEP</b> : si vos en-têtes de sigles (Pap, GEVASCO, PPRE, PAI, L…) sont colorés, toute cellule de la ligne d'un élève <b>reprenant la couleur d'un en-tête</b> (prénom fusionné, NOM, ou case de la grille) marque ce sigle. Un <b>chiffre 1 à 5</b> tapé dans la case du sigle indique en plus le <b>niveau</b>. Le récapitulatif reste éditable avant application.</p>
       <label>…ou coller une liste (un élève par ligne : NOM, Prénom, Sexe, BEP)</label>
-      <textarea id="inPaste" placeholder="BONGARD	Sixtine	F&#10;BOUCARD	Charly	G	TDAH"></textarea>
+      <textarea id="inPaste" placeholder="GRANGER	Hermione	F&#10;LONDUBAT	Neville	G	PAP"></textarea>
       <div class="actions"><button class="ghost2" id="btnDemo">Classe démo</button><button class="primary" id="btnBuild">Créer / mettre à jour</button></div>
       <button id="btnDeleteClass" class="hidden" style="width:100%;margin-top:12px;padding:11px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:800;border:1.6px solid var(--red);min-height:44px">🗑 Supprimer la classe affichée (élèves et suivi)</button>
     </div>
@@ -2545,7 +2545,7 @@
   var KEY_REMOTEMOD = "pdc_remotemod";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-07-e";
+  var APP_VERSION = "2026-09-07-f";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
