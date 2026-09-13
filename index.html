@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Plan de classe">
 <meta name="theme-color" content="#1f2a30">
-<title>Plan de classe — Suivi de la classe</title>
+<title>Plan de classe - Suivi de la classe</title>
 <style>
   :root{
     --ink:#1f2a30; --ink-2:#2c3a42; --paper:#f4f2ec; --card:#ffffff;
@@ -159,6 +159,11 @@
   .seat .score{position:absolute; top:7px; left:9px; background:var(--blue); color:#fff; font-size:.6rem; font-weight:800; border-radius:6px; padding:1px 5px; box-shadow:0 1px 2px rgba(0,0,0,.18);}
   #roomInner{transform-origin:top center;}
   .seat .pastilles{display:flex; flex-wrap:wrap; gap:3px; margin-top:3px;}
+  /* Pictogrammes d'aménagement : une bande d'icônes sous les sigles, lisible d'un coup d'oeil. */
+  .seat .amen{display:flex; flex-wrap:wrap; gap:2px; margin-top:3px; align-items:center;}
+  .seat .amen i{font-style:normal; font-size:.82rem; line-height:1.15; background:#eef3f7;
+                border:1px solid #d3dee6; border-radius:5px; padding:0 3px;}
+  .seat .amen i.plus{font-size:.62rem; font-weight:800; color:var(--ink-2); background:transparent; border:none;}
   .past{font-size:.56rem; font-weight:800; color:#fff; border-radius:4px; padding:1px 4px; line-height:1.3; letter-spacing:.02em; text-shadow:0 1px 1px rgba(0,0,0,.25);}
   .seat .tally{display:flex; gap:6px; margin-top:auto; padding-top:3px; font-size:.66rem; font-weight:800;}
   .seat .tally .r{color:var(--red);} .seat .tally .g{color:var(--green);} .seat .tally .q{color:var(--blue);}
@@ -299,6 +304,14 @@
   .am-addedlist{display:flex; flex-direction:column; gap:5px; margin:6px 0;}
   .am-added{display:flex; align-items:center; gap:8px; background:#eef4fb; border:1px solid #cfe0f2; border-radius:8px; padding:6px 9px; font-size:.82rem;}
   .am-added b{flex:1;} .am-del{background:var(--red-bg); color:var(--red); border-radius:6px; width:26px; height:26px; font-weight:800; flex:none;}
+  .am-edit{background:#e7eef6; color:var(--blue-d); border-radius:6px; width:26px; height:26px; font-weight:800; flex:none;}
+  .am-pic{background:#fff; border:1.4px solid #cfe0f2; border-radius:6px; width:30px; height:28px; flex:none; font-size:1rem; line-height:1;}
+  .am-sugg .sp{margin-right:4px;}
+  .picgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:7px;}
+  .picbtn{display:flex; align-items:center; gap:7px; border:1.5px solid var(--line); background:#fff; border-radius:9px;
+          padding:8px 9px; font-size:.74rem; font-weight:600; text-align:left; min-height:40px;}
+  .picbtn .g{font-size:1.15rem; line-height:1;}
+  .picbtn.on{border-color:var(--blue); background:#e8f1fa; box-shadow:0 0 0 2px rgba(47,111,176,.22);}
   .am-addbtn{width:100%; padding:9px; border-radius:9px; border:1.6px dashed var(--blue); color:var(--blue-d); background:#fff; font-weight:800; font-size:.8rem; margin-top:4px;}
   .am-sugglist{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
   .am-sugg{font-size:.76rem; font-weight:700; border:1.5px solid var(--line); background:#fff; color:var(--blue-d); border-radius:8px; padding:7px 10px; min-height:34px;}
@@ -358,6 +371,7 @@
   .glist{max-height:46vh; overflow-y:auto; border:1px solid var(--line); border-radius:10px; background:#fff; margin-top:8px;}
   /* --- Tirage au sort : pendant l'animation, seuls NOM et Prénom restent visibles --- */
   /* Mode Oral : aucune information BEP visible par la classe pendant l'interrogation */
+  body.oral-discret .seat .amen,
   body.oral-discret .seat .pastilles,
   body.oral-discret .seat .glasses,
   body.oral-discret .seat .agit,
@@ -508,6 +522,8 @@
   .refgroup h4{margin:0 0 7px; font-size:.74rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
   .refrow{display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:.84rem;}
   .refrow span{flex:1;} .refdel{background:var(--red-bg); color:var(--red); border-radius:7px; width:30px; height:30px; font-weight:800; flex:none;}
+  .refedit{background:#e7eef6; color:var(--blue-d); border-radius:7px; width:30px; height:30px; font-weight:800; flex:none;}
+  .refpic{background:#fff; border:1.4px solid #cfe0f2; border-radius:7px; width:34px; height:30px; flex:none; font-size:1rem; line-height:1;}
   .refadd{display:flex; gap:6px; margin-top:8px;} .refadd input{flex:1; padding:8px 9px; border:1.5px solid var(--line); border-radius:8px; font-size:.84rem; font-family:inherit;}
   .refadd button{flex:none; background:var(--green); color:#fff; border-radius:8px; width:40px; font-weight:800; min-height:38px;}
 
@@ -530,7 +546,7 @@
   <div class="topbar">
     <div class="brand"><b>Plan de classe</b></div>
     <select class="classchip" id="classSelect" aria-label="Classe active"></select>
-    <span class="weekbadge" id="weekBadge" title="Emploi du temps · semaine paire/impaire">Sem. —</span>
+    <span class="weekbadge" id="weekBadge" title="Emploi du temps · semaine paire/impaire">Sem. -</span>
     <span class="hspace"></span>
     <button class="drivebadge" id="driveBadge" data-s="off">☁︎ Local</button>
     <button class="iconbtn ghost" id="btnConfig">⚙︎ Classe</button>
@@ -564,7 +580,7 @@
   </div>
 </header>
 
-<div class="banner warn hidden" id="reconnect">⚠️ Session Google expirée — vos saisies restent en local.
+<div class="banner warn hidden" id="reconnect">⚠️ Session Google expirée - vos saisies restent en local.
   <button class="bbtn" id="btnReconnect">Se reconnecter</button></div>
 <div class="conflictbar hidden" id="conflictBar"></div>
 <div class="bavardbar hidden" id="bavardBar"></div>
@@ -641,7 +657,7 @@
       </div>
       <label>Importer un classeur Excel (multi-onglets) ou un CSV</label>
       <label class="filebtn">📄 Choisir un fichier (.xlsx / .csv)<input type="file" id="inFile" accept=".xlsx,.xls,.csv,.txt" class="hidden"></label>
-      <p class="hint">Excel : <b>un onglet = une classe</b> (le nom de l'onglet devient le nom de la classe). Colonnes repérées par leur <b>intitulé</b> : <b>NOM</b>, <b>Prénom</b>, <b>Sexe</b>, <b>BEP</b> (casse/accents tolérés) — sinon détection automatique sans en-têtes. Réimport en cours d'année = <b>fusion</b> (jamais d'écrasement) avec récapitulatif.</p>
+      <p class="hint">Excel : <b>un onglet = une classe</b> (le nom de l'onglet devient le nom de la classe). Colonnes repérées par leur <b>intitulé</b> : <b>NOM</b>, <b>Prénom</b>, <b>Sexe</b>, <b>BEP</b> (casse/accents tolérés) - sinon détection automatique sans en-têtes. Réimport en cours d'année = <b>fusion</b> (jamais d'écrasement) avec récapitulatif.</p>
       <p class="hint">🧩 <b>Marques BEP</b> : si vos en-têtes de sigles (Pap, GEVASCO, PPRE, PAI, L…) sont colorés, toute cellule de la ligne d'un élève <b>reprenant la couleur d'un en-tête</b> (prénom fusionné, NOM, ou case de la grille) marque ce sigle. Un <b>chiffre 1 à 5</b> tapé dans la case du sigle indique en plus le <b>niveau</b>. Le récapitulatif reste éditable avant application.</p>
       <label>…ou coller une liste (un élève par ligne : NOM, Prénom, Sexe, BEP)</label>
       <textarea id="inPaste" placeholder="GRANGER	Hermione	F&#10;LONDUBAT	Neville	G	PAP"></textarea>
@@ -657,9 +673,21 @@
     <div class="ph">Récapitulatif avant import <button class="x" id="recapCancel">✕</button></div>
     <div class="pc">
       <div id="recapBody"></div>
-      <label class="ccheck" style="margin-top:4px"><input type="checkbox" id="recapBepSync" checked><span>Mettre à jour les marques <b>BEP / dispositifs</b> des élèves conservés d'après le fichier (remplace les marques actuelles — le suivi comportement/compétences est intact)</span></label>
+      <label class="ccheck" style="margin-top:4px"><input type="checkbox" id="recapBepSync" checked><span>Mettre à jour les marques <b>BEP / dispositifs</b> des élèves conservés d'après le fichier (remplace les marques actuelles - le suivi comportement/compétences est intact)</span></label>
       <p class="hint">Les départs présumés ne sont <b>jamais</b> supprimés automatiquement : leur suivi est conservé sauf si vous demandez la suppression.</p>
       <div class="actions"><button class="ghost2" id="recapConfirmDel">Appliquer + retirer les départs</button><button class="primary" id="recapConfirm">Appliquer (conserver tout)</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Choix d'un pictogramme d'aménagement -->
+<div class="dlg" id="dlgPicto">
+  <div class="panel" style="max-width:560px">
+    <div class="ph">Pictogramme <button class="x" id="dlgPictoX">✕</button></div>
+    <div class="pc">
+      <p class="hint" id="pkTexte">-</p>
+      <div class="picgrid" id="pkGrid"></div>
+      <div class="actions"><button class="ghost2" id="pkAuto">Choix automatique</button><button class="primary" id="pkClose">Fermer</button></div>
     </div>
   </div>
 </div>
@@ -670,14 +698,14 @@
     <div class="ph">Appel <button class="x" id="dlgAppelX">✕</button></div>
     <div class="pc">
       <div class="actbar" style="margin-bottom:8px">
-        <b id="apEntete">—</b>
+        <b id="apEntete">-</b>
         <label style="margin:0 0 0 auto">Durée</label>
         <select id="apDuree"><option value="1">1 h</option><option value="1.5">1 h 30</option><option value="2">2 h</option></select>
         <button class="admbtn ok" id="apTousLa">✓ Tout le monde est là</button>
       </div>
       <p class="hint">Touchez les élèves <b>absents</b>. L'enregistrement est immédiat ; un élève absent est grisé sur le plan et retiré des tirages au sort.</p>
       <div class="apwrap"><div class="apgrid" id="apGrid"></div></div>
-      <div class="secttl">Cumul — <span id="apPeriodeNom">trimestre en cours</span></div>
+      <div class="secttl">Cumul - <span id="apPeriodeNom">trimestre en cours</span></div>
       <div class="actbar" style="margin-bottom:6px">
         <label style="margin:0">Période</label>
         <select id="apPeriode"><option value="tri">Trimestre en cours</option><option value="an">Depuis le début de l'année</option></select>
@@ -691,12 +719,12 @@
 <!-- Vérification / saisie rapide des dispositifs -->
 <div class="dlg" id="dlgBepCheck">
   <div class="panel" style="max-width:900px">
-    <div class="ph">Dispositifs — vérification de toutes les classes <button class="x" id="dlgBepCheckX">✕</button></div>
+    <div class="ph">Dispositifs - vérification de toutes les classes <button class="x" id="dlgBepCheckX">✕</button></div>
     <div class="pc">
       <div class="secttl">Compte par classe</div>
       <div class="adm"><div class="admscroll" id="bcResume"></div></div>
       <p class="hint">Une classe entièrement à zéro signale presque toujours un import où les marques n'ont pas été reprises. Choisissez-la ci-dessous pour saisir directement.</p>
-      <div class="secttl">Saisie rapide — <span id="bcClasseNom">—</span></div>
+      <div class="secttl">Saisie rapide - <span id="bcClasseNom">-</span></div>
       <div class="actbar" style="margin-bottom:8px">
         <label style="margin:0">Classe</label><select id="bcClasse"></select>
         <span class="hint" style="margin:0">Cochez, c'est enregistré aussitôt.</span>
@@ -742,7 +770,7 @@
       <div class="ntabs"><button id="ntNew" class="on">Nouvelle annotation</button><button id="ntHist">Historique</button></div>
 
       <div id="nPaneNew">
-        <label>Élève(s) concerné(s) — plusieurs possibles</label>
+        <label>Élève(s) concerné(s) - plusieurs possibles</label>
         <div class="npick" id="nEleves"></div>
         <label>Nature</label>
         <div class="ncat" id="nCats"></div>
@@ -763,7 +791,7 @@
 
 <div class="dlg" id="dlgGender">
   <div class="panel">
-    <div class="ph">Sexe manquant — un tap <button class="x" id="dlgGenderX">✕</button></div>
+    <div class="ph">Sexe manquant - un tap <button class="x" id="dlgGenderX">✕</button></div>
     <div class="pc">
       <p class="hint" id="gIntro">Attribuez le sexe pour une répartition mixte uniforme. <b>F</b> = fille, <b>G</b> = garçon.</p>
       <div class="glist" id="glist"></div>
@@ -778,7 +806,7 @@
   <div class="panel">
     <div class="ph">Avec qui ? <button class="x" id="dlgAvecQuiX">✕</button></div>
     <div class="pc">
-      <p class="hint">Un tap pour noter avec qui l'échange a eu lieu — ça aide à repérer un placement à corriger. Facultatif, vous pouvez passer.</p>
+      <p class="hint">Un tap pour noter avec qui l'échange a eu lieu - ça aide à repérer un placement à corriger. Facultatif, vous pouvez passer.</p>
       <div class="glist" id="avecQuiList"></div>
       <div class="actions"><button class="ghost2" id="avecQuiSkip">Passer</button></div>
     </div>
@@ -819,12 +847,12 @@
       <div class="edtbar">
         <span class="pill" id="edtParityLabel">Grille : paire</span>
         <button class="iconbtn" id="edtTogglePar" style="background:var(--blue)">↔ Voir paire/impaire</button>
-        <span class="pill" id="edtActive">Semaine en cours : —</span>
+        <span class="pill" id="edtActive">Semaine en cours : -</span>
       </div>
       <div class="edtwrap"><div id="edtGrid"></div></div>
-      <p class="hint">Choisissez la classe de chaque créneau (vide = aucune). Une même case peut différer entre semaine paire et impaire. <b>Cours sur 1,5 séance</b> : sélectionnez la même classe sur les deux créneaux consécutifs — la présélection reste correcte pendant toute la durée.</p>
+      <p class="hint">Choisissez la classe de chaque créneau (vide = aucune). Une même case peut différer entre semaine paire et impaire. <b>Cours sur 1,5 séance</b> : sélectionnez la même classe sur les deux créneaux consécutifs - la présélection reste correcte pendant toute la durée.</p>
       <div class="row2">
-        <div><label>Calage — lundi de référence</label><input type="date" id="calageDate"></div>
+        <div><label>Calage - lundi de référence</label><input type="date" id="calageDate"></div>
         <div><label>… cette semaine est</label><select id="calageParity"><option value="paire">paire</option><option value="impaire">impaire</option></select></div>
       </div>
       <p class="hint">L'alternance paire/impaire de l'établissement ne suit pas toujours le n° de semaine : ce calage fixe le repère, l'app alterne ensuite seule.</p>
@@ -849,7 +877,7 @@
   <div class="panel">
     <div class="ph">📊 Tableau de bord des groupes <button class="x" id="dlgDashboardX">✕</button></div>
     <div class="pc">
-      <p class="hint">Lecture du climat (positif/négatif sur 7 jours) et des profils de chaque groupe, d'après ce que vous notez. <b>Informatif</b> : rien n'est déplacé automatiquement — à vous de décider.</p>
+      <p class="hint">Lecture du climat (positif/négatif sur 7 jours) et des profils de chaque groupe, d'après ce que vous notez. <b>Informatif</b> : rien n'est déplacé automatiquement - à vous de décider.</p>
       <div id="dashBody"></div>
       <p class="hint" style="margin-top:12px">⚡ moteur (s'investit / autonome) · 🤝 aidant (coopère) · 🧩 élève fragile (BEP) · 🗣️ agité. Un profil apparaît après quelques notations.</p>
     </div>
@@ -882,21 +910,21 @@
   <div class="pgpanel">
     <div class="pgtitle" id="pgTitle">Import en cours…</div>
     <div class="pgbar"><i id="pgBar"></i></div>
-    <div class="pgdetail" id="pgDetail">—</div>
+    <div class="pgdetail" id="pgDetail">-</div>
   </div>
 </div>
 
 <!-- Google Identity Services (uniquement pour Drive ; l'app marche sans) -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-/* xlsxlite — lecteur .xlsx autonome, sans dépendance.
+/* xlsxlite - lecteur .xlsx autonome, sans dépendance.
    Décompresse les entrées ZIP (DEFLATE brut), lit les onglets dans l'ordre,
    le nom de l'onglet, et renvoie les lignes/cellules. Suffisant pour des
    listes d'élèves (texte + quelques nombres). ~Aucune écriture.            */
 (function (root) {
   "use strict";
 
-  /* ---------- INFLATE (DEFLATE brut, RFC 1951) — style tinf ---------- */
+  /* ---------- INFLATE (DEFLATE brut, RFC 1951) - style tinf ---------- */
   function Tree() { this.t = new Uint16Array(16); this.trans = new Uint16Array(288); }
   function Data(src) {
     this.s = src; this.i = 0; this.tag = 0; this.bitcount = 0;
@@ -1298,7 +1326,7 @@
 
 </script>
 <script>
-/* domain — logique pure, sans DOM. Testable en Node, réutilisée dans le HTML. */
+/* domain - logique pure, sans DOM. Testable en Node, réutilisée dans le HTML. */
 (function (root) {
   "use strict";
 
@@ -1425,7 +1453,7 @@
       return true;
     }
 
-    // 4) extraire les élèves — 2 passes : repérer les lignes-élèves, puis analyser les couleurs
+    // 4) extraire les élèves - 2 passes : repérer les lignes-élèves, puis analyser les couleurs
     var idxs = [];
     for (var i = 0; i < rows.length; i++) {
       if (i <= headerIdx) continue;
@@ -1591,7 +1619,7 @@
   }
   // Exposition d'un groupe = nombre d'îlots VOISINS qu'il touche dans la salle (disposition à 5
   // groupes uniquement) : les groupes du milieu touchent le fond, l'autre milieu ET le groupe
-  // devant (3 voisins) — position centrale exposée, comme au centre d'un échiquier. Les groupes
+  // devant (3 voisins) - position centrale exposée, comme au centre d'un échiquier. Les groupes
   // devant ou le fond n'en touchent que 2. Sert à éloigner un élève agité du milieu en priorité.
   function groupExposure(n) {
     if (n === 5) return [2, 2, 3, 3, 2];
@@ -1694,7 +1722,7 @@
     });
   }
 // Géométrie exacte des îlots (identique au rendu à l'écran) : la queue du L part à DROITE
-  // pour Lr, à GAUCHE pour Ll — les deux formes ne sont PAS de simples chaînes symétriques,
+  // pour Lr, à GAUCHE pour Ll - les deux formes ne sont PAS de simples chaînes symétriques,
   // il faut la vraie position de chaque place pour calculer qui touche qui.
   function clusterShape(gi, backCap) {
     var Lr = { cells: [{ o: 0, r: 3, c: 1 }, { o: 1, r: 3, c: 2 }, { o: 2, r: 3, c: 3 }, { o: 3, r: 3, c: 4 }, { o: 4, r: 2, c: 4 }, { o: 5, r: 1, c: 4 }] };
@@ -1705,7 +1733,7 @@
     return { cells: cells };
   }
   // Graphe d'adjacence réel (cases qui se touchent, distance de grille = 1) à partir des
-  // coordonnées exactes de chaque place — fonctionne pour n'importe quelle forme d'îlot
+  // coordonnées exactes de chaque place - fonctionne pour n'importe quelle forme d'îlot
   function adjacencyOf(shape) {
     var adj = shape.cells.map(function () { return {}; });
     shape.cells.forEach(function (a) {
@@ -1720,7 +1748,7 @@
   // JAMAIS voisins directs entre eux (pas seulement "au mieux") ; à défaut de place totalement
   // libre de tout voisin déjà choisi, on prend la place ayant le MOINS de voisins au total.
   // Rang "mur de la salle" par emplacement : la vraie place la plus sûre touche le MUR
-  // extérieur (un seul voisin possible, rien de l'autre côté) — tout à gauche du groupe le
+  // extérieur (un seul voisin possible, rien de l'autre côté) - tout à gauche du groupe le
   // plus à gauche d'une rangée (devant/milieu), tout à droite du groupe le plus à droite.
   // 0 = contre le mur (meilleur) ; 1 = queue du L (encore correct) ; 2 = au centre (à éviter).
   function wallRank(gi, capG, photo) {
@@ -1853,7 +1881,7 @@
     });
 
     // 1b) élèves PAP : préférence de proximité (groupes les plus proches du bureau d'abord,
-    // au pire le niveau de proximité suivant = second rang) — préférence souple, sans conflit signalé
+    // au pire le niveau de proximité suivant = second rang) - préférence souple, sans conflit signalé
     var proxLevels = prox.slice().filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
     papSoft.forEach(function (s) {
       var placed = false;
@@ -2326,7 +2354,7 @@
 </script>
 <script>
 /* ============================================================================
-   Plan de classe — application (état / logique / rendu / interactions)
+   Plan de classe - application (état / logique / rendu / interactions)
    Modules autonomes : PDC (domain), XLSXLite (lecteur Excel). Aucun CDN.
    Modèle à 4 niveaux : 1) élève partagé · 2) élève×matière · 3) transversal
    (calculé) · 4) enseignant (plan, compétences, notation, emploi du temps).
@@ -2387,10 +2415,12 @@
     { nom: "MCGONAGALL", prenom: "Minerva", sexe: "F" }, { nom: "KRUM", prenom: "Viktor", sexe: "G" },
     { nom: "DELACOUR", prenom: "Fleur", sexe: "F" },   { nom: "ZABINI", prenom: "Blaise", sexe: "G" }
   ];
-  var NOM_CLASSE_DEMO = "DÉMO — Poudlard";
+  var NOM_CLASSE_DEMO = "DÉMO - Poudlard";
   /* Anciennes classes de démonstration produites par les versions précédentes : leurs élèves
      portaient des patronymes français très courants, source de confusion avec de vrais élèves. */
-  var DEMO_ANCIENS_NOMS_CLASSE = ["6e2 démo", "DÉMO (exemple)"];
+  /* Le nom actuel n'y figure pas : sinon la migration se redéclencherait à chaque ouverture
+     et provoquerait un enregistrement inutile au démarrage. */
+  var DEMO_ANCIENS_NOMS_CLASSE = ["6e2 démo", "DÉMO (exemple)", "DÉMO \u2014 Poudlard"];
   var DEMO_ANCIENS_PATRONYMES = ["MARTIN", "BERNARD", "THOMAS", "PETIT", "ROBERT", "RICHARD", "DURAND",
     "DUBOIS", "MOREAU", "LAURENT", "SIMON", "MICHEL", "LEROY", "ROUX", "DAVID", "BERTRAND", "FOURNIER",
     "GIRARD", "BONNET", "DUPONT", "LAMBERT", "FONTAINE", "ROUSSEAU", "VINCENT", "FAURE",
@@ -2419,6 +2449,51 @@
     ULIS: "Inclusion ULIS · adapter supports et objectifs, lien coordonnateur.",
     AESH: "Accompagnement humain · cadrer le rôle de l'AESH selon la notification."
   };
+  /* ---- Pictogrammes d'aménagement ----
+     Chaque aménagement porte une icône, visible sur la place de l'élève : d'un coup d'oeil on sait
+     qui a un tiers-temps, qui ne doit pas copier, qui a besoin d'une police agrandie.
+     L'icône vient d'abord du choix de l'enseignant, sinon de mots-clés, sinon d'un jeton neutre. */
+  var PICTOS = [
+    { i: "⏱", lab: "Temps majoré, tiers-temps" },
+    { i: "✍", lab: "Copie réduite, traces fournies" },
+    { i: "🔠", lab: "Police agrandie, support aéré" },
+    { i: "🗣", lab: "Consignes orales en plus de l'écrit" },
+    { i: "🎤", lab: "Privilégier l'oral" },
+    { i: "🧮", lab: "Calculatrice autorisée" },
+    { i: "🖥", lab: "Ordinateur, clavier, DAO" },
+    { i: "📋", lab: "Support ou trace fourni" },
+    { i: "🪑", lab: "Place adaptée, près du bureau" },
+    { i: "🤝", lab: "Tutorat, binôme aidant" },
+    { i: "🔤", lab: "Orthographe non pénalisée" },
+    { i: "🧩", lab: "Tâche fractionnée, étapes" },
+    { i: "👁", lab: "Appui visuel, pictogrammes" },
+    { i: "🔇", lab: "Environnement calme, casque" },
+    { i: "⏸", lab: "Pauses autorisées" },
+    { i: "🚪", lab: "Sortie autorisée" },
+    { i: "📐", lab: "Matériel adapté" },
+    { i: "⭐", lab: "Valorisation, encouragement" }
+  ];
+  var PICTO_MOTS = [
+    [/tiers.?temps|temps major|majoration de temps|plus de temps/i, "⏱"],
+    [/copi|prise de note|notes?\b|ecrire moins|écrire moins/i, "✍"],
+    [/agrandi|police|aere|aéré|taille de (la )?police|interligne/i, "🔠"],
+    [/consigne/i, "🗣"],
+    [/oral|dao\b/i, "🎤"],
+    [/calculatrice|calcul/i, "🧮"],
+    [/ordinateur|clavier|tablette|numerique|numérique|traitement de texte/i, "🖥"],
+    [/support|trace|photocopie|fiche fournie|cours fourni/i, "📋"],
+    [/place|devant|bureau|premier rang/i, "🪑"],
+    [/tutorat|binome|binôme|camarade|aidant/i, "🤝"],
+    [/orthograph/i, "🔤"],
+    [/fraction|etape|étape|decouper|découper|exercice|quantite|quantité/i, "🧩"],
+    [/visuel|pictogram|schema|schéma|couleur/i, "👁"],
+    [/calme|bruit|casque|silence/i, "🔇"],
+    [/pause|fatigab|repos/i, "⏸"],
+    [/sortie|infirmerie|deplacer|déplacer/i, "🚪"],
+    [/materiel|matériel|regle|règle|compas|outil/i, "📐"],
+    [/valoris|encourag|felicit|félicit/i, "⭐"]
+  ];
+  var PICTO_DEFAUT = "🧷";
   var DEF_AMENAGEMENTS = [
     "Temps majoré (tiers-temps)", "Supports agrandis / police aérée", "Consignes écrites + orales",
     "Réduire la quantité de copie", "Calculatrice autorisée", "Privilégier l'oral / la DAO",
@@ -2467,7 +2542,7 @@
   var INTENS_LABEL = { leger: "Léger", moyen: "Moyen", fort: "Fort" };
   var TL_LABEL = { pos: "Attitude positive", neg: "Comportement à reprendre", q: "Question", note: "Annotation" };
 
-  /* ====================== ÉTAT — SOURCE DE VÉRITÉ UNIQUE ====================== */
+  /* ====================== ÉTAT - SOURCE DE VÉRITÉ UNIQUE ====================== */
   var state = null, ui = { activeEleve: null, profileFace: false, qLevel: 2, oralLevel: 2 };
 
   function isoMonday(d) { var m = D.mondayOf(d); return m.getFullYear() + "-" + String(m.getMonth() + 1).padStart(2, "0") + "-" + String(m.getDate()).padStart(2, "0"); }
@@ -2508,6 +2583,105 @@
     return m.eleveData[eleveId];
   }
   function plan(cid) { var m = mat(); if (!m.plans[cid]) m.plans[cid] = { groups: 5, pos: {} }; var p = m.plans[cid]; if (!p.cpos) p.cpos = {}; if (!p.groupesLibres) p.groupesLibres = []; return p; }
+  /* ---- Résolution du pictogramme d'un aménagement ----
+     refs.picto garde les choix explicites de l'enseignant, indexés sur le texte normalisé :
+     corriger une faute d'orthographe déplace la clé, l'icône suit. */
+  function cleAm(txt) {
+    return D.stripAccents(String(txt || "")).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function pictosRef() { if (!state.refs.picto) state.refs.picto = {}; return state.refs.picto; }
+  function pictoDe(txt) {
+    var k = cleAm(txt); if (!k) return PICTO_DEFAUT;
+    var choisi = pictosRef()[k];
+    if (choisi) return choisi;
+    for (var i = 0; i < PICTO_MOTS.length; i++) if (PICTO_MOTS[i][0].test(txt)) return PICTO_MOTS[i][1];
+    return PICTO_DEFAUT;
+  }
+  function fixerPicto(txt, icone) {
+    var k = cleAm(txt); if (!k) return;
+    if (icone) pictosRef()[k] = icone; else delete pictosRef()[k];
+  }
+  function deplacerPicto(ancien, nouveau) {
+    var ka = cleAm(ancien), kn = cleAm(nouveau);
+    if (ka && kn && ka !== kn && pictosRef()[ka]) { pictosRef()[kn] = pictosRef()[ka]; delete pictosRef()[ka]; }
+  }
+  /* Aménagements d'un élève dans la matière courante, sous forme { txt, icone }. */
+  function amenagementsDe(eid) {
+    var d = eData(eid), out = [];
+    ((d.amenagements && d.amenagements.added) || []).forEach(function (a2) {
+      if (a2) out.push({ txt: String(a2), icone: pictoDe(a2) });
+    });
+    return out;
+  }
+
+  /* Corriger le libellé d'un aménagement : chez cet élève, et sur proposition dans la liste
+     de référence et chez les autres élèves qui portent exactement le même texte. */
+  var pictoCible = null, pictoApres = null;
+  function renommerAmenagement(ancien, eleve) {
+    var nouveau = prompt("Corriger le libellé de l'aménagement :", ancien);
+    if (nouveau === null) return;
+    nouveau = nouveau.trim();
+    if (!nouveau || nouveau === ancien) return;
+    var d = eData(eleve.id);
+    act("Libellé d'aménagement corrigé");
+    d.amenagements.added = (d.amenagements.added || []).map(function (x) { return x === ancien ? nouveau : x; });
+    // dédoublonner si le nouveau libellé existait déjà chez cet élève
+    var vus = {}; d.amenagements.added = d.amenagements.added.filter(function (x) { if (vus[x]) return false; vus[x] = 1; return true; });
+    deplacerPicto(ancien, nouveau);
+    var iRef = state.refs.amenagements.indexOf(ancien);
+    var ailleurs = compterAmenagement(ancien, eleve.id);
+    if (iRef >= 0 || ailleurs) {
+      var msg = "Corriger aussi ce libellé";
+      if (iRef >= 0) msg += " dans la liste des aménagements proposés";
+      if (iRef >= 0 && ailleurs) msg += " et";
+      if (ailleurs) msg += " chez " + ailleurs + " autre(s) élève(s)";
+      if (confirm(msg + " ?")) {
+        if (iRef >= 0) { if (state.refs.amenagements.indexOf(nouveau) < 0) state.refs.amenagements[iRef] = nouveau; else state.refs.amenagements.splice(iRef, 1); }
+        remplacerAmenagementPartout(ancien, nouveau, eleve.id);
+      }
+    }
+    save(); buildTracking(eleve); renderRoom();
+    flash("Libellé corrigé", 2200);
+  }
+  function compterAmenagement(txt, sauf) {
+    var n = 0, m = mat();
+    Object.keys(m.eleveData || {}).forEach(function (eid) {
+      if (eid === sauf) return;
+      var a2 = m.eleveData[eid].amenagements;
+      if (a2 && (a2.added || []).indexOf(txt) >= 0) n++;
+    });
+    return n;
+  }
+  function remplacerAmenagementPartout(ancien, nouveau, sauf) {
+    var m = mat();
+    Object.keys(m.eleveData || {}).forEach(function (eid) {
+      if (eid === sauf) return;
+      var a2 = m.eleveData[eid].amenagements; if (!a2 || !a2.added) return;
+      if (a2.added.indexOf(ancien) < 0) return;
+      a2.added = a2.added.map(function (x) { return x === ancien ? nouveau : x; });
+      var vus = {}; a2.added = a2.added.filter(function (x) { if (vus[x]) return false; vus[x] = 1; return true; });
+    });
+  }
+  /* Palette de pictogrammes : choix explicite, ou retour au repérage automatique par mots-clés. */
+  function choisirPicto(txt, apres) {
+    pictoCible = txt; pictoApres = apres || null;
+    $("pkTexte").textContent = txt;
+    var actuel = pictoDe(txt), grille = $("pkGrid");
+    grille.innerHTML = PICTOS.map(function (p2) {
+      return '<button class="picbtn' + (p2.i === actuel ? " on" : "") + '" data-i="' + p2.i + '"><span class="g">' + p2.i + "</span><span>" + esc(p2.lab) + "</span></button>";
+    }).join("");
+    grille.querySelectorAll(".picbtn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        act("Pictogramme d'aménagement");
+        fixerPicto(pictoCible, b.dataset.i);
+        save(); $("dlgPicto").classList.remove("open");
+        if (pictoApres) pictoApres();
+        renderRoom(); flash("Pictogramme enregistré", 2000);
+      });
+    });
+    closeAllDialogs(); $("dlgPicto").classList.add("open");
+  }
+
   /* Dispositifs matérialisés par la couleur du cadre de la place, par ordre de priorité.
      Un élève qui cumule PAP et PPS reçoit le cadre du premier, l'autre restant en pastille. */
   var CADRE_DISPOSITIFS = ["PAP", "PPS", "PPRE"];
@@ -2545,10 +2719,10 @@
   var KEY_REMOTEMOD = "pdc_remotemod";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-07-f";
+  var APP_VERSION = "2026-09-13-a";
   var saveTimer = null, dirty = false;
 
-  /* ====================== HISTORIQUE — ANNULER / RÉTABLIR ======================
+  /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
      Chaque appel à save() compare l'état courant au dernier état enregistré. S'ils
      diffèrent, l'ancien part sur la pile « passé ». Aucune action n'a donc besoin
      d'être instrumentée pour devenir annulable : un clic de bavardage, une note,
@@ -2679,7 +2853,7 @@
 
   /* Déchiffre une sauvegarde. Sur un poste neuf la clé locale vient d'être tirée au
      hasard : elle ne peut pas convenir. On demande alors la phrase de récupération,
-     et si elle fonctionne ce poste l'adopte définitivement — sans quoi la prochaine
+     et si elle fonctionne ce poste l'adopte définitivement - sans quoi la prochaine
      sauvegarde repartirait avec une clé différente et rendrait le fichier illisible
      depuis l'autre poste. Renvoie les données, ou null si l'utilisateur renonce. */
   async function dechiffrerOuDemanderPhrase(blob, contexte) {
@@ -2700,7 +2874,7 @@
       try { data = await D.decryptJSON(blob, raw); } catch (err) { data = null; }
       if (data) {
         deviceKeyRaw = raw; LS.setRaw(KEY_DEVICEKEY, D.toBase32(raw));
-        flash("Phrase acceptée — ce poste utilise désormais la même clé.", 3500);
+        flash("Phrase acceptée - ce poste utilise désormais la même clé.", 3500);
         return data;
       }
       flash("Phrase incorrecte pour ce fichier.", 3000);
@@ -2817,7 +2991,7 @@
       "La sauvegarde Google Drive a changé depuis la dernière synchronisation de ce poste.\n" +
       "Un autre ordinateur a probablement travaillé entre-temps.\n\n" +
       "OK  : récupérer la version du Drive (recommandé).\n" +
-      "Annuler : imposer la version de CE poste — une copie datée de la version Drive sera\n" +
+      "Annuler : imposer la version de CE poste - une copie datée de la version Drive sera\n" +
       "conservée avant remplacement, rien ne sera perdu.");
     if (garder) { memoriserRemoteModif(distantActuel); await driveLoad(); return; }
     var archive = await archiverDistantAvantEcrasement();
@@ -2862,7 +3036,7 @@
     } catch (e) { return null; }
   }
   /* Toutes les 3 minutes : on pousse ce qui a changé ici, et on récupère ce qui a changé
-     ailleurs — c'est ce second sens qui garde à jour les sessions ouvertes sur deux postes. */
+     ailleurs - c'est ce second sens qui garde à jour les sessions ouvertes sur deux postes. */
   async function driveSync(raison) {
     if (!driveConfigured() || drive.enCours) return;
     if (!tokenValid()) { renouvellerJeton(); return; }
@@ -2911,7 +3085,7 @@
   function hideReconnectBanner() { var b = $("reconnect"); if (b) b.classList.add("hidden"); }
   function updateDriveBadge(msg) {
     var el = $("driveBadge"); if (!el) return;
-    if (!driveConfigured()) { el.textContent = "☁︎ Local"; el.title = "Google Drive non configuré — sauvegarde locale active"; el.dataset.s = "off"; }
+    if (!driveConfigured()) { el.textContent = "☁︎ Local"; el.title = "Google Drive non configuré - sauvegarde locale active"; el.dataset.s = "off"; }
     else if (tokenValid()) { el.textContent = "☁︎ " + (msg || "Drive"); el.dataset.s = "on"; }
     else { el.textContent = "☁︎ Connecter"; el.dataset.s = "warn"; }
   }
@@ -3037,7 +3211,7 @@
       return { moved: fx.moved, notes: [], unresolved: fx.conflicts.map(function (c) { return { txt: c }; }) };
     }
     // resynchroniser les objets élèves depuis les positions RÉELLEMENT affichées (un déplacement
-    // manuel n'écrit que le cache p.pos) — sinon la réparation travaillerait sur des positions périmées
+    // manuel n'écrit que le cache p.pos) - sinon la réparation travaillerait sur des positions périmées
     eleves.forEach(function (s) { var pos = p.pos[s.id]; if (pos) { s.group = pos.group; s.order = pos.order; } });
     var res = D.repairPlacement(eleves, p.groups, state.refs);
     res.moved.forEach(function (id) { var s = state.eleves[id]; if (s) p.pos[id] = { group: s.group, order: s.order }; });
@@ -3062,7 +3236,7 @@
         d.avecQui[oid] = (d.avecQui[oid] || 0) + 1;
         var od = eData(oid); od.avecQui[s.id] = (od.avecQui[s.id] || 0) + 1; // symétrique
         save(); closeAllDialogs();
-        // On NOTE seulement — aucun déplacement automatique. L'enseignant garde la main :
+        // On NOTE seulement - aucun déplacement automatique. L'enseignant garde la main :
         // la suggestion apparaît dans la fiche, et c'est « 🔧 Corriger » qui applique.
         if (ui.activeEleve === s.id) buildTracking(s);
         refreshSeat(s.id); if (state.eleves[oid]) refreshSeat(oid);
@@ -3110,14 +3284,14 @@
     if (bavardMode.step === "who") bar.innerHTML = '🗣️ <b>Tapez l\'élève qui bavarde</b> sur le plan <button id="bavardStop">Terminer</button>';
     else {
       var w = state.eleves[bavardMode.whoId];
-      bar.innerHTML = '🗣️ <b>' + esc(w ? w.nom : "") + '</b> — tapez le <b>camarade</b> avec qui, ou <button id="bavardSolo">seul(e)</button> <button id="bavardStop">Terminer</button>';
+      bar.innerHTML = '🗣️ <b>' + esc(w ? w.nom : "") + '</b> - tapez le <b>camarade</b> avec qui, ou <button id="bavardSolo">seul(e)</button> <button id="bavardStop">Terminer</button>';
     }
     var stop = $("bavardStop"); if (stop) stop.addEventListener("click", stopBavardMode);
     var solo = $("bavardSolo"); if (solo) solo.addEventListener("click", function () { bavardMode.step = "who"; bavardMode.whoId = null; updateBavardBanner(); flash("Bavardage noté"); });
   }
   function bavardTapSeat(id) {
     if (bavardMode.step === "who") {
-      act("Bavardage — " + nomCourt(id));
+      act("Bavardage - " + nomCourt(id));
       logBehavior(id, "neg", "bavard", "leger"); // intensité légère (niveau 1) automatique
       refreshSeat(id);
       bavardMode.step = "with"; bavardMode.whoId = id;
@@ -3161,7 +3335,7 @@
     if (oralMode.step === "who") bar.innerHTML = '🎤 <b>Tapez l\'élève qui participe</b> sur le plan ou <button id="oralRandom">🎲 Au hasard</button> <button id="oralStop">Terminer</button>';
     else {
       var e = state.eleves[oralMode.eleveId];
-      bar.innerHTML = '🎤 <b>' + esc(e ? e.nom : "") + '</b> — répondez aux questions ci-dessous <button id="oralStop">Terminer</button>';
+      bar.innerHTML = '🎤 <b>' + esc(e ? e.nom : "") + '</b> - répondez aux questions ci-dessous <button id="oralStop">Terminer</button>';
     }
     var stop = $("oralStop"); if (stop) stop.addEventListener("click", stopOralMode);
     var ornd = $("oralRandom"); if (ornd) ornd.addEventListener("click", oralPickRandom);
@@ -3281,7 +3455,7 @@
   function leconTapSeat(id) {
     leconMode.eleveId = id;
     var e = state.eleves[id];
-    $("oralStepTitle").textContent = "Leçon — note sur 5";
+    $("oralStepTitle").textContent = "Leçon - note sur 5";
     $("oralStepName").textContent = e ? (e.nom + " " + e.prenom) : "";
     var notes = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
     $("oralStepBody").innerHTML = '<div class="oral-choices oral-notes">' +
@@ -3352,7 +3526,7 @@
     if (!state) return;
     $("classSelect").innerHTML = Object.keys(state.classes).map(function (id) {
       return '<option value="' + id + '"' + (id === curClassId() ? " selected" : "") + ">" + esc(state.classes[id].nom) + "</option>";
-    }).join("") || '<option value="">— aucune classe —</option>';
+    }).join("") || '<option value="">- aucune classe -</option>';
     var m = mat();
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
     $("btnCourse").innerHTML = "➕ Cours " + ((m.courseIndex || 0) + 1);
@@ -3365,7 +3539,7 @@
   /* ============ HORLOGE ET BASCULE AUTOMATIQUE DE CLASSE ============
      Le badge de semaine porte aussi l'heure et le créneau en cours. Toutes les 30 secondes,
      l'application compare le créneau de l'emploi du temps à la classe affichée et bascule
-     d'elle-même — jamais au milieu d'une saisie, et jamais contre un choix manuel. */
+     d'elle-même - jamais au milieu d'une saisie, et jamais contre un choix manuel. */
   var creneauApplique = null, horlogeTimer = null;
   function creneauCourant(quand) {
     quand = quand || new Date();
@@ -3389,8 +3563,8 @@
     var cr = creneauCourant();
     el.innerHTML = "Sem. " + par + " · " + heureCourte() + (cr ? " · " + esc(state.classes[cr.cid].nom) : "");
     el.title = cr
-      ? ("Cours en ce moment : " + state.classes[cr.cid].nom + " — clic pour ouvrir l'emploi du temps")
-      : "Aucun cours à cette heure d'après l'emploi du temps — clic pour l'ouvrir";
+      ? ("Cours en ce moment : " + state.classes[cr.cid].nom + " - clic pour ouvrir l'emploi du temps")
+      : "Aucun cours à cette heure d'après l'emploi du temps - clic pour l'ouvrir";
   }
   function saisieEnCours() {
     return !!(bavardMode || oralMode || leconMode || grpMode || roomEdit)
@@ -3409,7 +3583,7 @@
     state.uiPrefs.classeActive = cr.cid;
     act("Changement de classe (emploi du temps)");
     save(); renderAll();
-    flash("Créneau suivant — classe " + state.classes[cr.cid].nom + " affichée", 3200);
+    flash("Créneau suivant - classe " + state.classes[cr.cid].nom + " affichée", 3200);
   }
   function demarrerHorloge() {
     if (horlogeTimer) clearInterval(horlogeTimer);
@@ -3436,21 +3610,21 @@
       if (a.aidants) profilsTxt.push("🤝 " + a.aidants + " aidant" + (a.aidants > 1 ? "s" : "") + (a.aidantNoms.length ? " (" + a.aidantNoms.map(esc).join(", ") + ")" : ""));
       if (a.fragiles) profilsTxt.push("🧩 " + a.fragiles + " fragile" + (a.fragiles > 1 ? "s" : ""));
       if (a.agites) profilsTxt.push("🗣️ " + a.agites + " agité" + (a.agites > 1 ? "s" : ""));
-      rows.push('<div class="dash-line"><span>Profils</span><b>' + (profilsTxt.length ? profilsTxt.join(" · ") : "—") + "</b></div>");
+      rows.push('<div class="dash-line"><span>Profils</span><b>' + (profilsTxt.length ? profilsTxt.join(" · ") : "-") + "</b></div>");
       if (a.flags.length) rows.push('<div class="dash-flag">💡 À regarder : ' + a.flags.map(esc).join(" · ") + "</div>");
       html += '<div class="dash-group dash-' + a.climat + '"><h4>' + esc(titre) + " <span>" + a.taille + " él.</span></h4>" + rows.join("") + "</div>";
     });
     // suggestions transversales douces (jamais impératives)
     var noMotor = analysis.filter(function (a) { return a.taille >= 3 && a.moteurs === 0 && (a.pos + a.neg) > 0; }).length;
     var totMotor = analysis.reduce(function (s, a) { return s + a.moteurs; }, 0);
-    if (totMotor >= 2 && noMotor >= 1) html += '<div class="dash-tip">💡 Vous avez des élèves moteurs concentrés sur certains groupes et d\'autres groupes sans moteur. Répartir un moteur par îlot dynamise souvent l\'ensemble — à vous de voir.</div>';
+    if (totMotor >= 2 && noMotor >= 1) html += '<div class="dash-tip">💡 Vous avez des élèves moteurs concentrés sur certains groupes et d\'autres groupes sans moteur. Répartir un moteur par îlot dynamise souvent l\'ensemble - à vous de voir.</div>';
     // groupes nommés (créés via 👥 Groupe)
     var gl = plan(cid).groupesLibres || [];
     if (gl.length) {
       html += '<div class="dash-group" style="border-left-color:#7c3aad"><h4>👥 Groupes personnalisés <span>' + gl.length + "</span></h4>" +
         gl.map(function (g, gi) {
           var noms = g.eleveIds.map(function (id) { var e = state.eleves[id]; return e ? e.nom : null; }).filter(Boolean);
-          return '<div class="dash-line"><span style="color:' + GRP_COLORS[gi % GRP_COLORS.length] + '">●</span><b>' + esc(g.nom) + " — " + (noms.length ? noms.map(esc).join(", ") : "vide") + "</b></div>";
+          return '<div class="dash-line"><span style="color:' + GRP_COLORS[gi % GRP_COLORS.length] + '">●</span><b>' + esc(g.nom) + " - " + (noms.length ? noms.map(esc).join(", ") : "vide") + "</b></div>";
         }).join("") + "</div>";
     }
     $("dashBody").innerHTML = html || '<p class="hint">Aucune donnée pour l\'instant. Notez quelques attitudes positives et comportements, puis revenez ici.</p>';
@@ -3509,7 +3683,7 @@
       if (t.kind === "round4") { flash("Une table ronde n'a pas d'orientation"); return; }
       var nr = t.rot ? 0 : 1;
       if (fitsAt(t, t.c, t.r, nr)) { t.rot = nr; save(); renderRoom(); }
-      else flash("Pas la place pour pivoter ici — déplacez-la d'abord");
+      else flash("Pas la place pour pivoter ici - déplacez-la d'abord");
     });
     var del = $("reDelete"); if (del) del.addEventListener("click", function () {
       var cid2 = curClassId(), p2 = plan(cid2);
@@ -3718,7 +3892,7 @@
   function startGrpFlow() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
     var p = plan(cid);
-    var nom = prompt("GROUPE NOMMÉ (désignation à la main)\n\nVous allez nommer un groupe, puis toucher un par un les élèves concernés sur le plan.\nCe n'est pas la composition automatique — pour cela, fermez et utilisez « Composer automatiquement ».\n\nNom du groupe" + (p.groupesLibres.length ? "\n(existants : " + p.groupesLibres.map(function (g) { return g.nom; }).join(", ") + ")" : ""), "");
+    var nom = prompt("GROUPE NOMMÉ (désignation à la main)\n\nVous allez nommer un groupe, puis toucher un par un les élèves concernés sur le plan.\nCe n'est pas la composition automatique - pour cela, fermez et utilisez « Composer automatiquement ».\n\nNom du groupe" + (p.groupesLibres.length ? "\n(existants : " + p.groupesLibres.map(function (g) { return g.nom; }).join(", ") + ")" : ""), "");
     if (nom === null) return;
     nom = nom.trim(); if (!nom) return;
     var g = p.groupesLibres.find(function (x) { return x.nom.toLowerCase() === nom.toLowerCase(); });
@@ -3740,7 +3914,7 @@
     if (!grpMode) { bar.classList.add("hidden"); return; }
     var g = grpOf(curClassId(), grpMode.gid); if (!g) { stopGrpMode(); return; }
     bar.classList.remove("hidden");
-    bar.innerHTML = '👥 Groupe <b>' + esc(g.nom) + '</b> — tapez les élèves (' + g.eleveIds.length + ' sélectionné' + (g.eleveIds.length > 1 ? 's' : '') + ') ' +
+    bar.innerHTML = '👥 Groupe <b>' + esc(g.nom) + '</b> - tapez les élèves (' + g.eleveIds.length + ' sélectionné' + (g.eleveIds.length > 1 ? 's' : '') + ') ' +
       '<button id="grpDeleteBtn">🗑 Supprimer le groupe</button> <button id="grpDoneBtn">✓ Terminer</button>';
     $("grpDoneBtn").addEventListener("click", function () { save(); var n = g.eleveIds.length, nm = g.nom; stopGrpMode(); flash("Groupe « " + nm + " » : " + n + " élève(s)"); });
     $("grpDeleteBtn").addEventListener("click", function () {
@@ -3768,7 +3942,7 @@
     var room = $("room"); room.innerHTML = "";
     if (plan(cid).custom && plan(cid).custom.on && (plan(cid).custom.desk || roomEdit)) { renderCustomRoom(cid); requestAnimationFrame(function(){ fitNames(); fitRoom(); }); return; }
     var photo = (n === 5), caps = D.capsFor(n, eleves.length);
-    // analyse par groupe (climat + profils) — lecture seule, pour le résumé sur le plan
+    // analyse par groupe (climat + profils) - lecture seule, pour le résumé sur le plan
     var groupsForAnalysis = [];
     for (var ga = 0; ga < n; ga++) groupsForAnalysis[ga] = eleves.filter(function (s) { return posOf(cid, s.id).group === ga; });
     var analysis = D.groupAnalysis(groupsForAnalysis, function (id) { return eData(id).behavior; }, Date.now());
@@ -3782,10 +3956,10 @@
       var f = list.filter(function (s) { return s.sexe === "F"; }).length, g2 = list.filter(function (s) { return s.sexe === "G"; }).length;
       var fond = photo ? (gi === 4) : (gi === n - 1);
       var il = document.createElement("section"); il.className = "ilot g" + gi + (fond ? " fond" : "");
-      var note = photo ? (" · " + (GROUP_TITLES[gi] || "")) : (fond ? " — fond" : "");
+      var note = photo ? (" · " + (GROUP_TITLES[gi] || "")) : (fond ? " - fond" : "");
       var a = analysis[gi] || {};
       var climIcon = a.climat === "bon" ? "🟢" : (a.climat === "vigilance" ? "🔴" : "⚪");
-      var ratioTxt = (a.ratio === Infinity) ? "★" : (a.ratio != null ? ("×" + a.ratio.toFixed(1)) : "—");
+      var ratioTxt = (a.ratio === Infinity) ? "★" : (a.ratio != null ? ("×" + a.ratio.toFixed(1)) : "-");
       var profils = [];
       if (a.moteurs) profils.push(a.moteurs + "⚡");
       if (a.aidants) profils.push(a.aidants + "🤝");
@@ -3820,6 +3994,18 @@
     for (var k = 0; k < cap; k++) { var tbl = k % 2, slot = Math.floor(k / 2), c = tbl === 0 ? (1 + slot) : (per + 2 + slot); cells.push({ o: k, r: 1, c: c }); }
     return { type: "back", cap: cap, cols: cols, cells: cells };
   }
+  /* Bande de pictogrammes d'une place : au plus 6, puis un compteur « +n ». */
+  function amenHtmlSeat(eid) {
+    var liste = amenagementsDe(eid);
+    if (!liste.length) return "";
+    var max = 6, vus = liste.slice(0, max);
+    var html = vus.map(function (a2) { return '<i title="' + esc(a2.txt) + '">' + a2.icone + "</i>"; }).join("");
+    if (liste.length > max) {
+      var reste = liste.slice(max).map(function (a2) { return a2.txt; }).join(" · ");
+      html += '<i class="plus" title="' + esc(reste) + '">+' + (liste.length - max) + "</i>";
+    }
+    return '<span class="amen" title="Aménagements">' + html + "</span>";
+  }
   function emptySlot(gi, order) { var d = document.createElement("div"); d.className = "slot"; d.dataset.group = gi; d.dataset.order = order; d.textContent = "＋"; return d; }
   function seatEl(s) {
     var d = eData(s.id), tr = trendOf(s.id), qtot = d.q.bonne + d.q.mauvaise + d.q.pas, sc = scoreCur(s.id);
@@ -3843,12 +4029,12 @@
     var sep = (s.placement && s.placement.separer && s.placement.separer.length) ? '<span class="sepmark" title="À séparer">⇎</span>' : "";
     b.innerHTML =
       (s.glasses ? '<span class="glasses">👓</span>' : "") +
-      (s.agitation ? '<span class="agit" title="Agitation/bavardages — placement isolé">🗣️</span>' : "") +
+      (s.agitation ? '<span class="agit" title="Agitation/bavardages - placement isolé">🗣️</span>' : "") +
       (needComp ? '<span class="qmark" title="Compétence non validée">?</span>' : "") + sep +
       '<span class="score">' + sc + " pt" + (sc > 1 ? "s" : "") + "</span>" +
       '<span class="nom ' + (tr.score > 0 ? "tend-pos" : (tr.score < 0 ? "tend-neg" : "")) + '">' + esc(s.nom) + (tr.score > 0 ? ' <span class="tarr up">▲</span>' : (tr.score < 0 ? ' <span class="tarr down">▼</span>' : "")) + "</span>" +
       '<span class="prenom">' + esc(s.prenom) + "</span>" +
-      (past ? '<span class="pastilles">' + past + "</span>" : "") +
+      (past ? '<span class="pastilles">' + past + "</span>" : "") + amenHtmlSeat(s.id) +
       '<span class="tally"><span class="r ' + (tr.neg ? "show" : "") + '">−' + tr.neg + '</span><span class="g ' + (tr.pos ? "show" : "") + '">+' + tr.pos + '</span><span class="q ' + (qtot ? "show" : "") + '">?' + qtot + "</span></span>";
     if (estAbsent) {
       var mk = document.createElement("span"); mk.className = "absmark";
@@ -3957,7 +4143,7 @@
         html += '<div class="crow"><span class="cname">Bavarde souvent avec <b>' + esc(o.nom + " " + o.prenom) + "</b> (" + sg.n + " fois notées)</span>" +
           '<button class="sepnowbtn ' + (already ? "done" : "") + '" data-sep="' + sg.id + '">' + (already ? "✓ Séparés" : "Séparer") + "</button></div>";
       });
-      html += '<p class="hint">Dès qu\'un duo est noté 2 fois comme bavardant ensemble, les deux sont éloignés automatiquement. Vous pouvez aussi forcer la séparation ici. Basé uniquement sur ce que vous notez — rien n\'est deviné automatiquement.</p></div>';
+      html += '<p class="hint">Dès qu\'un duo est noté 2 fois comme bavardant ensemble, les deux sont éloignés automatiquement. Vous pouvez aussi forcer la séparation ici. Basé uniquement sur ce que vous notez - rien n\'est deviné automatiquement.</p></div>';
     }
 
     // Compétences (seulement si une séance en a défini)
@@ -3969,7 +4155,7 @@
           COMP_LEVELS.map(function (o) { return '<button data-k="' + o.k + '" class="' + (cur === o.k ? "on" : "") + '" title="' + o.t + '">' + o.k + "</button>"; }).join("") +
           '</div><button class="vbtn ' + (done ? "done" : "") + '" data-comp="' + ci + '">' + (done ? "✓" : "Valider") + "</button></div>";
       });
-      html += '<button class="valall" id="valAllQ">✓ Valider « ? » à Satisfaisant — toute la classe</button></div>';
+      html += '<button class="valall" id="valAllQ">✓ Valider « ? » à Satisfaisant - toute la classe</button></div>';
     } else {
       html += '<div class="nocomp">Aucune compétence de séance. <button id="pickComp">Choisir (2 max)</button></div>';
     }
@@ -3979,9 +4165,9 @@
     var cumAn = cumulAbsences(curClassId(), "an")[s.id];
     if (cumAn && cumAn.seances) {
       html += '<div class="block"><h4><span class="dot" style="background:#8a6d1a"></span>Absences</h4>'
-        + '<div class="crow"><span class="cname"><b>' + (cumEl ? cumEl.seances : 0) + ' cours</b> manqués ce trimestre — '
+        + '<div class="crow"><span class="cname"><b>' + (cumEl ? cumEl.seances : 0) + ' cours</b> manqués ce trimestre - '
         + heuresTxt(cumEl ? cumEl.heures : 0) + "</span></div>"
-        + '<div class="crow"><span class="cname">' + cumAn.seances + " sur l'année — " + heuresTxt(cumAn.heures) + "</span></div>"
+        + '<div class="crow"><span class="cname">' + cumAn.seances + " sur l'année - " + heuresTxt(cumAn.heures) + "</span></div>"
         + '<p class="hint">' + esc(cumAn.dates.slice(-8).join(" · ")) + "</p></div>";
     }
     // Attitude positive (vert) puis négative (rouge)
@@ -3999,20 +4185,26 @@
     var glob = scoreGlobal(s.id); maxV = Math.max(maxV, glob);
     var barHtml = bars.map(function (b) { return '<div class="bar ' + (b.cur ? "bcur" : "") + '"><span class="bv">' + b.v + '</span><div class="bb" style="height:' + Math.round(6 + b.v / maxV * 54) + 'px"></div><span class="bl">' + b.l + (b.cur ? " •" : "") + "</span></div>"; }).join("") +
       '<div class="bar bglob"><span class="bv">' + glob + '</span><div class="bb" style="height:' + Math.round(6 + glob / maxV * 54) + 'px"></div><span class="bl">Global</span></div>';
-    html += '<details class="block scoredet"><summary>📊 Score — cours ' + (m.courseIndex + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
+    html += '<details class="block scoredet"><summary>📊 Score - cours ' + (m.courseIndex + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
 
-    // Aménagements (BEP) — en bas ; base liée au handicap en gras + bouton Ajouter
+    // Aménagements (BEP) - en bas ; base liée au handicap en gras + bouton Ajouter
     if (eleveBep(s)) {
       var src = state.refs.troubles.concat(state.refs.dispositifs);
       var actifs = src.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); });
       var base = actifs.map(function (t) {
-        return '<div class="am-base"><span class="bep-sigle" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + '</span><span><b>' + esc(t.name) + "</b> — <b>" + esc(TROUBLE_HELP[t.k] || "") + "</b></span></div>";
+        return '<div class="am-base"><span class="bep-sigle" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + '</span><span><b>' + esc(t.name) + "</b> - <b>" + esc(TROUBLE_HELP[t.k] || "") + "</b></span></div>";
       }).join("");
       var am = d.amenagements || { added: [], texte: "" };
-      var added = (am.added || []).map(function (a) { return '<div class="am-added"><b>' + esc(a) + '</b><button class="am-del" data-am="' + esc(a) + '">✕</button></div>'; }).join("");
+      var added = (am.added || []).map(function (a) {
+        return '<div class="am-added">'
+          + '<button class="am-pic" data-pic="' + esc(a) + '" title="Changer le pictogramme">' + pictoDe(a) + "</button>"
+          + "<b>" + esc(a) + "</b>"
+          + '<button class="am-edit" data-amedit="' + esc(a) + '" title="Corriger le texte">✎</button>'
+          + '<button class="am-del" data-am="' + esc(a) + '" title="Retirer">✕</button></div>';
+      }).join("");
       var suggestions = state.refs.amenagements.filter(function (a) { return (am.added || []).indexOf(a) < 0; })
-        .map(function (a) { return '<button class="am-sugg" data-am="' + esc(a) + '">+ ' + esc(a) + "</button>"; }).join("");
-      html += '<details class="block bep" open><summary>🧩 Aménagements — ' + esc(m.nom) + (s.glasses ? " · 👓" : "") + "</summary>" +
+        .map(function (a) { return '<button class="am-sugg" data-am="' + esc(a) + '"><span class="sp">' + pictoDe(a) + "</span>" + esc(a) + "</button>"; }).join("");
+      html += '<details class="block bep" open><summary>🧩 Aménagements - ' + esc(m.nom) + (s.glasses ? " · 👓" : "") + "</summary>" +
         '<div class="am-baselist">' + base + "</div>" +
         (added ? '<div class="am-addedlist">' + added + "</div>" : "") +
         '<button class="am-addbtn" id="amAddBtn">+ Ajouter un aménagement</button>' +
@@ -4053,8 +4245,8 @@
         var cid = curClassId();
         if (cid) {
           var res = repairPlan(cid);
-          if (res.unresolved.length) { rebuildPlan(cid); flash("Séparation impossible en un échange — toute la classe a été replacée"); }
-          else flash("Séparés — reste de la classe inchangé");
+          if (res.unresolved.length) { rebuildPlan(cid); flash("Séparation impossible en un échange - toute la classe a été replacée"); }
+          else flash("Séparés - reste de la classe inchangé");
           save(); renderRoom();
         }
         buildTracking(s); refreshSeat(s.id);
@@ -4074,7 +4266,13 @@
     });
     var amAdd = $("amAddBtn"); if (amAdd) amAdd.addEventListener("click", function () { $("amSugg").classList.toggle("hidden"); });
     body.querySelectorAll(".am-sugg").forEach(function (b) { b.addEventListener("click", function () { var a = b.dataset.am; if (d.amenagements.added.indexOf(a) < 0) d.amenagements.added.push(a); save(); buildTracking(s); }); });
-    body.querySelectorAll(".am-del").forEach(function (b) { b.addEventListener("click", function () { var a = b.dataset.am; d.amenagements.added = d.amenagements.added.filter(function (x) { return x !== a; }); save(); buildTracking(s); }); });
+    body.querySelectorAll(".am-del").forEach(function (b) { b.addEventListener("click", function () { var a = b.dataset.am; act("Aménagement retiré"); d.amenagements.added = d.amenagements.added.filter(function (x) { return x !== a; }); save(); buildTracking(s); refreshSeat(s.id); }); });
+    body.querySelectorAll(".am-edit").forEach(function (b) {
+      b.addEventListener("click", function () { renommerAmenagement(b.dataset.amedit, s); });
+    });
+    body.querySelectorAll(".am-pic").forEach(function (b) {
+      b.addEventListener("click", function () { choisirPicto(b.dataset.pic, function () { buildTracking(s); refreshSeat(s.id); }); });
+    });
     var amFree = $("amFree"); if (amFree) amFree.addEventListener("keydown", function (e) { if (e.key === "Enter") { var v = amFree.value.trim(); if (v && d.amenagements.added.indexOf(v) < 0) { d.amenagements.added.push(v); if (state.refs.amenagements.indexOf(v) < 0) state.refs.amenagements.push(v); save(); buildTracking(s); } } });
     var curIntensity = { pos: null, neg: null };
     body.querySelectorAll(".intpick").forEach(function (grp) { grp.querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { curIntensity[grp.dataset.kind] = b.dataset.lv; grp.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); }); }); }); });
@@ -4159,15 +4357,15 @@
       '<div class="block"><h4>Sexe</h4><div class="seg2" id="pSex">' +
       '<button data-s="F" class="' + (s.sexe === "F" ? "on" : "") + '">Fille</button>' +
       '<button data-s="G" class="' + (s.sexe === "G" ? "on" : "") + '">Garçon</button>' +
-      '<button data-s="?" class="' + (s.sexe === "?" ? "on" : "") + '">—</button></div>' +
-      '<button class="glassesbtn ' + (s.glasses ? "on" : "") + '" id="pGlasses">👓 Élève à lunettes — placé devant ' + (s.glasses ? "✓" : "") + "</button>" +
-      '<button class="glassesbtn ' + (s.agitation ? "on" : "") + '" id="pAgitation">🗣️ Agité(e) / bavard(e) — le moins de voisins possible ' + (s.agitation ? "✓" : "") + "</button></div>" +
+      '<button data-s="?" class="' + (s.sexe === "?" ? "on" : "") + '">-</button></div>' +
+      '<button class="glassesbtn ' + (s.glasses ? "on" : "") + '" id="pGlasses">👓 Élève à lunettes - placé devant ' + (s.glasses ? "✓" : "") + "</button>" +
+      '<button class="glassesbtn ' + (s.agitation ? "on" : "") + '" id="pAgitation">🗣️ Agité(e) / bavard(e) - le moins de voisins possible ' + (s.agitation ? "✓" : "") + "</button></div>" +
       '<div class="block"><h4>Contraintes de placement (prioritaires)</h4><div class="cbtns">' + contraintes + "</div>" +
       '<h4 style="margin-top:10px">À séparer de…</h4><div class="sepbtns">' + (sepList || '<span class="hint">Aucun autre élève dans la classe.</span>') + "</div>" +
       '<h4 style="margin-top:10px">À éloigner au maximum de…</h4><div class="sepbtns farbtns">' + (farList || '<span class="hint">Aucun autre élève dans la classe.</span>') + "</div>" +
       '<p class="hint">« Éloigner » va plus loin que « séparer » : les deux élèves sont envoyés aux extrémités opposées de la salle, jamais dans le même îlot.</p>' +
       '<p class="hint">Le placement automatique respecte ces contraintes en priorité ; la mixité s\'applique ensuite. Un conflit insoluble est signalé, jamais ignoré.</p></div>' +
-      '<div class="block"><h4>Troubles (BEP) — pastilles</h4><div class="troubles">' + trBtns + "</div>" +
+      '<div class="block"><h4>Troubles (BEP) - pastilles</h4><div class="troubles">' + trBtns + "</div>" +
       '<h4 style="margin-top:10px">Dispositifs</h4><div class="troubles">' + dpBtns + "</div>" +
       '<p class="hint">Un trouble ou dispositif coché = élève BEP, placé au rang avant.</p></div></div>';
     $("pSex").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { s.sexe = b.dataset.s; $("pSex").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); }); syncSheetHeader(s); save(); refreshSeat(s.id); }); });
@@ -4260,7 +4458,7 @@
       b.addEventListener("click", function () {
         var i = se.abs.indexOf(e.id);
         if (i >= 0) se.abs.splice(i, 1); else se.abs.push(e.id);
-        act((i >= 0 ? "Présence" : "Absence") + " — " + e.prenom + " " + e.nom);
+        act((i >= 0 ? "Présence" : "Absence") + " - " + e.prenom + " " + e.nom);
         save(); refreshSeat(e.id); renderAppelGrid(); renderAppelCumul();
       });
       box.appendChild(b);
@@ -4297,14 +4495,14 @@
         return "<tr><td><b>" + esc(e.nom) + " " + esc(e.prenom) + "</b></td><td>" + c.seances + "</td><td>"
           + heuresTxt(c.heures) + '</td><td class="dt">' + esc(c.dates.join(" · ")) + "</td></tr>";
       }).join("");
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Absences — '
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Absences - '
       + esc(state.classes[cid].nom) + '</title><style>'
       + "body{font-family:-apple-system,Segoe UI,sans-serif;margin:22px;color:#111}"
       + "h1{font-size:1.2rem;margin:0 0 3px}p{color:#555;font-size:.8rem;margin:0 0 14px}"
       + "table{border-collapse:collapse;width:100%;font-size:.8rem}"
       + "th,td{border:1px solid #ccc;padding:5px 8px;vertical-align:top}th{background:#1f4e79;color:#fff;text-align:left}"
       + "td:nth-child(2),td:nth-child(3){text-align:center;white-space:nowrap}.dt{color:#555;font-size:.72rem}"
-      + "</style></head><body><h1>Absences — " + esc(state.classes[cid].nom) + "</h1><p>" + esc(titre)
+      + "</style></head><body><h1>Absences - " + esc(state.classes[cid].nom) + "</h1><p>" + esc(titre)
       + " · édité le " + new Date().toLocaleString("fr-FR") + "</p>"
       + "<table><tr><th>Élève</th><th>Cours manqués</th><th>Heures</th><th>Dates</th></tr>"
       + (lignes || '<tr><td colspan="4">Aucune absence enregistrée.</td></tr>') + "</table></body></html>";
@@ -4313,7 +4511,7 @@
 
   /* ============ VÉRIFICATION ET SAISIE RAPIDE DES DISPOSITIFS ============
      Un import « conserver tout » sans reprise des marques laisse une classe sans aucun
-     dispositif. Cet écran compte les marques classe par classe — l'anomalie saute aux yeux —
+     dispositif. Cet écran compte les marques classe par classe - l'anomalie saute aux yeux -
      et permet de les saisir en une grille de cases à cocher plutôt qu'une fiche par élève. */
   function openBepCheck() {
     if (!state || !Object.keys(state.classes).length) { flash("Aucune classe"); return; }
@@ -4375,7 +4573,7 @@
         var e = state.eleves[b.dataset.e]; if (!e) return;
         if (!e.dispositifs) e.dispositifs = {};
         if (b.checked) e.dispositifs[b.dataset.k] = true; else delete e.dispositifs[b.dataset.k];
-        act("Dispositif " + b.dataset.k + " — " + e.prenom + " " + e.nom);
+        act("Dispositif " + b.dataset.k + " - " + e.prenom + " " + e.nom);
         save(); refreshSeat(e.id); renderBepResume();
         b.closest("tr").classList.toggle("bcrow0", !state.refs.dispositifs.some(function (d) { return e.dispositifs[d.k]; }));
       });
@@ -4385,7 +4583,7 @@
     var lignes = Object.keys(state.classes).map(function (cid) {
       var c = comptesDispositifs(cid);
       return "<tr><td><b>" + esc(state.classes[cid].nom) + "</b></td><td>" + c._total + "</td>"
-        + state.refs.dispositifs.map(function (d) { return "<td>" + (c[d.k] || "—") + "</td>"; }).join("")
+        + state.refs.dispositifs.map(function (d) { return "<td>" + (c[d.k] || "-") + "</td>"; }).join("")
         + "<td>" + c._marques + "</td></tr>";
     }).join("");
     var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Dispositifs par classe</title><style>'
@@ -4428,7 +4626,7 @@
       return;
     }
     $("admBackupInfo").textContent = driveConfigured()
-      ? (tokenValid() ? "Connecté à Google Drive — sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
+      ? (tokenValid() ? "Connecté à Google Drive - sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
                       : "Identifiant enregistré. Touchez le badge ☁︎ de la barre de titre pour vous connecter.")
       : "Aucun identifiant : les données restent sur cet appareil uniquement.";
     $("admBackupInfo").textContent += "  •  Version du programme : " + APP_VERSION;
@@ -4509,7 +4707,7 @@
     var e = makeEleve({ nom: nom, prenom: prenom, sexe: (g.sx === "?" ? "?" : g.sx) });
     state.eleves[e.id] = e; state.classes[cid].eleveIds.push(e.id);
     rebuildPlan(cid); save(); renderAll(); renderClassAdmin();
-    flash(nom.toUpperCase() + " " + prenom + " ajouté(e)" + (g.sure ? "" : " — vérifiez le sexe"));
+    flash(nom.toUpperCase() + " " + prenom + " ajouté(e)" + (g.sure ? "" : " - vérifiez le sexe"));
   }
 
   function removeEleve(eid) {
@@ -4662,7 +4860,7 @@
     var hud = document.createElement("div");
     hud.className = "tirage-hud roulant";
     hud.innerHTML = '<button class="son" type="button">' + (sonActif() ? "🔊 Son" : "🔇 Muet") + "</button>"
-      + '<div class="lbl">Tirage au sort</div><div class="nm">—</div><div class="pn">&nbsp;</div>';
+      + '<div class="lbl">Tirage au sort</div><div class="nm">-</div><div class="pn">&nbsp;</div>';
     document.body.appendChild(hud);
     var elNom = hud.querySelector(".nm"), elPre = hud.querySelector(".pn"), btnSon = hud.querySelector(".son");
     btnSon.addEventListener("click", function (ev) {
@@ -4820,7 +5018,7 @@
         + '<td><span style="background:' + ci.c + ';color:#fff;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:700">' + esc(ci.lab) + '</span></td>'
         + '<td>' + esc(n.txt) + "</td></tr>";
     }).join("");
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Annotations — ' + esc(cl ? cl.nom : "") + '</title>'
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Annotations - ' + esc(cl ? cl.nom : "") + '</title>'
       + '<style>body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#1f2a30;margin:24px}'
       + 'h1{font-size:1.2rem;margin:0 0 4px}.sub{color:#7b8489;font-size:.85rem;margin-bottom:16px}'
       + 'table{width:100%;border-collapse:collapse;font-size:.88rem}th{text-align:left;font-size:.7rem;text-transform:uppercase;color:#7b8489;border-bottom:2px solid #d9d4c8;padding:6px 8px}'
@@ -4828,11 +5026,11 @@
       + 'footer{margin-top:20px;font-size:.72rem;color:#7b8489;font-style:italic}'
       + '@media print{.np{display:none}}</style></head><body>'
       + '<button class="np" onclick="window.print()" style="float:right;padding:9px 15px;border:none;border-radius:8px;background:#2f6fb0;color:#fff;font-weight:700;cursor:pointer">🖨️ Imprimer</button>'
-      + "<h1>Annotations — " + esc(cl ? cl.nom : "") + "</h1>"
+      + "<h1>Annotations - " + esc(cl ? cl.nom : "") + "</h1>"
       + '<div class="sub">' + list.length + " observation(s) · édité le " + new Date().toLocaleString("fr-FR") + "</div>"
       + "<table><thead><tr><th>Date</th><th>Élève</th><th>Nature</th><th>Observation</th></tr></thead><tbody>"
       + lignes + "</tbody></table>"
-      + "<footer>Document interne équipe pédagogique — données sensibles, ne pas diffuser.</footer></body></html>";
+      + "<footer>Document interne équipe pédagogique - données sensibles, ne pas diffuser.</footer></body></html>";
     var w = window.open("", "_blank");
     if (w) { w.document.open(); w.document.write(html); w.document.close(); }
     else {
@@ -4861,9 +5059,9 @@
 
   /* ---- Incompatibilités entre élèves ----
      Deux sources, toutes deux décidées par l'enseignant :
-       · placement.separer  — « à séparer » (les duos de bavardage convertis par 🔧 Corriger
+       · placement.separer  - « à séparer » (les duos de bavardage convertis par 🔧 Corriger
                               atterrissent ici, le comportement est donc bien pris en compte)
-       · placement.eloigner — « à éloigner » (contrainte plus forte encore)
+       · placement.eloigner - « à éloigner » (contrainte plus forte encore)
      Dans un groupe de travail, les uns comme les autres ne doivent pas se retrouver ensemble. */
   function incompatMap(eleves) {
     var m = {};
@@ -4921,7 +5119,7 @@
         possibles.push(k);
         if (!quota || compte(k, quota.test) < quota.max) libres.push(k);
       }
-      // on relâche d'abord le quota, puis la capacité, jamais l'incompatibilité —
+      // on relâche d'abord le quota, puis la capacité, jamais l'incompatibilité -
       // sauf s'il n'existe absolument aucune place sans conflit
       var cands = libres.length ? libres : (possibles.length ? possibles : (nonPleins.length ? nonPleins : null));
       if (!cands) { cands = []; for (k = 0; k < n; k++) cands.push(k); }
@@ -5052,7 +5250,7 @@
       : "Aucun élève à PAP, PPS ou PPRE dans cette classe.";
     if (listeConflits.length) {
       $("actInfo").innerHTML += '<br><span style="color:var(--red);font-weight:800">⇎ '
-        + listeConflits.length + " incompatibilité(s) non résolue(s) — " + listeConflits.map(esc).join(" · ")
+        + listeConflits.length + " incompatibilité(s) non résolue(s) - " + listeConflits.map(esc).join(" · ")
         + ".</span> Ajoutez un groupe ou déplacez l'un des deux.";
     } else {
       $("actInfo").innerHTML += '<br><span style="color:var(--green);font-weight:700">✓ Aucun élève à séparer ou à éloigner ne se retrouve dans le même groupe.</span>';
@@ -5103,7 +5301,7 @@
         $("actN").value = String(c.groupes.length);
         renderActBoard();
         asseoirGroupes(true);                       // charger une config, c'est asseoir la classe
-        flash("Configuration « " + c.nom + " » chargée — élèves installés", 3000);
+        flash("Configuration « " + c.nom + " » chargée - élèves installés", 3000);
       });
       row.querySelector("[data-del]").addEventListener("click", function () {
         if (!confirm("Supprimer la configuration « " + c.nom + " » ?")) return;
@@ -5121,7 +5319,7 @@
         .map(function (e) { return "<li>" + esc(e.nom) + " " + esc(e.prenom) + "</li>"; }).join("");
       return '<section><h2>Groupe ' + (gi + 1) + " <small>" + grp.length + " élèves</small></h2><ol>" + lignes + "</ol></section>";
     }).join("");
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Groupes — ' + esc(cl ? cl.nom : "") + '</title>'
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Groupes - ' + esc(cl ? cl.nom : "") + '</title>'
       + '<style>body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#1f2a30;margin:22px}'
       + 'h1{font-size:1.25rem;margin:0 0 4px}.sub{color:#7b8489;font-size:.85rem;margin-bottom:18px}'
       + '.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}'
@@ -5130,7 +5328,7 @@
       + 'h2 small{color:#7b8489;font-weight:600}ol{margin:0;padding-left:1.2em;font-size:.92rem;line-height:1.55}'
       + '@media print{.pbtn{display:none}}</style></head><body>'
       + '<button class="pbtn" onclick="window.print()" style="float:right;padding:9px 15px;border:none;border-radius:8px;background:#2f6fb0;color:#fff;font-weight:700;cursor:pointer">🖨️ Imprimer</button>'
-      + "<h1>Groupes d'activité — " + esc(cl ? cl.nom : "") + "</h1>"
+      + "<h1>Groupes d'activité - " + esc(cl ? cl.nom : "") + "</h1>"
       + '<div class="sub">' + actState.groupes.length + " groupes · édité le " + new Date().toLocaleString("fr-FR") + "</div>"
       + '<div class="cols">' + cols + "</div></body></html>";
     openPrintable(html, "groupes_" + slug(cl ? cl.nom : "classe") + ".html");
@@ -5177,7 +5375,7 @@
     var classes = [{ nom: name, students: students, groups: grp }];
     dropAdminRows(classes);
     var bilanSx = applySexGuess(classes);
-    if (bilanSx.auto || bilanSx.doute) flash("Sexe déduit pour " + (bilanSx.auto + bilanSx.doute) + " prénom(s)" + (bilanSx.doute ? " — " + bilanSx.doute + " à confirmer" : ""));
+    if (bilanSx.auto || bilanSx.doute) flash("Sexe déduit pour " + (bilanSx.auto + bilanSx.doute) + " prénom(s)" + (bilanSx.doute ? " - " + bilanSx.doute + " à confirmer" : ""));
     if (bilanSx.doute) openGenderTag(classes); else showMergeRecap(classes);
   }
 
@@ -5230,11 +5428,11 @@
         }).join("");
         chips += '<div class="recapchip"><b>' + esc(stu.nom + " " + stu.prenom) + "</b>" + pastilles + "</div>";
       });
-      html += '<div class="recapbep">🧩 Marques BEP détectées — vérifiez, retirez (✕) ou ajoutez :' +
+      html += '<div class="recapbep">🧩 Marques BEP détectées - vérifiez, retirez (✕) ou ajoutez :' +
         (chips ? '<div class="recapchips">' + chips + "</div>" : ' <span class="recapbep0">aucune</span>') +
         '<div class="recapadd" data-cl="' + ci + '">' +
         '<select class="ra-el">' + cl.students.map(function (s, si) { return '<option value="' + si + '">' + esc(s.nom + " " + s.prenom) + "</option>"; }).join("") + "</select>" +
-        '<select class="ra-k">' + sigles.map(function (t) { return '<option value="' + esc(t.k) + '">' + esc(t.k + " — " + t.name) + "</option>"; }).join("") + "</select>" +
+        '<select class="ra-k">' + sigles.map(function (t) { return '<option value="' + esc(t.k) + '">' + esc(t.k + " - " + t.name) + "</option>"; }).join("") + "</select>" +
         '<button class="ra-add" data-cl="' + ci + '">➕ Ajouter</button></div></div>';
       html += "</div>";
     });
@@ -5288,7 +5486,7 @@
   }
 
   /* ---------- Progression d'import ---------- */
-  function showProgress(title) { $("pgTitle").textContent = title || "Import en cours…"; $("pgBar").style.width = "0%"; $("pgDetail").textContent = "—"; $("progress").classList.remove("hidden"); }
+  function showProgress(title) { $("pgTitle").textContent = title || "Import en cours…"; $("pgBar").style.width = "0%"; $("pgDetail").textContent = "-"; $("progress").classList.remove("hidden"); }
   function setProgress(pct, detail) { $("pgBar").style.width = Math.min(100, Math.max(0, pct)) + "%"; if (detail != null) $("pgDetail").textContent = detail; }
   function hideProgress() { $("progress").classList.add("hidden"); }
   function tick(ms) { return new Promise(function (r) { setTimeout(r, ms || 16); }); }
@@ -5296,7 +5494,7 @@
   function handleFile(file) {
     var name = file.name.toLowerCase(), reader = new FileReader();
     if (name.endsWith(".csv") || name.endsWith(".txt")) {
-      reader.onload = function (e) { $("inPaste").value = e.target.result; flash("Fichier chargé — vérifiez puis « Créer »"); };
+      reader.onload = function (e) { $("inPaste").value = e.target.result; flash("Fichier chargé - vérifiez puis « Créer »"); };
       reader.readAsText(file, "UTF-8");
     } else {
       reader.onload = async function (e) {
@@ -5310,9 +5508,9 @@
           var bepRefs = state.refs.troubles.concat(state.refs.dispositifs);
           var classes = [], skipped = [], truncNote = [];
           for (var i = 0; i < book.count; i++) {
-            setProgress(4 + (i / book.count) * 30, "Onglet « " + book.sheetNames[i] + " » (" + (i + 1) + "/" + book.count + ") — analyse…");
+            setProgress(4 + (i / book.count) * 30, "Onglet « " + book.sheetNames[i] + " » (" + (i + 1) + "/" + book.count + ") - analyse…");
             await tick(40);
-            if (Date.now() - t0 > 30000) throw new Error("import trop long — exportez l'onglet en CSV et réessayez");
+            if (Date.now() - t0 > 30000) throw new Error("import trop long - exportez l'onglet en CSV et réessayez");
             var sh;
             try { sh = await book.readSheet(i); }
             catch (err2) { skipped.push(book.sheetNames[i] + " (illisible : " + err2.message + ")"); continue; }
@@ -5323,7 +5521,7 @@
           }
           if (!classes.length) {
             hideProgress();
-            flash("Aucun onglet exploitable" + (skipped.length ? " — " + skipped.join(" · ") : ""), 6000);
+            flash("Aucun onglet exploitable" + (skipped.length ? " - " + skipped.join(" · ") : ""), 6000);
             return;
           }
           // défilement de la progression : onglet + nom de chaque élève
@@ -5331,7 +5529,7 @@
           var done = 0;
           for (var ci = 0; ci < classes.length; ci++) {
             var cl = classes[ci];
-            setProgress(35 + (done / total) * 60, "Onglet « " + cl.nom + " » — " + cl.students.length + " élève(s)");
+            setProgress(35 + (done / total) * 60, "Onglet « " + cl.nom + " » - " + cl.students.length + " élève(s)");
             await tick(120);
             for (var si = 0; si < cl.students.length; si++) {
               var stu = cl.students[si]; done++;
@@ -5339,21 +5537,21 @@
               if (si % 2 === 0 || cl.students.length <= 30) await tick(cl.students.length <= 40 ? 28 : 4);
             }
           }
-          setProgress(100, "Terminé — " + total + " élève(s) dans " + classes.length + " classe(s)");
+          setProgress(100, "Terminé - " + total + " élève(s) dans " + classes.length + " classe(s)");
           await tick(300);
           hideProgress();
           var notes = [];
           if (skipped.length) notes.push("Onglets ignorés : " + skipped.join(" · "));
           if (truncNote.length) notes.push("Onglet(s) tronqué(s) à " + 4000 + " lignes : " + truncNote.join(", "));
-          if (notes.length) flash(notes.join(" — "), 5000);
+          if (notes.length) flash(notes.join(" - "), 5000);
           var nAdmin = dropAdminRows(classes);
           if (nAdmin) flash(nAdmin + " ligne(s) d'en-tête ignorée(s)", 3000);
           var bilanSx = applySexGuess(classes);
-          if (bilanSx.auto || bilanSx.doute) flash("Sexe déduit pour " + (bilanSx.auto + bilanSx.doute) + " prénom(s)" + (bilanSx.doute ? " — " + bilanSx.doute + " à confirmer" : ""), 4000);
+          if (bilanSx.auto || bilanSx.doute) flash("Sexe déduit pour " + (bilanSx.auto + bilanSx.doute) + " prénom(s)" + (bilanSx.doute ? " - " + bilanSx.doute + " à confirmer" : ""), 4000);
           if (bilanSx.doute) openGenderTag(classes); else showMergeRecap(classes);
         } catch (err) {
           hideProgress();
-          flash("Lecture Excel impossible : " + err.message + " — vous pouvez exporter l'onglet en CSV et le coller ici.", 6500);
+          flash("Lecture Excel impossible : " + err.message + " - vous pouvez exporter l'onglet en CSV et le coller ici.", 6500);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -5450,7 +5648,7 @@
       if (s.sxDoubt) doute.push({ s: s, cl: cl }); else if (s.sxAuto) auto.push({ s: s, cl: cl }); }); });
     $("gIntro").innerHTML = doute.length
       ? "Sexe déduit automatiquement d'après le prénom. <b>" + doute.length + " prénom" + (doute.length > 1 ? "s" : "")
-        + " à confirmer</b> — la proposition est présélectionnée, un tap suffit pour la corriger. Votre choix est mémorisé pour les prochains imports."
+        + " à confirmer</b> - la proposition est présélectionnée, un tap suffit pour la corriger. Votre choix est mémorisé pour les prochains imports."
       : "Tous les prénoms ont été reconnus. Vérifiez si besoin, puis continuez.";
     fillGList($("glist"), doute.length ? doute : auto);
     const box = $("gAutoBox");
@@ -5490,7 +5688,7 @@
     $("edtActive").textContent = "Semaine en cours détectée : " + D.weekParity(m.calage, new Date());
     var grid = m.edt[edtParity] || (m.edt[edtParity] = {});
     function optsFor(sel) {
-      return '<option value="">—</option>' + Object.keys(state.classes).map(function (id) {
+      return '<option value="">-</option>' + Object.keys(state.classes).map(function (id) {
         return '<option value="' + id + '"' + (sel === id ? " selected" : "") + ">" + esc(state.classes[id].nom) + "</option>";
       }).join("");
     }
@@ -5532,7 +5730,11 @@
     function listEditor(title, arr, isObj, kind) {
       var rows = arr.map(function (it, i) {
         var label = isObj ? (it.label || it.name) : it;
-        return '<div class="refrow"><span>' + esc(label) + '</span><button class="refdel" data-kind="' + kind + '" data-i="' + i + '">✕</button></div>';
+        return '<div class="refrow">'
+          + (kind === "amenagements" ? '<button class="refpic" data-refpic="' + esc(label) + '" title="Changer le pictogramme">' + pictoDe(label) + "</button>" : "")
+          + "<span>" + esc(label) + "</span>"
+          + '<button class="refedit" data-kind="' + kind + '" data-i="' + i + '" title="Corriger le texte">✎</button>'
+          + '<button class="refdel" data-kind="' + kind + '" data-i="' + i + '" title="Supprimer">✕</button></div>';
       }).join("");
       return '<div class="refgroup"><h4>' + title + "</h4>" + rows +
         '<div class="refadd"><input type="text" data-addkind="' + kind + '" placeholder="Ajouter…"><button data-addbtn="' + kind + '">+</button></div></div>';
@@ -5546,6 +5748,10 @@
       listEditor("Troubles", r.troubles, true, "troubles") +
       listEditor("Dispositifs", r.dispositifs, true, "dispositifs");
     box.querySelectorAll(".refdel").forEach(function (b) { b.addEventListener("click", function () { refDelete(b.dataset.kind, +b.dataset.i); }); });
+    box.querySelectorAll(".refedit").forEach(function (b) { b.addEventListener("click", function () { refRename(b.dataset.kind, +b.dataset.i); }); });
+    box.querySelectorAll("[data-refpic]").forEach(function (b) {
+      b.addEventListener("click", function () { choisirPicto(b.dataset.refpic, renderRefs); });
+    });
     box.querySelectorAll("[data-addbtn]").forEach(function (b) {
       b.addEventListener("click", function () { var kind = b.dataset.addbtn, inp = box.querySelector('[data-addkind="' + kind + '"]'); if (inp.value.trim()) refAdd(kind, inp.value.trim()); });
     });
@@ -5559,9 +5765,44 @@
     else if (kind === "troubles" || kind === "dispositifs") { var k = D.stripAccents(val).slice(0, 4).toUpperCase(); r[kind].push({ k: k, name: val, c: palette[r[kind].length % palette.length] }); }
     save(); renderRefs(); flash("Ajouté");
   }
+  /* Correction d'un libellé dans les listes de référence. Pour les aménagements, le texte
+     est aussi corrigé chez les élèves qui le portent : sinon la faute resterait sur le plan. */
+  function refRename(kind, i) {
+    var r = state.refs;
+    var cible = kind === "amenagements" ? r.amenagements
+      : kind === "comp_pos" ? r.comportements.pos
+      : kind === "comp_neg" ? r.comportements.neg
+      : kind === "contraintesPlacement" ? r.contraintesPlacement
+      : r[kind];
+    if (!cible || !cible[i]) return;
+    var estTexte = (kind === "amenagements");
+    var ancien = estTexte ? cible[i] : (cible[i].label || cible[i].name);
+    var nouveau = prompt("Corriger le libellé :", ancien);
+    if (nouveau === null) return;
+    nouveau = nouveau.trim(); if (!nouveau || nouveau === ancien) return;
+    act("Libellé corrigé");
+    if (estTexte) {
+      if (r.amenagements.indexOf(nouveau) >= 0) r.amenagements.splice(i, 1); else r.amenagements[i] = nouveau;
+      deplacerPicto(ancien, nouveau);
+      var n = compterAmenagement(ancien, null);
+      if (n && confirm("Corriger aussi ce libellé chez " + n + " élève(s) qui le portent ?"))
+        remplacerAmenagementPartout(ancien, nouveau, null);
+    } else if (cible[i].label !== undefined) cible[i].label = nouveau;
+    else cible[i].name = nouveau;
+    save(); renderRefs(); renderRoom(); flash("Libellé corrigé", 2200);
+  }
   function refDelete(kind, i) {
     var r = state.refs;
-    if (kind === "amenagements") r.amenagements.splice(i, 1);
+    if (kind === "amenagements") {
+      var txt = r.amenagements[i], n = compterAmenagement(txt, null);
+      if (n && !confirm("« " + txt + " » est attribué à " + n + " élève(s).\n\n"
+        + "OK : le retirer de la liste proposée ET de ces élèves.\nAnnuler : ne rien changer.")) return;
+      r.amenagements.splice(i, 1);
+      if (n) { var m2 = mat(); Object.keys(m2.eleveData || {}).forEach(function (eid) {
+        var a2 = m2.eleveData[eid].amenagements; if (!a2 || !a2.added) return;
+        a2.added = a2.added.filter(function (x) { return x !== txt; }); }); }
+      act("Aménagement supprimé");
+    }
     else if (kind === "comp_pos") { if (!confirm("Supprimer ce comportement positif ?")) return; r.comportements.pos.splice(i, 1); }
     else if (kind === "comp_neg") { if (!confirm("Supprimer ce comportement négatif ?")) return; r.comportements.neg.splice(i, 1); }
     else if (kind === "contraintesPlacement") r.contraintesPlacement.splice(i, 1);
@@ -5732,8 +5973,8 @@
       // comportements agrégés (positifs d'abord)
       var posCounts = {}, negCounts = {};
       (d.behavior || []).forEach(function (e) { if (e.t === "pos") posCounts[e.id] = (posCounts[e.id] || 0) + 1; else if (e.t === "neg") negCounts[e.id] = (negCounts[e.id] || 0) + 1; });
-      var posList = Object.keys(posCounts).map(function (id) { return esc(labelOfBehavior({ t: "pos", id: id })) + " ×" + posCounts[id]; }).join(", ") || "—";
-      var negList = Object.keys(negCounts).map(function (id) { return esc(labelOfBehavior({ t: "neg", id: id })) + " ×" + negCounts[id]; }).join(", ") || "—";
+      var posList = Object.keys(posCounts).map(function (id) { return esc(labelOfBehavior({ t: "pos", id: id })) + " ×" + posCounts[id]; }).join(", ") || "-";
+      var negList = Object.keys(negCounts).map(function (id) { return esc(labelOfBehavior({ t: "neg", id: id })) + " ×" + negCounts[id]; }).join(", ") || "-";
       var q = d.q, qtot = q.bonne + q.mauvaise + q.pas;
       // graphe scores
       var cs = d.courseScores || {}, nC = Math.max(m.courseIndex + 1, 1);
@@ -5751,9 +5992,9 @@
       var tend = tr.score > 0 ? { c: "#2f9e6f", t: "Tendance 7j : en progrès (+" + tr.score + ")" } : (tr.score < 0 ? { c: "#d64545", t: "Tendance 7j : à surveiller (" + tr.score + ")" } : { c: "#9aa3a8", t: "Tendance 7j : neutre" });
       // BEP aménagements (matière)
       var amChecked = (d.amenagements.added || []);
-      var bep = eleveBep(s) ? '<div class="rp-bepbox"><h3>Aménagements — ' + esc(m.nom) + "</h3>" +
-        troubles.map(function (t) { return '<div class="rp-bepi"><span class="rp-past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + "</span><div><b>" + esc(t.name) + "</b> — " + esc(TROUBLE_HELP[t.k] || "") + "</div></div>"; }).join("") +
-        (amChecked.length ? '<p><b>Aménagements ajoutés :</b> ' + amChecked.map(esc).join(", ") + "</p>" : "") +
+      var bep = eleveBep(s) ? '<div class="rp-bepbox"><h3>Aménagements - ' + esc(m.nom) + "</h3>" +
+        troubles.map(function (t) { return '<div class="rp-bepi"><span class="rp-past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + "</span><div><b>" + esc(t.name) + "</b> - " + esc(TROUBLE_HELP[t.k] || "") + "</div></div>"; }).join("") +
+        (amChecked.length ? '<p><b>Aménagements ajoutés :</b> ' + amChecked.map(function (x) { return pictoDe(x) + " " + esc(x); }).join(" · ") + "</p>" : "") +
         (d.amenagements.texte ? '<p><b>Note :</b> ' + esc(d.amenagements.texte) + "</p>" : "") +
         '<p class="rp-muted">Propre à ' + esc(m.nom) + ". Repères à adapter (PAP/PPS/GEVASCO, AESH, médecin scolaire). Aucun diagnostic.</p></div>" : "";
       var sigRefs = state.refs.troubles.concat(state.refs.dispositifs)
@@ -5766,7 +6007,7 @@
       var cadre = (s.dispositifs && s.dispositifs.PAP && papR) ? papR.c : (sigRefs.length ? sigRefs[0].c : "");
       return '<section class="rp-card' + (cadre ? " rp-flag" : "") + '"' + (cadre ? ' style="border-left-color:' + cadre + '"' : "") + '><header class="rp-head"><div><h2>' + esc(s.nom) + " <span>" + esc(s.prenom) + "</span>" + (sigles ? '<span class="rp-sigles">' + sigles + "</span>" : "") + "</h2>" +
         '<div class="rp-tags"><span class="rp-tag">Groupe ' + (posOf(cid, s.id).group + 1) + "</span>" +
-        '<span class="rp-tag">' + (s.sexe === "F" ? "Fille" : s.sexe === "G" ? "Garçon" : "—") + "</span>" +
+        '<span class="rp-tag">' + (s.sexe === "F" ? "Fille" : s.sexe === "G" ? "Garçon" : "-") + "</span>" +
         (s.glasses ? '<span class="rp-tag">👓 lunettes</span>' : "") +
         (eleveBep(s) ? '<span class="rp-tag rp-bep">BEP</span>' : "") +
         (tv.multiMatiere ? '<span class="rp-tag rp-warn">⚑ multi-matières</span>' : "") +
@@ -5810,7 +6051,7 @@
       '.rp-card.rp-flag{border-left-width:7px;border-left-style:solid}' +
       '.rp-sigles{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}' +
       '@media print{.rp-top{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.rp-print{display:none}body{background:#fff}.rp-journal{break-inside:avoid}}' +
-      '</style></head><body><div class="rp-top"><div><h1>Bilan — ' + esc(state.classes[cid].nom) + '</h1><div class="sub">' + classEleves(cid).length + ' élèves · ' + esc(m.nom) + ' · édité le ' + dateStr + '</div></div><button class="rp-print" onclick="window.print()">🖨️ Imprimer / PDF</button></div><main>' + cards + "</main></body></html>";
+      '</style></head><body><div class="rp-top"><div><h1>Bilan - ' + esc(state.classes[cid].nom) + '</h1><div class="sub">' + classEleves(cid).length + ' élèves · ' + esc(m.nom) + ' · édité le ' + dateStr + '</div></div><button class="rp-print" onclick="window.print()">🖨️ Imprimer / PDF</button></div><main>' + cards + "</main></body></html>";
     var w = window.open("", "_blank");
     if (w) { w.document.open(); w.document.write(html); w.document.close(); flash("Bilan généré"); }
     else { downloadBlob(html, "text/html;charset=utf-8", "bilan_" + slug(state.classes[cid].nom) + "_" + today() + ".html"); flash("Bilan téléchargé (ouvrez-le puis Imprimer › PDF)"); }
@@ -5845,9 +6086,13 @@
         styles.push("box-shadow:inset 4px 0 0 " + cAct);
         badge = '<u style="background:' + cAct + '">G' + (gAct.gi + 1) + "</u>";
       }
+      var amen = amenagementsDe(s.id);
+      var amenHtml = amen.length
+        ? '<span class="pp-amen">' + amen.map(function (x) { return '<i title="' + esc(x.txt) + '">' + x.icone + "</i>"; }).join("") + "</span>"
+        : "";
       var styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
       return '<div class="pp-seat ' + tcls + '"' + styleAttr + '>' + badge + "<b>" + esc(s.nom) + (tr.score > 0 ? " ▲" : tr.score < 0 ? " ▼" : "") + "</b><span>" + esc(s.prenom) + "</span>" +
-        '<div class="pp-meta"><em>' + sc + " pt" + (sc > 1 ? "s" : "") + "</em>" + (past ? '<span class="pp-past">' + past + "</span>" : "") + "</div></div>";
+        '<div class="pp-meta"><em>' + sc + " pt" + (sc > 1 ? "s" : "") + "</em>" + (past ? '<span class="pp-past">' + past + "</span>" : "") + "</div>" + amenHtml + "</div>";
     }
 
     // Groupes : même géométrie que l'écran (îlots en L, tables du fond, places vides)
@@ -5865,7 +6110,7 @@
       } else {
         inner = '<div class="pp-seats pp-flow">' + list.map(seatHtml).join("") + "</div>";
       }
-      var note = photo ? (" · " + (GROUP_TITLES[gi] || "")) : (gi === n - 1 ? " — fond" : "");
+      var note = photo ? (" · " + (GROUP_TITLES[gi] || "")) : (gi === n - 1 ? " - fond" : "");
       var f = list.filter(function (s) { return s.sexe === "F"; }).length;
       var fond = photo ? (gi === 4) : (gi === n - 1);
       return '<section class="pp-grp pg' + gi + '"><h2' + (fond ? ' class="pp-fond"' : "") + ">Groupe " + (gi + 1) + note
@@ -5886,6 +6131,11 @@
         if (!eleves.some(function (s) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })) return;
         items.push('<span><i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + '</i>' + esc(t.name || t.k) + '</span>');
       });
+      var picto = {};
+      eleves.forEach(function (e) { amenagementsDe(e.id).forEach(function (x) { if (!picto[x.icone]) picto[x.icone] = x.txt; }); });
+      Object.keys(picto).forEach(function (ic) {
+        items.push('<span><i style="background:#eef3f7;color:#111;border:.5px solid #cdd8e0">' + ic + "</i>" + esc(picto[ic]) + "</span>");
+      });
       var compo = compoActive(cid);
       if (compo) compo.forEach(function (grp, gi) {
         items.push('<span><b style="border:1.4px solid #bbb;box-shadow:inset 4px 0 0 ' + GRP_COLORS[gi % GRP_COLORS.length] + '"></b>groupe d\'activité G' + (gi + 1) + '</span>');
@@ -5902,7 +6152,7 @@
       roomHtml = '<div class="pp-room pp-stack">' + order.map(groupHtml).join("") + "</div>";
     }
 
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Plan — ' + esc(state.classes[cid].nom) + '</title><style>' +
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Plan - ' + esc(state.classes[cid].nom) + '</title><style>' +
       '@page{size:A4 landscape;margin:8mm}' +
       '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
       'body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#111;margin:0;padding:12px 16px;background:#fff}' +
@@ -5930,6 +6180,8 @@
       '.pp-meta{display:flex;align-items:center;gap:4px;margin-top:2px;flex-wrap:wrap}' +
       '.pp-meta em{font-style:normal;font-size:.6rem;font-weight:800;background:#2f6fb0;color:#fff;border-radius:4px;padding:1px 4px}' +
       '.pp-past i{font-style:normal;font-size:.55rem;font-weight:800;color:#fff;border-radius:3px;padding:1px 3px;margin-right:2px}' +
+      '.pp-amen{display:flex;flex-wrap:wrap;gap:2px;margin-top:2px}' +
+      '.pp-amen i{font-style:normal;font-size:.62rem;line-height:1.2;background:#eef3f7;border:.5px solid #cdd8e0;border-radius:3px;padding:0 2px}' +
       '.bureau{text-align:center;margin-top:7px}.bureau span{display:inline-block;background:#111;color:#fff;font-weight:800;letter-spacing:.14em;padding:6px 40px;border-radius:8px;font-size:.76rem}' +
       '.pbtn{position:fixed;top:10px;right:12px;background:#2f6fb0;color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}' +
       '.pp-leg{margin-top:9px;padding-top:6px;border-top:1px solid #ccc;display:flex;flex-wrap:wrap;gap:5px 14px;align-items:center;font-size:.62rem;color:#444;break-inside:avoid}' +
@@ -5940,7 +6192,7 @@
       '@media print{.pbtn{display:none}body{padding:0}}' +
       '</style></head><body>' +
       '<button class="pbtn" onclick="window.print()">🖨️ Imprimer</button>' +
-      '<header><h1>Plan de classe — ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + esc(m.nom) + " · " + eleves.length + " élèves · " + new Date().toLocaleDateString("fr-FR") + '</span></header>' +
+      '<header><h1>Plan de classe - ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + esc(m.nom) + " · " + eleves.length + " élèves · " + new Date().toLocaleDateString("fr-FR") + '</span></header>' +
       '<div class="pp-orient">↑ FOND DE CLASSE</div>' +
       roomHtml + '<div class="bureau"><span>BUREAU</span></div>' + legendeHtml() + '</body></html>';
     openPrintable(html, "plan_" + slug(state.classes[cid].nom) + "_" + today() + ".html");
@@ -5957,13 +6209,14 @@
       var actifs = sigles.filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); });
       var lignes = actifs.map(function (t) {
         var nv = s.bepNiveaux && s.bepNiveaux[t.k];
-        return '<div class="bp-line"><i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + "</i><div><b>" + esc(t.name) + (nv ? " — niveau " + nv + "/5" : "") + "</b><br><strong>" + esc(TROUBLE_HELP[t.k] || "") + "</strong></div></div>";
+        return '<div class="bp-line"><i style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + "</i><div><b>" + esc(t.name) + (nv ? " - niveau " + nv + "/5" : "") + "</b><br><strong>" + esc(TROUBLE_HELP[t.k] || "") + "</strong></div></div>";
       }).join("");
-      var added = (d.amenagements.added || []).length ? '<div class="bp-add"><b>Aménagements ajoutés (' + esc(m.nom) + ") :</b> " + d.amenagements.added.map(esc).join(" · ") + "</div>" : "";
-      var tend = tr.score > 0 ? '<span class="bp-t bp-up">▲ démarche positive (7 j : +' + tr.score + ")</span>" : (tr.score < 0 ? '<span class="bp-t bp-down">▼ à surveiller (7 j : ' + tr.score + ")</span>" : '<span class="bp-t">— neutre (7 j)</span>');
+      var added = (d.amenagements.added || []).length ? '<div class="bp-add"><b>Aménagements ajoutés (' + esc(m.nom) + ") :</b> "
+        + d.amenagements.added.map(function (x) { return pictoDe(x) + " " + esc(x); }).join(" · ") + "</div>" : "";
+      var tend = tr.score > 0 ? '<span class="bp-t bp-up">▲ démarche positive (7 j : +' + tr.score + ")</span>" : (tr.score < 0 ? '<span class="bp-t bp-down">▼ à surveiller (7 j : ' + tr.score + ")</span>" : '<span class="bp-t">- neutre (7 j)</span>');
       return '<section class="bp-card"><h2>' + esc(s.nom) + " " + esc(s.prenom) + " " + tend + "</h2>" + lignes + added + "</section>";
     }).join("");
-    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Bilan BEP — ' + esc(state.classes[cid].nom) + '</title><style>' +
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Bilan BEP - ' + esc(state.classes[cid].nom) + '</title><style>' +
       '*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#111;margin:0;padding:16px 20px;background:#fff}' +
       'header{border-bottom:2.5px solid #111;padding-bottom:8px;margin-bottom:12px}header h1{font-size:1.2rem;margin:0}header .d{color:#555;font-size:.82rem}' +
       '.bp-card{border:1.5px solid #bbb;border-radius:10px;padding:10px 12px;margin-bottom:10px;break-inside:avoid}' +
@@ -5980,8 +6233,8 @@
       '@media print{.pbtn{display:none}}' +
       '</style></head><body>' +
       '<button class="pbtn" onclick="window.print()">🖨️ Imprimer</button>' +
-      '<header><h1>Bilan BEP — ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + beps.length + " élève(s) à besoins particuliers · " + esc(m.nom) + " · " + new Date().toLocaleDateString("fr-FR") + "</span></header>" +
-      cards + "<footer>Repères généraux à adapter — se référer au PAP/PPS/GEVASCO, à l'AESH et au médecin scolaire. Aucun diagnostic. Document interne équipe pédagogique — données sensibles, ne pas diffuser.</footer></body></html>";
+      '<header><h1>Bilan BEP - ' + esc(state.classes[cid].nom) + '</h1><span class="d">' + beps.length + " élève(s) à besoins particuliers · " + esc(m.nom) + " · " + new Date().toLocaleDateString("fr-FR") + "</span></header>" +
+      cards + "<footer>Repères généraux à adapter - se référer au PAP/PPS/GEVASCO, à l'AESH et au médecin scolaire. Aucun diagnostic. Document interne équipe pédagogique - données sensibles, ne pas diffuser.</footer></body></html>";
     openPrintable(html, "bilan_bep_" + slug(state.classes[cid].nom) + "_" + today() + ".html");
   }
 
@@ -5990,7 +6243,7 @@
     await ensureDeviceKey();
     var blob = await D.encryptJSON(state, deviceKeyRaw); // PAS de phrase en clair dans le fichier
     downloadBlob(JSON.stringify(blob), "application/json", "sauvegarde_chiffree_" + today() + ".pdc.json");
-    flash("Sauvegarde chiffrée téléchargée — notez bien votre phrase de récupération pour rouvrir ailleurs.");
+    flash("Sauvegarde chiffrée téléchargée - notez bien votre phrase de récupération pour rouvrir ailleurs.");
   }
   function importEncrypted(file) {
     if (!D.cryptoReady()) { flash("Chiffrement indisponible ici : ouvrez l'app en https ou localhost."); return; }
@@ -6053,6 +6306,16 @@
     });
     $("btnStart").addEventListener("click", openConfig);
     $("btnConfig").addEventListener("click", openConfig);
+    $("dlgPictoX").addEventListener("click", function () { $("dlgPicto").classList.remove("open"); });
+    $("pkClose").addEventListener("click", function () { $("dlgPicto").classList.remove("open"); });
+    $("pkAuto").addEventListener("click", function () {
+      if (!pictoCible) return;
+      act("Pictogramme automatique");
+      fixerPicto(pictoCible, null); save();
+      $("dlgPicto").classList.remove("open");
+      if (pictoApres) pictoApres();
+      renderRoom(); flash("Pictogramme choisi automatiquement", 2200);
+    });
     $("btnAppel").addEventListener("click", openAppel);
     $("dlgAppelX").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); });
     $("apClose").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); renderRoom(); });
@@ -6093,7 +6356,7 @@
       else { actState.groupes = composerGroupes(actState.n); }
       actState.sel = null;
       renderActBoard();
-      if (asseoirGroupes(false)) flash("Groupes composés — les élèves ont été installés dans la salle", 3200);
+      if (asseoirGroupes(false)) flash("Groupes composés - les élèves ont été installés dans la salle", 3200);
       else flash("Groupes composés", 2400);
     });
     $("actAfficher").addEventListener("click", function () {
@@ -6126,10 +6389,10 @@
       }, 250);
     });
     $("modeSeg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.m); }); });
-    $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée — " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée — nouvelle disposition"); });
+    $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée - " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée - nouvelle disposition"); });
     $("btnUndo").addEventListener("click", annuler);
     $("btnRedo").addEventListener("click", retablir);
-    /* Ctrl+Z / Ctrl+Y — inactifs pendant une saisie ou un tirage au sort en cours. */
+    /* Ctrl+Z / Ctrl+Y - inactifs pendant une saisie ou un tirage au sort en cours. */
     document.addEventListener("keydown", function (e) {
       if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       var c = e.target, tag = c && c.tagName ? c.tagName.toLowerCase() : "";
@@ -6144,7 +6407,7 @@
       act("Correction du placement");
       snapshotPlan(cid);
       // 1) convertir les bavardages notés (duos ayant atteint le seuil) en séparations effectives
-      //    et marquer les deux élèves « agité » — c'est ici, sur commande, jamais automatiquement
+      //    et marquer les deux élèves « agité » - c'est ici, sur commande, jamais automatiquement
       var applied = 0;
       classEleves(cid).forEach(function (s) {
         avecQuiSuggestions(s.id, 2).forEach(function (sg) {
@@ -6163,10 +6426,10 @@
       var res = repairPlan(cid);
       if (res.unresolved.length) {
         rebuildPlan(cid); save(); renderRoom(); showUndo();
-        flash("Replacement ciblé insuffisant — toute la classe a été replacée (" + res.unresolved.length + " cas)");
+        flash("Replacement ciblé insuffisant - toute la classe a été replacée (" + res.unresolved.length + " cas)");
       } else {
         save(); renderRoom();
-        if (!res.moved.length && !applied) { lastSnapshot = null; flash("Rien à corriger — aucun conflit détecté"); }
+        if (!res.moved.length && !applied) { lastSnapshot = null; flash("Rien à corriger - aucun conflit détecté"); }
         else { showUndo(); flash(res.moved.length + " élève(s) déplacé(s) · reste de la classe inchangé"); }
       }
     });
@@ -6182,8 +6445,8 @@
       var v = $("admClientId").value.trim();
       try { localStorage.setItem(KEY_CLIENTID, v); } catch (e) {}
       GOOGLE_CLIENT_ID = v;
-      if (v) { initDrive(); driveConnect(true); flash("Identifiant enregistré — connexion à Drive"); }
-      else flash("Identifiant effacé — mode local");
+      if (v) { initDrive(); driveConnect(true); flash("Identifiant enregistré - connexion à Drive"); }
+      else flash("Identifiant effacé - mode local");
       renderClassAdmin();
     });
     $("admDriveNow").addEventListener("click", async function () {
@@ -6213,7 +6476,7 @@
       var deja = Object.keys(state.classes || {}).filter(function (c) { return /^DÉMO/.test(state.classes[c].nom); });
       if (deja.length) {
         state.uiPrefs.classeActive = deja[0]; save(); renderAll(); closeAllDialogs();
-        flash("La classe de démonstration existe déjà — elle est affichée", 3000);
+        flash("La classe de démonstration existe déjà - elle est affichée", 3000);
         return;
       }
       if (!confirm("Créer une classe de DÉMONSTRATION ?\n\n" +
