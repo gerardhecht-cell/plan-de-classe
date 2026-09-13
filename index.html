@@ -454,6 +454,7 @@
   /* --- Groupes d'activité --- */
   .actbar{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:4px 0 8px;}
   .actbar select{width:auto; min-width:70px;}
+  .actbar input[type="date"]{width:auto; flex:none; min-width:150px; max-width:170px;}
   .actboard{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; margin:10px 0;}
   .actcol{border:1px solid var(--line); border-radius:10px; background:#fff; overflow:hidden; display:flex; flex-direction:column;}
   .actcol > h5{margin:0; font-family:inherit; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
@@ -727,13 +728,20 @@
     <div class="ph">Appel <button class="x" id="dlgAppelX">✕</button></div>
     <div class="pc">
       <div class="actbar" style="margin-bottom:8px">
-        <b id="apEntete">-</b>
-        <label style="margin:0 0 0 auto">Durée</label>
+        <b id="apClasseNom">-</b>
+        <label style="margin:0">Date</label><input type="date" id="apDate">
+        <label style="margin:0">Heure</label><select id="apHeure"></select>
+        <label style="margin:0">Durée</label>
         <select id="apDuree"><option value="1">1 h</option><option value="1.5">1 h 30</option><option value="2">2 h</option></select>
+        <button class="admbtn" id="apAujourdhui" title="Revenir à la séance en cours">⟲ Maintenant</button>
         <button class="admbtn ok" id="apTousLa">✓ Tout le monde est là</button>
       </div>
-      <p class="hint">Touchez les élèves <b>absents</b>. L'enregistrement est immédiat ; un élève absent est grisé sur le plan et retiré des tirages au sort.</p>
+      <p class="hint" id="apEntete">-</p>
+      <p class="hint">Touchez les élèves <b>absents</b>. L'enregistrement est immédiat ; un élève absent est grisé sur le plan et retiré des tirages au sort. Changez la date ou l'heure pour rattraper un oubli ou corriger une erreur.</p>
       <div class="apwrap"><div class="apgrid" id="apGrid"></div></div>
+      <div class="secttl">Séances enregistrées pour cette classe</div>
+      <div class="adm"><div class="admscroll" id="apSeances"></div></div>
+
       <div class="secttl">Cumul - <span id="apPeriodeNom">trimestre en cours</span></div>
       <div class="actbar" style="margin-bottom:6px">
         <label style="margin:0">Période</label>
@@ -2751,7 +2759,7 @@
   var KEY_PROJECTION = "pdc_projection";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-13-b";
+  var APP_VERSION = "2026-09-13-c";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
@@ -4448,24 +4456,36 @@
   }
   function libelleTrimestre(t) { return "Trimestre " + t.slice(-1) + " (" + t.slice(0, 4) + "-" + (+t.slice(0, 4) + 1) + ")"; }
   /* La séance en cours : celle du créneau de l'emploi du temps, sinon l'heure ronde courante. */
-  function seanceCourante(cid) {
-    var cr = creneauCourant();
-    var d = new Date();
-    var h = cr ? (String(Math.floor(cr.debut / 60)).padStart(2, "0") + ":" + String(cr.debut % 60).padStart(2, "0"))
-               : (String(d.getHours()).padStart(2, "0") + ":00");
-    var jour = jourISO(d);
-    var liste = appels(cid);
-    var trouve = liste.filter(function (a2) { return a2.d === jour && a2.h === h; })[0];
-    if (!trouve) { trouve = { d: jour, h: h, dur: 1, abs: [] }; liste.push(trouve); }
-    return trouve;
+  /* Séance visée par la fenêtre d'appel : par défaut celle en cours, mais l'enseignant peut
+     choisir une autre date ou une autre heure pour rattraper un oubli ou corriger une erreur. */
+  var appelSel = null;
+  function creneauDuMoment() {
+    var cr = creneauCourant(), d = new Date();
+    return {
+      d: jourISO(d),
+      h: cr ? (String(Math.floor(cr.debut / 60)).padStart(2, "0") + ":" + String(cr.debut % 60).padStart(2, "0"))
+            : (String(d.getHours()).padStart(2, "0") + ":00")
+    };
+  }
+  function seanceTrouver(cid, jour, h) {
+    return appels(cid).filter(function (a2) { return a2.d === jour && a2.h === h; })[0] || null;
+  }
+  /* Crée l'enregistrement seulement au premier geste réel : consulter une séance ne laisse
+     pas de trace vide dans l'historique. */
+  function seanceAssurer(cid, jour, h) {
+    var t = seanceTrouver(cid, jour, h);
+    if (!t) { t = { d: jour, h: h, dur: 1, abs: [] }; appels(cid).push(t); }
+    return t;
+  }
+  function seanceSelection(cid) {
+    if (!appelSel) appelSel = creneauDuMoment();
+    return appelSel;
   }
   function estAbsentMaintenant(eid) {
     var cid = curClassId(); if (!cid) return false;
-    var jour = jourISO(), cr = creneauCourant();
-    var d = new Date();
-    var h = cr ? (String(Math.floor(cr.debut / 60)).padStart(2, "0") + ":" + String(cr.debut % 60).padStart(2, "0"))
-               : (String(d.getHours()).padStart(2, "0") + ":00");
-    return appels(cid).some(function (a2) { return a2.d === jour && a2.h === h && a2.abs.indexOf(eid) >= 0; });
+    var m = creneauDuMoment();
+    var se = seanceTrouver(cid, m.d, m.h);
+    return !!(se && se.abs.indexOf(eid) >= 0);
   }
   function cumulAbsences(cid, periode) {
     var ref = jourISO(), tri = trimestreDe(ref), an = anneeScolaireDe(ref), out = {};
@@ -4486,34 +4506,94 @@
     var ent = Math.floor(h), dem = Math.round((h - ent) * 60);
     return ent + " h" + (dem ? " " + String(dem).padStart(2, "0") : "");
   }
+  function heuresDisponibles(cid) {
+    var vues = {};
+    SLOTS.forEach(function (h) { vues[h] = 1; });
+    appels(cid).forEach(function (a2) { vues[a2.h] = 1; });
+    vues[creneauDuMoment().h] = 1;
+    if (appelSel) vues[appelSel.h] = 1;
+    return Object.keys(vues).sort();
+  }
   function openAppel() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe affichée"); return; }
-    var se = seanceCourante(cid);
-    $("apDuree").value = String(se.dur || 1);
-    var d = new Date();
-    $("apEntete").textContent = state.classes[cid].nom + " · " + d.toLocaleDateString("fr-FR") + " · " + se.h;
-    renderAppelGrid(); renderAppelCumul();
+    appelSel = creneauDuMoment();
+    renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul();
     closeAllDialogs(); $("dlgAppel").classList.add("open");
+  }
+  function renderAppelEntete() {
+    var cid = curClassId(); if (!cid) return;
+    var sel = seanceSelection(cid);
+    $("apClasseNom").textContent = state.classes[cid].nom;
+    $("apDate").value = sel.d;
+    $("apHeure").innerHTML = heuresDisponibles(cid).map(function (h) {
+      return '<option value="' + h + '"' + (h === sel.h ? " selected" : "") + ">" + h + "</option>";
+    }).join("");
+    var se = seanceTrouver(cid, sel.d, sel.h);
+    $("apDuree").value = String((se && se.dur) || 1);
+    var maintenant = creneauDuMoment();
+    var enCours = (sel.d === maintenant.d && sel.h === maintenant.h);
+    var jj = sel.d.slice(8, 10) + "/" + sel.d.slice(5, 7) + "/" + sel.d.slice(0, 4);
+    $("apEntete").innerHTML = "Séance du <b>" + jj + "</b> à <b>" + sel.h + "</b> · "
+      + (se ? (se.abs.length + " absent" + (se.abs.length > 1 ? "s" : "") + " enregistré" + (se.abs.length > 1 ? "s" : ""))
+            : "aucun appel fait pour cette séance")
+      + (enCours ? " · <b>séance en cours</b>" : " · <b style=\"color:var(--amber)\">séance passée ou à venir</b>");
   }
   function renderAppelGrid() {
     var cid = curClassId(); if (!cid) return;
-    var se = seanceCourante(cid), box = $("apGrid");
+    var sel = seanceSelection(cid);
+    var se = seanceTrouver(cid, sel.d, sel.h), box = $("apGrid");
     var cum = cumulAbsences(cid, "tri");
     box.innerHTML = "";
     classEleves(cid).slice().sort(function (a2, b2) { return a2.nom.localeCompare(b2.nom); }).forEach(function (e) {
-      var absent = se.abs.indexOf(e.id) >= 0;
+      var absent = !!(se && se.abs.indexOf(e.id) >= 0);
       var c = cum[e.id] || { seances: 0 };
       var b = document.createElement("button");
       b.className = "apchip" + (absent ? " abs" : "");
       b.innerHTML = '<span class="st"></span><span>' + esc(e.nom) + " " + esc(e.prenom)
         + (c.seances ? "<small>" + c.seances + " absence" + (c.seances > 1 ? "s" : "") + " ce trimestre</small>" : "") + "</span>";
       b.addEventListener("click", function () {
-        var i = se.abs.indexOf(e.id);
-        if (i >= 0) se.abs.splice(i, 1); else se.abs.push(e.id);
+        var s2 = seanceAssurer(cid, sel.d, sel.h);
+        var i = s2.abs.indexOf(e.id);
+        if (i >= 0) s2.abs.splice(i, 1); else s2.abs.push(e.id);
         act((i >= 0 ? "Présence" : "Absence") + " - " + e.prenom + " " + e.nom);
-        save(); refreshSeat(e.id); renderAppelGrid(); renderAppelCumul();
+        save(); refreshSeat(e.id);
+        renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul();
       });
       box.appendChild(b);
+    });
+  }
+  /* Historique des séances : ouvrir pour corriger, supprimer si la séance n'a pas eu lieu. */
+  function renderAppelSeances() {
+    var cid = curClassId(); if (!cid) return;
+    var box = $("apSeances"), liste = appels(cid).slice().sort(function (a2, b2) {
+      return (b2.d + b2.h).localeCompare(a2.d + a2.h);
+    });
+    box.innerHTML = "";
+    if (!liste.length) { box.innerHTML = '<div class="row"><span class="hint">Aucune séance enregistrée pour l\'instant.</span></div>'; return; }
+    var sel = seanceSelection(cid);
+    liste.forEach(function (se) {
+      var jj = se.d.slice(8, 10) + "/" + se.d.slice(5, 7) + "/" + se.d.slice(0, 4);
+      var noms = se.abs.map(function (id) { var e = state.eleves[id]; return e ? e.nom : null; }).filter(Boolean).join(", ");
+      var courant = (se.d === sel.d && se.h === sel.h);
+      var row = document.createElement("div"); row.className = "row";
+      row.innerHTML = '<span style="flex:1">' + (courant ? "<b>▸ " : "") + jj + " · " + se.h + (courant ? "</b>" : "")
+        + ' <span class="hint">' + heuresTxt(+se.dur || 1) + "</span></span>"
+        + '<span class="nb">' + se.abs.length + " abs.</span>"
+        + '<span class="hint" style="max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(noms) + '">' + esc(noms || "personne") + "</span>"
+        + '<button class="admbtn" data-ouvrir="1">Ouvrir</button><button class="admbtn del" data-sup="1">✕</button>';
+      row.querySelector("[data-ouvrir]").addEventListener("click", function () {
+        appelSel = { d: se.d, h: se.h };
+        renderAppelEntete(); renderAppelGrid(); renderAppelSeances();
+      });
+      row.querySelector("[data-sup]").addEventListener("click", function () {
+        if (!confirm("Supprimer l'appel du " + jj + " à " + se.h + " ?\n"
+          + (se.abs.length ? se.abs.length + " absence(s) seront retirées du décompte." : "Aucune absence n'y est enregistrée."))) return;
+        act("Appel supprimé");
+        var l = appels(cid); l.splice(l.indexOf(se), 1);
+        save(); renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul(); renderRoom();
+        flash("Appel supprimé", 2200);
+      });
+      box.appendChild(row);
     });
   }
   function renderAppelCumul() {
@@ -6374,15 +6454,31 @@
     $("apClose").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); renderRoom(); });
     $("apPeriode").addEventListener("change", renderAppelCumul);
     $("apPrint").addEventListener("click", printAppel);
+    $("apDate").addEventListener("change", function () {
+      var cid = curClassId(); if (!cid || !this.value) return;
+      appelSel = { d: this.value, h: seanceSelection(cid).h };
+      renderAppelEntete(); renderAppelGrid(); renderAppelSeances();
+    });
+    $("apHeure").addEventListener("change", function () {
+      var cid = curClassId(); if (!cid) return;
+      appelSel = { d: seanceSelection(cid).d, h: this.value };
+      renderAppelEntete(); renderAppelGrid(); renderAppelSeances();
+    });
+    $("apAujourdhui").addEventListener("click", function () {
+      appelSel = creneauDuMoment();
+      renderAppelEntete(); renderAppelGrid(); renderAppelSeances();
+    });
     $("apDuree").addEventListener("change", function () {
       var cid = curClassId(); if (!cid) return;
-      seanceCourante(cid).dur = +this.value; act("Durée de la séance"); save(); renderAppelCumul();
+      var sel = seanceSelection(cid);
+      seanceAssurer(cid, sel.d, sel.h).dur = +this.value;
+      act("Durée de la séance"); save(); renderAppelEntete(); renderAppelSeances(); renderAppelCumul();
     });
     $("apTousLa").addEventListener("click", function () {
       var cid = curClassId(); if (!cid) return;
-      var se = seanceCourante(cid);
-      if (se.abs.length) { act("Appel : tout le monde présent"); se.abs = []; save(); }
-      renderAppelGrid(); renderAppelCumul(); renderRoom();
+      var sel = seanceSelection(cid), se = seanceAssurer(cid, sel.d, sel.h);
+      act("Appel : tout le monde présent"); se.abs = []; save();
+      renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul(); renderRoom();
       flash("Appel enregistré : classe complète", 2400);
     });
     $("admVerifBep").addEventListener("click", openBepCheck);
