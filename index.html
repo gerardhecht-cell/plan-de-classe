@@ -379,6 +379,34 @@
   body.oral-discret .seat.cadre-bep{border-color:var(--line) !important; border-width:1.5px !important; background:#fff !important;}
   body.oral-discret .seat.cadre-bep.front{box-shadow:inset 0 -3px 0 #bcd2ea !important;}
 
+  /* --- Mode Projection : le plan affiché au vidéoprojecteur ne montre que les places,
+         les noms et, si vous les affichez, les groupes d'activité. Toute information
+         individuelle disparaît : dispositifs, aménagements, scores, tendances, absences. --- */
+  body.projection .seat .amen,
+  body.projection .seat .pastilles,
+  body.projection .seat .glasses,
+  body.projection .seat .agit,
+  body.projection .seat .sepmark,
+  body.projection .seat .score,
+  body.projection .seat .tally,
+  body.projection .seat .qmark,
+  body.projection .seat .absmark,
+  body.projection .seat .tarr,
+  body.projection .grp-band{display:none !important;}
+  body.projection .seat.cadre-bep{border-color:var(--line) !important; border-width:1.5px !important; background:#fff !important;}
+  body.projection .seat.cadre-bep.front{box-shadow:inset 0 -3px 0 #bcd2ea !important;}
+  body.projection .seat.absent{opacity:1 !important; filter:none !important;}
+  /* le liseré rouge/vert de tendance révèle le comportement : il disparaît aussi.
+     Le liseré de groupe d'activité, lui, est réappliqué juste après. */
+  body.projection .seat.neg, body.projection .seat.pos{background:#fff !important; box-shadow:none !important;}
+  body.projection .seat.has-actg{box-shadow:inset 4px 0 0 var(--actg-c) !important;}
+  body.projection .ilot h2 .ilot-dash{display:none !important;}
+  body.projection .seat[data-c]{background:#fff !important;}
+  body.projection .seat .nom{background:none !important; box-shadow:none !important; font-size:1.24rem !important;}
+  body.projection .seat .prenom{font-size:1.06rem !important; color:var(--ink) !important;}
+  body.projection .seat{justify-content:center;}
+  #btnProjection[data-on="1"]{background:var(--amber); color:#17202a;}
+
   body.tirage .seat > *:not(.nom):not(.prenom){display:none !important;}
   body.tirage .seat .tarr{display:none !important;}          /* flèches de tendance */
   body.tirage .ilot h2 > *{visibility:hidden;}                /* effectifs, mixité, indicateurs de groupe */
@@ -549,6 +577,7 @@
     <span class="weekbadge" id="weekBadge" title="Emploi du temps · semaine paire/impaire">Sem. -</span>
     <span class="hspace"></span>
     <button class="drivebadge" id="driveBadge" data-s="off">☁︎ Local</button>
+    <button class="iconbtn" id="btnProjection" data-on="0" title="Masquer toutes les informations individuelles pour projeter le plan à la classe">👁 Projection</button>
     <button class="iconbtn ghost" id="btnConfig">⚙︎ Classe</button>
   </div>
   <div class="toolrow">
@@ -2717,9 +2746,12 @@
      de CE poste. Conservé en local : sans lui, un poste qui redémarre ne sait pas si le Drive
      a bougé entre-temps et peut écraser le travail fait ailleurs. */
   var KEY_REMOTEMOD = "pdc_remotemod";
+  /* Le mode Projection est un réglage d'écran, propre à ce poste : il ne part pas sur Drive
+     et n'impose rien à l'autre ordinateur. */
+  var KEY_PROJECTION = "pdc_projection";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-13-a";
+  var APP_VERSION = "2026-09-13-b";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
@@ -3565,6 +3597,26 @@
     el.title = cr
       ? ("Cours en ce moment : " + state.classes[cr.cid].nom + " - clic pour ouvrir l'emploi du temps")
       : "Aucun cours à cette heure d'après l'emploi du temps - clic pour l'ouvrir";
+  }
+  /* ---- Mode Projection ---- */
+  function projectionActive() { return LS.raw(KEY_PROJECTION) === "1"; }
+  function appliquerProjection() {
+    var on = projectionActive();
+    document.body.classList.toggle("projection", on);
+    var b = $("btnProjection"); if (!b) return;
+    b.dataset.on = on ? "1" : "0";
+    b.innerHTML = on ? "👁 Projection ON" : "👁 Projection";
+    b.title = on
+      ? "Mode Projection actif : aucune information individuelle affichée. Cliquez pour revenir à l'affichage complet."
+      : "Masquer toutes les informations individuelles pour projeter le plan à la classe";
+  }
+  function basculerProjection() {
+    LS.setRaw(KEY_PROJECTION, projectionActive() ? "0" : "1");
+    appliquerProjection();
+    requestAnimationFrame(function () { fitNames(); fitRoom(); });
+    flash(projectionActive()
+      ? "Mode Projection : dispositifs, aménagements, scores et absences masqués"
+      : "Affichage complet rétabli", 2800);
   }
   function saisieEnCours() {
     return !!(bavardMode || oralMode || leconMode || grpMode || roomEdit)
@@ -6316,6 +6368,7 @@
       if (pictoApres) pictoApres();
       renderRoom(); flash("Pictogramme choisi automatiquement", 2200);
     });
+    $("btnProjection").addEventListener("click", basculerProjection);
     $("btnAppel").addEventListener("click", openAppel);
     $("dlgAppelX").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); });
     $("apClose").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); renderRoom(); });
@@ -6545,6 +6598,7 @@
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
+    try { appliquerProjection(); } catch (e) { console.error("projection", e); }
     try { demarrerHorloge(); } catch (e) { console.error("horloge", e); }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
