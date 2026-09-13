@@ -107,6 +107,8 @@
   .seat .actg{position:absolute; top:6px; right:7px; z-index:3; color:#fff; font-size:.6rem; font-weight:800;
               border-radius:6px; padding:1px 5px; letter-spacing:.02em; box-shadow:0 1px 2px rgba(0,0,0,.22);}
   .seat.has-actg{box-shadow:inset 4px 0 0 var(--actg-c);}
+  .seancebar{background:#8a6d1a; color:#fff; padding:7px 16px; font-size:.78rem; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .seancebar button{background:#fff; color:#8a6d1a; border-radius:7px; padding:4px 10px; font-weight:800; font-size:.74rem; margin-left:auto;}
   .actgbar{background:#0e7fa8; color:#fff; padding:7px 16px; font-size:.78rem; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .actgbar .dot{width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:4px; vertical-align:-1px;}
   .actgbar .lg{background:rgba(255,255,255,.16); border-radius:6px; padding:2px 7px; font-weight:800;}
@@ -436,6 +438,11 @@
   .ncat{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px;}
   .ncat button{border:1.6px solid var(--line); background:#fff; border-radius:9px; padding:8px 11px; font-size:.78rem; font-weight:700; color:var(--ink-2); min-height:38px;}
   .ncat button.on{color:#fff;}
+  .ncat button .ton{font-weight:900; opacity:.75; margin-left:2px;}
+  .ncat button.editable{border-style:dashed; border-color:var(--blue);}
+  .ncat .catadd{border-style:dashed; border-color:var(--blue); color:var(--blue-d);}
+  .ncat .catedit{border-color:#b9c6d3; color:var(--muted);}
+  .ncat .catedit.on{background:var(--blue); border-color:var(--blue); color:#fff;}
   .npick{display:flex; flex-wrap:wrap; gap:5px; max-height:26vh; overflow-y:auto; padding:8px; border:1px solid var(--line); border-radius:10px; background:#fff;}
   .npick button{border:1.5px solid var(--line); background:#fff; border-radius:8px; padding:6px 9px; font-size:.76rem; font-weight:700; color:var(--ink-2); min-height:34px;}
   .npick button.on{background:var(--blue); color:#fff; border-color:var(--blue);}
@@ -617,6 +624,7 @@
 <div class="bavardbar hidden" id="roomEditBar" style="background:var(--ink-2)"></div>
 <div class="bavardbar hidden" id="grpBar" style="background:#7c3aad"></div>
 <div class="actgbar hidden" id="actgBar"></div>
+<div class="seancebar hidden" id="seanceBar"></div>
 <div class="oralbar hidden" id="oralBar"></div>
 <div class="oralbar hidden" id="leconBar" style="background:#2f6fb0"></div>
 
@@ -706,6 +714,18 @@
       <label class="ccheck" style="margin-top:4px"><input type="checkbox" id="recapBepSync" checked><span>Mettre à jour les marques <b>BEP / dispositifs</b> des élèves conservés d'après le fichier (remplace les marques actuelles - le suivi comportement/compétences est intact)</span></label>
       <p class="hint">Les départs présumés ne sont <b>jamais</b> supprimés automatiquement : leur suivi est conservé sauf si vous demandez la suppression.</p>
       <div class="actions"><button class="ghost2" id="recapConfirmDel">Appliquer + retirer les départs</button><button class="primary" id="recapConfirm">Appliquer (conserver tout)</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendrier des séances possibles pour la classe -->
+<div class="dlg" id="dlgSeanceQ">
+  <div class="panel" style="max-width:520px">
+    <div class="ph">Quelle séance ? <button class="x" id="dlgSeanceQX">✕</button></div>
+    <div class="pc">
+      <p class="hint">Séances passées de <b id="sqTitre">-</b> d'après votre emploi du temps, de la plus récente à la plus ancienne. Tout ce que vous saisirez ensuite sera daté de la séance choisie.</p>
+      <div class="adm"><div class="admscroll" id="sqListe"></div></div>
+      <div class="actions"><button class="ghost2" id="sqMaintenant">⟲ Saisir à l'heure actuelle</button><button class="primary" id="sqFermer">Fermer</button></div>
     </div>
   </div>
 </div>
@@ -2589,6 +2609,7 @@
       refs: {
         troubles: clone(DEF_TROUBLES), dispositifs: clone(DEF_DISPOSITIFS),
         amenagements: DEF_AMENAGEMENTS.slice(), contraintesPlacement: clone(DEF_CONTRAINTES),
+        noteCats: clone(NOTE_CATS_DEF),
         comportements: clone(DEF_BEHAVIOR)
       },
       eleves: {},
@@ -2759,7 +2780,7 @@
   var KEY_PROJECTION = "pdc_projection";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-13-c";
+  var APP_VERSION = "2026-09-14-a";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
@@ -2862,6 +2883,7 @@
     try { migrerAncienneDemo(s); } catch (e) { /* jamais bloquant */ }
     if (!s.refs) s.refs = def.refs;
     ["troubles", "dispositifs", "amenagements", "contraintesPlacement", "comportements"].forEach(function (k) { if (!s.refs[k]) s.refs[k] = def.refs[k]; });
+    if (!s.refs.noteCats || !s.refs.noteCats.length) s.refs.noteCats = clone(NOTE_CATS_DEF);
     // resynchroniser la couleur des sigles CONNUS avec les valeurs à jour (l'app n'expose pas
     // de sélecteur de couleur ; les écarts viennent uniquement d'anciennes versions par défaut).
     // Les sigles ajoutés par l'enseignant (clé absente des valeurs par défaut) gardent leur couleur.
@@ -3260,7 +3282,7 @@
 
   /* ====================== COMPORTEMENT / TENDANCE ====================== */
   function logBehavior(eleveId, kind, itemId, intensite) {
-    eData(eleveId).behavior.push({ t: kind, id: itemId, intensite: intensite, ts: Date.now(), ci: mat().courseIndex });
+    eData(eleveId).behavior.push({ t: kind, id: itemId, intensite: intensite, ts: horodatageSaisie(), ci: coursIndexSaisie(classeDeEleve(eleveId)) });
     save();
   }
   function openAvecQui(s) {
@@ -3438,8 +3460,9 @@
     var lvl = oralMode.niveau || 1;
     // points : bonne = +niveau, moyenne = +la moitié (arrondi sup.), sinon 0
     var pts = out === "bonne" ? lvl : (out === "moyenne" ? Math.ceil(lvl / 2) : 0);
-    if (pts) d.courseScores[m.courseIndex] = (d.courseScores[m.courseIndex] || 0) + pts;
-    d.behavior.push({ t: "oral", id: out, lvl: lvl, spontane: !!oralMode.spontane, ts: Date.now(), ci: m.courseIndex });
+    var ciO = coursIndexSaisie(curClassId());
+    if (pts) d.courseScores[ciO] = (d.courseScores[ciO] || 0) + pts;
+    d.behavior.push({ t: "oral", id: out, lvl: lvl, spontane: !!oralMode.spontane, ts: horodatageSaisie(), ci: ciO });
     save(); refreshSeat(id);
     if (ui.activeEleve === id) buildTracking(state.eleves[id]);
     $("dlgOralStep").classList.remove("open");
@@ -3523,9 +3546,10 @@
       if (note >= 4) d.q.bonne++; else if (note >= 2.5) d.q.moyenne++; else d.q.mauvaise++;
       // points de cours = note arrondie au sup (0.5 -> 1) pour rester cohérent avec le score entier
       var pts = Math.round(note);
-      if (pts) d.courseScores[m.courseIndex] = (d.courseScores[m.courseIndex] || 0) + pts;
+      var ciL = coursIndexSaisie(curClassId());
+      if (pts) d.courseScores[ciL] = (d.courseScores[ciL] || 0) + pts;
     }
-    d.behavior.push({ t: "lecon", id: isPas ? "pas" : "note", note: note, ts: Date.now(), ci: m.courseIndex });
+    d.behavior.push({ t: "lecon", id: isPas ? "pas" : "note", note: note, ts: horodatageSaisie(), ci: coursIndexSaisie(curClassId()) });
     d.lastLeconTs = Date.now(); // pour le tirage au sort qui évite les récents
     save(); refreshSeat(id);
     if (ui.activeEleve === id) buildTracking(state.eleves[id]);
@@ -3554,8 +3578,136 @@
     return D.transversal(per, Date.now());
   }
 
-  /* ====================== SCORES / COMPÉTENCES ====================== */
-  function scoreCur(eleveId) { return (eData(eleveId).courseScores[mat().courseIndex]) || 0; }
+  /* ============ SAISIE DATÉE : rattraper une heure passée ============
+     Par défaut tout est horodaté à l'instant. Quand l'enseignant saisit pour une classe
+     qu'il n'a pas à cette heure-ci, il choisit la séance concernée dans un calendrier qui
+     ne propose QUE les dates où cette classe a cours d'après son emploi du temps. */
+  var saisieSeance = null;                 // null = maintenant | { cid, d, h, ts }
+  function horodatageSaisie() { return saisieSeance ? saisieSeance.ts : Date.now(); }
+  function cleSeance(d, h) { return d + "_" + h; }
+  function coursDeSeance(cid) {
+    var m = mat(); if (!m.coursDeSeance) m.coursDeSeance = {};
+    if (!m.coursDeSeance[cid]) m.coursDeSeance[cid] = {};
+    return m.coursDeSeance[cid];
+  }
+  /* Mémorise quel numéro de cours correspond à la séance en cours : une saisie rattrapée
+     plus tard retrouvera la bonne barre de score au lieu d'alimenter celle du jour. */
+  function marquerSeanceDuCours(cid) {
+    var cr = creneauDuMoment();
+    var tbl = coursDeSeance(cid), k = cleSeance(cr.d, cr.h);
+    if (tbl[k] == null) tbl[k] = coursIndex(cid);
+  }
+  function coursIndexSaisie(cid) {
+    cid = cid || curClassId();
+    if (saisieSeance && saisieSeance.cid === cid) {
+      var connu = coursDeSeance(cid)[cleSeance(saisieSeance.d, saisieSeance.h)];
+      if (connu != null) return connu;
+    }
+    return coursIndex(cid);
+  }
+  /* Les séances passées de cette classe, d'après l'emploi du temps (8 semaines en arrière). */
+  function seancesPossibles(cid, semaines) {
+    var m = mat(), out = [], today = new Date();
+    semaines = semaines || 8;
+    for (var recul = 0; recul <= semaines * 7; recul++) {
+      var jour = new Date(today.getTime() - recul * 86400000);
+      var par = D.weekParity(m.calage, jour);
+      var dayIdx = ((jour.getDay() + 6) % 7) + 1;
+      var grille = (m.edt && m.edt[par] && m.edt[par][dayIdx]) || {};
+      Object.keys(grille).sort().forEach(function (debut) {
+        if (grille[debut] !== cid) return;
+        var iso = jourISO(jour);
+        var q = debut.split(":");
+        var quand = new Date(jour.getFullYear(), jour.getMonth(), jour.getDate(), +q[0], +q[1] || 0);
+        if (quand.getTime() > Date.now()) return;                 // pas de séance future
+        out.push({ d: iso, h: debut, ts: quand.getTime(), par: par, jourIdx: dayIdx });
+      });
+    }
+    return out;                                                    // déjà du plus récent au plus ancien
+  }
+  var JOURS_FR = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+  function libelleSeance(se) {
+    var d = new Date(se.ts);
+    return JOURS_FR[se.jourIdx] + " " + String(d.getDate()).padStart(2, "0") + "/"
+      + String(d.getMonth() + 1).padStart(2, "0") + " · " + se.h + " (sem. " + se.par + ")";
+  }
+  /* La saisie correspond-elle bien à un créneau de la classe affichée ? */
+  function creneauCoherent(cid) {
+    var cr = creneauCourant();
+    return !!(cr && cr.cid === cid);
+  }
+  function ouvrirCalendrierSeance(cid, apres) {
+    cid = cid || curClassId(); if (!cid) return;
+    var liste = seancesPossibles(cid, 8);
+    var box = $("sqListe");
+    $("sqTitre").textContent = state.classes[cid].nom;
+    if (!liste.length) {
+      box.innerHTML = '<div class="row"><span class="hint">Aucun créneau connu pour cette classe. '
+        + "Renseignez l'emploi du temps (clic sur le badge de semaine) pour obtenir des dates.</span></div>";
+    } else {
+      box.innerHTML = "";
+      liste.slice(0, 40).forEach(function (se) {
+        var deja = saisieSeance && saisieSeance.cid === cid && saisieSeance.d === se.d && saisieSeance.h === se.h;
+        var row = document.createElement("div"); row.className = "row";
+        row.innerHTML = '<span style="flex:1">' + (deja ? "<b>▸ " : "") + esc(libelleSeance(se)) + (deja ? "</b>" : "") + "</span>"
+          + '<button class="admbtn">Choisir</button>';
+        row.querySelector("button").addEventListener("click", function () {
+          saisieSeance = { cid: cid, d: se.d, h: se.h, ts: se.ts };
+          majBandeauSaisie(); $("dlgSeanceQ").classList.remove("open");
+          if (apres) apres();
+          flash("Saisie datée du " + libelleSeance(se), 3400);
+        });
+        box.appendChild(row);
+      });
+    }
+    closeAllDialogs(); $("dlgSeanceQ").classList.add("open");
+  }
+  function annulerSaisieDatee() { saisieSeance = null; majBandeauSaisie(); flash("Saisie revenue à maintenant", 2400); }
+  function majBandeauSaisie() {
+    var bar = $("seanceBar"); if (!bar) return;
+    if (!saisieSeance) { bar.classList.add("hidden"); return; }
+    bar.classList.remove("hidden");
+    var d = saisieSeance.d;
+    bar.innerHTML = "🕓 Saisie datée du <b>" + d.slice(8, 10) + "/" + d.slice(5, 7) + "/" + d.slice(0, 4)
+      + " à " + saisieSeance.h + "</b> pour <b>" + esc(state.classes[saisieSeance.cid] ? state.classes[saisieSeance.cid].nom : "?")
+      + '</b><button id="sqStop">⟲ Revenir à maintenant</button>';
+    $("sqStop").addEventListener("click", annulerSaisieDatee);
+  }
+  /* Appelé au démarrage d'un mode de saisie : si l'heure ne colle pas, on propose le calendrier. */
+  function verifierCreneauAvantSaisie(apres) {
+    var cid = curClassId(); if (!cid) { if (apres) apres(); return; }
+    if (saisieSeance && saisieSeance.cid === cid) { if (apres) apres(); return; }
+    if (saisieSeance && saisieSeance.cid !== cid) saisieSeance = null;
+    if (creneauCoherent(cid)) { marquerSeanceDuCours(cid); majBandeauSaisie(); if (apres) apres(); return; }
+    var liste = seancesPossibles(cid, 8);
+    if (!liste.length) { majBandeauSaisie(); if (apres) apres(); return; }   // pas d'emploi du temps : on ne gêne pas
+    if (!confirm("Vous saisissez pour " + state.classes[cid].nom + ", mais ce créneau n'est pas le sien.\n\n"
+      + "OK : choisir la séance concernée dans le calendrier de cette classe.\n"
+      + "Annuler : enregistrer quand même à la date et à l'heure actuelles.")) {
+      majBandeauSaisie(); if (apres) apres(); return;
+    }
+    ouvrirCalendrierSeance(cid, apres);
+  }
+
+  /* ====================== SCORES / COMPÉTENCES ======================
+     Le numéro de cours est propre à CHAQUE CLASSE. Auparavant il était unique pour toute la
+     matière : démarrer une heure avec une classe faisait basculer la barre de score de toutes
+     les autres, et les participations de l'heure précédente semblaient effacées. */
+  function coursIndex(cid) {
+    var m = mat(); if (!m.coursParClasse) m.coursParClasse = {};
+    cid = cid || curClassId(); if (!cid) return 0;
+    if (m.coursParClasse[cid] == null) m.coursParClasse[cid] = (m.courseIndex || 0); // reprise de l'existant
+    return m.coursParClasse[cid];
+  }
+  function setCoursIndex(cid, v) { var m = mat(); if (!m.coursParClasse) m.coursParClasse = {}; m.coursParClasse[cid] = v; }
+  function classeDeEleve(eid) {
+    var cs = state.classes || {};
+    var cur = curClassId();
+    if (cur && cs[cur] && (cs[cur].eleveIds || []).indexOf(eid) >= 0) return cur;
+    var k = Object.keys(cs).filter(function (c) { return (cs[c].eleveIds || []).indexOf(eid) >= 0; })[0];
+    return k || cur;
+  }
+  function scoreCur(eleveId, cid) { return (eData(eleveId).courseScores[coursIndex(cid || classeDeEleve(eleveId))]) || 0; }
   function scoreGlobal(eleveId) { return Object.values(eData(eleveId).courseScores).reduce(function (a, b) { return a + (b || 0); }, 0); }
   function compTint(eleveId) { var m = mat(); if (!m.sessionComp.length) return 3; var d = eData(eleveId); return Math.min.apply(null, m.sessionComp.map(function (c) { return C_IDX[d.comp[c] || "S"]; })); }
   function compValidated(eleveId) { var m = mat(), d = eData(eleveId); return m.sessionComp.some(function (c) { return d.compTouched && d.compTouched[c]; }); }
@@ -3569,7 +3721,7 @@
     }).join("") || '<option value="">- aucune classe -</option>';
     var m = mat();
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
-    $("btnCourse").innerHTML = "➕ Cours " + ((m.courseIndex || 0) + 1);
+    $("btnCourse").innerHTML = "➕ Cours " + (coursIndex(curClassId()) + 1);
     var par = D.weekParity(m.calage, new Date());
     $("weekBadge").dataset.p = par;
     majHorloge(par);
@@ -4238,14 +4390,15 @@
     // Questions et Leçons orales : saisies via les boutons rapides 🎤 Oral et 📖 Leçons du haut
 
     // Score (replié par défaut pour rester compact)
-    var cs = d.courseScores || {}, nC = Math.max(m.courseIndex + 1, 1);
+    var ciCur = coursIndex(curClassId());
+    var cs = d.courseScores || {}, nC = Math.max(ciCur + 1, 1);
     Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
     var maxV = 1, bars = [];
-    for (var i = 0; i < nC; i++) { var v = cs[i] || 0; maxV = Math.max(maxV, v); bars.push({ v: v, l: "C" + (i + 1), cur: i === m.courseIndex }); }
+    for (var i = 0; i < nC; i++) { var v = cs[i] || 0; maxV = Math.max(maxV, v); bars.push({ v: v, l: "C" + (i + 1), cur: i === ciCur }); }
     var glob = scoreGlobal(s.id); maxV = Math.max(maxV, glob);
     var barHtml = bars.map(function (b) { return '<div class="bar ' + (b.cur ? "bcur" : "") + '"><span class="bv">' + b.v + '</span><div class="bb" style="height:' + Math.round(6 + b.v / maxV * 54) + 'px"></div><span class="bl">' + b.l + (b.cur ? " •" : "") + "</span></div>"; }).join("") +
       '<div class="bar bglob"><span class="bv">' + glob + '</span><div class="bb" style="height:' + Math.round(6 + glob / maxV * 54) + 'px"></div><span class="bl">Global</span></div>';
-    html += '<details class="block scoredet"><summary>📊 Score - cours ' + (m.courseIndex + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
+    html += '<details class="block scoredet"><summary>📊 Score - cours ' + (ciCur + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
 
     // Aménagements (BEP) - en bas ; base liée au handicap en gras + bouton Ajouter
     if (eleveBep(s)) {
@@ -4373,8 +4526,9 @@
       grp.querySelectorAll("button").forEach(function (b) {
         b.addEventListener("click", function () {
           var out = b.dataset.o, lvl = kind === "q" ? ui.qLevel : ui.oralLevel; store[out]++;
-          if (out === "bonne") { var ci = m.courseIndex; d.courseScores[ci] = (d.courseScores[ci] || 0) + lvl; }
-          d.behavior.push({ t: kind, id: out, lvl: lvl, ts: Date.now(), ci: m.courseIndex });
+          var ci = coursIndexSaisie(curClassId());
+          if (out === "bonne") { d.courseScores[ci] = (d.courseScores[ci] || 0) + lvl; }
+          d.behavior.push({ t: kind, id: out, lvl: lvl, ts: horodatageSaisie(), ci: ci });
           save(); refreshSeat(s.id); buildTracking(s); flash(out === "bonne" ? ("+" + lvl + " pts") : "Enregistré");
         });
       });
@@ -5037,14 +5191,27 @@
   /* ====================== ANNOTATIONS ======================
      Observation datée, sur un ou plusieurs élèves à la fois, rangée dans le même
      journal que le reste du suivi : elle ressort dans l'historique et dans le bilan. */
-  var NOTE_CATS = [
-    { k: "positif",     lab: "👍 Bon travail",   c: "#2f9e6f" },
-    { k: "evolution",   lab: "📈 Évolution",     c: "#2f6fb0" },
-    { k: "impertinence",lab: "😠 Impertinence",  c: "#e0922f" },
-    { k: "violence",    lab: "⛔ Violence",      c: "#d64545" },
-    { k: "imprudence",  lab: "⚠️ Imprudence",    c: "#7d57c4" }
+  var NOTE_CATS_DEF = [
+    { k: "positif",     lab: "👍 Bon travail",   c: "#2f9e6f", ton: "positif" },
+    { k: "evolution",   lab: "📈 Évolution",     c: "#2f6fb0", ton: "positif" },
+    { k: "impertinence",lab: "😠 Impertinence",  c: "#e0922f", ton: "negatif" },
+    { k: "violence",    lab: "⛔ Violence",      c: "#d64545", ton: "negatif" },
+    { k: "imprudence",  lab: "⚠️ Imprudence",    c: "#7d57c4", ton: "negatif" }
   ];
-  var noteCat = "positif", noteSel = {}, noteFilter = "";
+  var TONS = [
+    { k: "positif", lab: "Positive", c: "#2f9e6f", sig: "＋" },
+    { k: "neutre",  lab: "Neutre",   c: "#7b8489", sig: "＝" },
+    { k: "negatif", lab: "Négative", c: "#d64545", sig: "－" }
+  ];
+  /* Les catégories vivent dans l'état : l'enseignant en ajoute, les corrige, les supprime,
+     et qualifie chacune de positive, neutre ou négative. */
+  function noteCats() {
+    if (!state.refs.noteCats || !state.refs.noteCats.length) state.refs.noteCats = clone(NOTE_CATS_DEF);
+    state.refs.noteCats.forEach(function (c) { if (!c.ton) c.ton = "neutre"; });
+    return state.refs.noteCats;
+  }
+  function tonInfo(k) { return TONS.filter(function (t) { return t.k === k; })[0] || TONS[1]; }
+  var noteCat = "positif", noteSel = {}, noteFilter = "", noteEdition = false;
 
   function openNoteDlg() {
     if (!curClassId()) { flash("Affichez une classe d'abord"); return; }
@@ -5071,22 +5238,90 @@
   }
   function renderNoteCats() {
     var box = $("nCats"); box.innerHTML = "";
-    NOTE_CATS.forEach(function (c) {
+    var liste = noteCats();
+    if (liste.length && liste.filter(function (c) { return c.k === noteCat; }).length === 0) noteCat = liste[0].k;
+    liste.forEach(function (c, i) {
+      var t = tonInfo(c.ton);
       var b = document.createElement("button");
-      b.textContent = c.lab;
+      b.innerHTML = esc(c.lab) + ' <span class="ton" title="Appréciation : ' + t.lab + '">' + t.sig + "</span>";
+      b.title = "Appréciation : " + t.lab;
       if (noteCat === c.k) { b.classList.add("on"); b.style.background = c.c; b.style.borderColor = c.c; }
-      b.addEventListener("click", function () { noteCat = c.k; renderNoteCats(); });
+      b.addEventListener("click", function () {
+        if (noteEdition) { editerCatNote(i); return; }
+        noteCat = c.k; renderNoteCats();
+      });
+      if (noteEdition) b.classList.add("editable");
       box.appendChild(b);
     });
+    var plus = document.createElement("button");
+    plus.className = "catadd"; plus.textContent = "＋ Catégorie";
+    plus.addEventListener("click", ajouterCatNote);
+    box.appendChild(plus);
+    var mod = document.createElement("button");
+    mod.className = "catedit" + (noteEdition ? " on" : "");
+    mod.textContent = noteEdition ? "✓ Terminer" : "✎ Modifier";
+    mod.title = "Corriger ou supprimer une catégorie";
+    mod.addEventListener("click", function () { noteEdition = !noteEdition; renderNoteCats(); });
+    box.appendChild(mod);
+  }
+  function couleurDuTon(ton) { return tonInfo(ton).c; }
+  function ajouterCatNote() {
+    var lab = prompt("Nom de la nouvelle catégorie d'annotation :\n(vous pouvez mettre un emoji au début, par exemple « 🧰 Matériel oublié »)", "");
+    if (lab === null) return;
+    lab = lab.trim(); if (!lab) return;
+    var ton = demanderTon("Comment appréciez-vous « " + lab + " » ?");
+    if (!ton) return;
+    var k = "c_" + D.stripAccents(lab).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 12) + "_" + Math.random().toString(36).slice(2, 5);
+    act("Catégorie d'annotation ajoutée");
+    noteCats().push({ k: k, lab: lab, c: couleurDuTon(ton), ton: ton });
+    noteCat = k; save(); renderNoteCats();
+    flash("Catégorie « " + lab + " » ajoutée", 2600);
+  }
+  function editerCatNote(i) {
+    var liste = noteCats(), c = liste[i]; if (!c) return;
+    var choix = prompt("Catégorie « " + c.lab + " »\n\n"
+      + "1 = corriger le nom\n2 = changer l'appréciation (actuelle : " + tonInfo(c.ton).lab + ")\n3 = supprimer\n\n"
+      + "Tapez 1, 2 ou 3 :", "1");
+    if (choix === null) return;
+    choix = choix.trim();
+    if (choix === "1") {
+      var lab = prompt("Nouveau nom :", c.lab);
+      if (lab === null) return; lab = lab.trim(); if (!lab) return;
+      act("Catégorie d'annotation corrigée"); c.lab = lab;
+    } else if (choix === "2") {
+      var ton = demanderTon("Appréciation de « " + c.lab + " » ?");
+      if (!ton) return;
+      act("Appréciation d'une catégorie"); c.ton = ton; c.c = couleurDuTon(ton);
+    } else if (choix === "3") {
+      var n = compterAnnotations(c.k);
+      if (!confirm("Supprimer la catégorie « " + c.lab + " » ?\n"
+        + (n ? n + " annotation(s) existante(s) la portent : elles seront conservées et affichées en gris."
+             : "Aucune annotation ne l'utilise."))) return;
+      act("Catégorie d'annotation supprimée"); liste.splice(i, 1);
+    } else return;
+    save(); renderNoteCats(); renderRoom();
+  }
+  function demanderTon(question) {
+    var r = prompt(question + "\n\n1 = positive\n2 = neutre\n3 = négative\n\nTapez 1, 2 ou 3 :", "1");
+    if (r === null) return null;
+    r = r.trim();
+    return r === "1" ? "positif" : r === "2" ? "neutre" : r === "3" ? "negatif" : null;
+  }
+  function compterAnnotations(k) {
+    var n = 0, m = mat();
+    Object.keys(m.eleveData || {}).forEach(function (eid) {
+      (m.eleveData[eid].behavior || []).forEach(function (ev) { if (ev.t === "note" && ev.id === k) n++; });
+    });
+    return n;
   }
   function saveNote() {
     var ids = Object.keys(noteSel).filter(function (id) { return noteSel[id]; });
     if (!ids.length) { flash("Choisissez au moins un élève"); return; }
     var txt = $("nTxt").value.trim();
     if (!txt) { flash("Écrivez l'observation"); return; }
-    var m = mat(), ts = Date.now();
-    ids.forEach(function (id) { eData(id).behavior.push({ t: "note", id: noteCat, txt: txt, ts: ts, ci: m.courseIndex }); });
-    save();
+    var ts = horodatageSaisie();
+    ids.forEach(function (id) { eData(id).behavior.push({ t: "note", id: noteCat, txt: txt, ts: ts, ci: coursIndexSaisie(classeDeEleve(id)) }); });
+    act("Annotation"); save();
     ids.forEach(function (id) { refreshSeat(id); });
     flash("Annotation enregistrée pour " + ids.length + " élève(s)");
     noteSel = {}; $("nTxt").value = ""; renderNoteEleves();
@@ -5105,14 +5340,14 @@
     });
     return out.sort(function (a, b) { return b.ts - a.ts; });
   }
-  function catInfo(k) { return NOTE_CATS.filter(function (c) { return c.k === k; })[0] || { lab: k, c: "#7b8489" }; }
+  function catInfo(k) { return noteCats().filter(function (c) { return c.k === k; })[0] || { lab: k, c: "#7b8489", ton: "neutre" }; }
   function renderNoteFilter() {
     var box = $("nFilter"); box.innerHTML = "";
     var tous = document.createElement("button"); tous.textContent = "Toutes";
     if (!noteFilter) { tous.classList.add("on"); tous.style.background = "var(--ink)"; tous.style.borderColor = "var(--ink)"; }
     tous.addEventListener("click", function () { noteFilter = ""; renderNoteFilter(); renderNoteList(); });
     box.appendChild(tous);
-    NOTE_CATS.forEach(function (c) {
+    noteCats().forEach(function (c) {
       var b = document.createElement("button"); b.textContent = c.lab;
       if (noteFilter === c.k) { b.classList.add("on"); b.style.background = c.c; b.style.borderColor = c.c; }
       b.addEventListener("click", function () { noteFilter = c.k; renderNoteFilter(); renderNoteList(); });
@@ -5126,7 +5361,7 @@
     list.forEach(function (n) {
       var ci = catInfo(n.cat);
       var d = document.createElement("div"); d.className = "nitem";
-      d.innerHTML = '<div class="nhead"><span class="ntag" style="background:' + ci.c + '">' + esc(ci.lab) + '</span>'
+      d.innerHTML = '<div class="nhead"><span class="ntag" style="background:' + ci.c + '">' + esc(ci.lab) + " " + tonInfo(ci.ton).sig + '</span>'
         + '<span class="nwho">' + esc(n.nom) + " " + esc(n.prenom) + '</span>'
         + '<span class="nwhen">' + esc(fmtTs(n.ts)) + '</span>'
         + '<button class="ndel" title="Supprimer">✕</button></div>'
@@ -5147,7 +5382,7 @@
     var lignes = list.map(function (n) {
       var ci = catInfo(n.cat);
       return '<tr><td>' + esc(fmtTs(n.ts)) + '</td><td><b>' + esc(n.nom) + " " + esc(n.prenom) + '</b></td>'
-        + '<td><span style="background:' + ci.c + ';color:#fff;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:700">' + esc(ci.lab) + '</span></td>'
+        + '<td><span style="background:' + ci.c + ';color:#fff;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:700">' + esc(ci.lab) + '</span> <small style="color:#7b8489">' + esc(tonInfo(ci.ton).lab) + '</small></td>'
         + '<td>' + esc(n.txt) + "</td></tr>";
     }).join("");
     var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Annotations - ' + esc(cl ? cl.nom : "") + '</title>'
@@ -6109,7 +6344,7 @@
       var negList = Object.keys(negCounts).map(function (id) { return esc(labelOfBehavior({ t: "neg", id: id })) + " ×" + negCounts[id]; }).join(", ") || "-";
       var q = d.q, qtot = q.bonne + q.mauvaise + q.pas;
       // graphe scores
-      var cs = d.courseScores || {}, nC = Math.max(m.courseIndex + 1, 1);
+      var cs = d.courseScores || {}, nC = Math.max(coursIndex(cid) + 1, 1);
       Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
       var mx = 1; for (var i = 0; i < nC; i++) mx = Math.max(mx, cs[i] || 0); var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
       var bars = ""; for (i = 0; i < nC; i++) { var v = cs[i] || 0; bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>C' + (i + 1) + "</small></div>"; }
@@ -6434,6 +6669,7 @@
       state.uiPrefs.classeActive = this.value;
       var cr = creneauCourant();
       if (cr) creneauApplique = cr.cle;          // choix manuel : on ne le contredit pas avant le créneau suivant
+      if (saisieSeance && saisieSeance.cid !== this.value) { saisieSeance = null; majBandeauSaisie(); }
       save(); renderAll();
     });
     $("btnStart").addEventListener("click", openConfig);
@@ -6448,6 +6684,9 @@
       if (pictoApres) pictoApres();
       renderRoom(); flash("Pictogramme choisi automatiquement", 2200);
     });
+    $("dlgSeanceQX").addEventListener("click", function () { $("dlgSeanceQ").classList.remove("open"); });
+    $("sqFermer").addEventListener("click", function () { $("dlgSeanceQ").classList.remove("open"); });
+    $("sqMaintenant").addEventListener("click", function () { annulerSaisieDatee(); $("dlgSeanceQ").classList.remove("open"); });
     $("btnProjection").addEventListener("click", basculerProjection);
     $("btnAppel").addEventListener("click", openAppel);
     $("dlgAppelX").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); });
@@ -6519,20 +6758,20 @@
     $("btnDashboard").addEventListener("click", openDashboard);
     $("dlgDashboardX").addEventListener("click", function () { $("dlgDashboard").classList.remove("open"); });
     // flux rapide bavardage : sélection directe sur le plan
-    $("btnFastBavard").addEventListener("click", startBavardMode);
+    $("btnFastBavard").addEventListener("click", function () { verifierCreneauAvantSaisie(startBavardMode); });
     // flux rapide participation orale : sélection directe sur le plan
-    $("btnFastOral").addEventListener("click", startOralMode);
-    $("btnFastLecon").addEventListener("click", startLeconMode);
+    $("btnFastOral").addEventListener("click", function () { verifierCreneauAvantSaisie(startOralMode); });
+    $("btnFastLecon").addEventListener("click", function () { verifierCreneauAvantSaisie(startLeconMode); });
     $("dlgOralStepX").addEventListener("click", function () { $("dlgOralStep").classList.remove("open"); if (oralMode) { oralMode.step = "who"; oralMode.eleveId = null; updateOralBanner(); } if (leconMode) updateLeconBanner(); });
     $("weekBadge").addEventListener("click", openSchedule);
     $("driveBadge").addEventListener("click", function () { driveConnect(true); });
     $("btnReconnect").addEventListener("click", function () { driveConnect(false); });
     $("btnCourse").addEventListener("click", function () {
       if (!state) return; if (!confirm("Démarrer un nouveau cours ?\nUne nouvelle barre de score démarre à 0 (historique conservé).")) return;
-      mat().courseIndex = (mat().courseIndex || 0) + 1; save();
+      var cidC = curClassId(); setCoursIndex(cidC, coursIndex(cidC) + 1); save();
       if (curClassId()) classEleves(curClassId()).forEach(function (st) { refreshSeat(st.id); });
       if (ui.activeEleve && !ui.profileFace) buildTracking(state.eleves[ui.activeEleve]); renderHeader();
-      flash("Nouveau cours : Cours " + (mat().courseIndex + 1));
+      flash("Nouveau cours : Cours " + (coursIndex(curClassId()) + 1) + " - " + state.classes[curClassId()].nom);
       if (curClassId()) setTimeout(function () {
         if (confirm("Nouvelle heure démarrée.\n\nFaire l'appel maintenant ?")) openAppel();
       }, 250);
@@ -6612,7 +6851,7 @@
       await driveLoad(); renderClassAdmin();
     });
     $("admListBackups").addEventListener("click", function () { renderDriveBackups(); });
-    $("btnNote").addEventListener("click", openNoteDlg);
+    $("btnNote").addEventListener("click", function () { verifierCreneauAvantSaisie(openNoteDlg); });
     $("dlgNoteX").addEventListener("click", closeAllDialogs);
     $("nCancel").addEventListener("click", closeAllDialogs);
     $("nClose2").addEventListener("click", closeAllDialogs);
@@ -6695,6 +6934,7 @@
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
     try { appliquerProjection(); } catch (e) { console.error("projection", e); }
+    try { majBandeauSaisie(); } catch (e) { console.error("bandeau saisie", e); }
     try { demarrerHorloge(); } catch (e) { console.error("horloge", e); }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
