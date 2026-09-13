@@ -601,7 +601,7 @@
     <button class="iconbtn" id="btnAppel" style="background:#8a6d1a" title="Appel : noter les élèves absents pour cette heure">📋 Appel</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnComp">🎯 Compétences</button>
-    <button class="iconbtn" id="btnSeance" title="Séance en cours - les cours se suivent automatiquement d'après la date et l'emploi du temps">📅 Séance</button>
+    <button class="iconbtn" id="btnCourse">➕ Cours</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger</button>
     <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe : nouvelle disposition à chaque clic">⇄ Replacer</button>
@@ -2780,7 +2780,7 @@
   var KEY_PROJECTION = "pdc_projection";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-14-c";
+  var APP_VERSION = "2026-09-14-a";
   var saveTimer = null, dirty = false;
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
@@ -3578,71 +3578,6 @@
     return D.transversal(per, Date.now());
   }
 
-  /* ============ LES COURS SONT DÉCOUPÉS PAR DATE ============
-     Un « cours » n'est plus un compteur qu'il faut incrémenter à la main : c'est une séance,
-     identifiée par sa date et son créneau. Le passage d'une semaine à l'autre se fait donc tout
-     seul, et l'historique des séances précédentes se reconstitue à partir des horodatages déjà
-     enregistrés - rien n'est perdu, même pour les données saisies avant ce changement. */
-  function pointsDeEvenement(ev) {
-    if (!ev) return 0;
-    if (ev.t === "oral" || ev.t === "q") {
-      var lvl = +ev.lvl || 1;
-      if (ev.id === "bonne") return lvl;
-      if (ev.id === "moyenne") return Math.ceil(lvl / 2);
-      return 0;
-    }
-    if (ev.t === "lecon") return (ev.note == null) ? 0 : Math.round(+ev.note) || 0;
-    return 0;
-  }
-  /* Créneau correspondant à un horodatage, d'après l'emploi du temps de la classe.
-     Sans créneau reconnu, la journée entière fait office de séance. */
-  function seanceDeTs(cid, ts) {
-    var m = mat(), d = new Date(ts);
-    var par = D.weekParity(m.calage, d);
-    var jour = ((d.getDay() + 6) % 7) + 1;
-    var mins = d.getHours() * 60 + d.getMinutes();
-    var grille = (m.edt && m.edt[par] && m.edt[par][jour]) || {};
-    var best = null, bestStart = -1;
-    Object.keys(grille).forEach(function (debut) {
-      if (grille[debut] !== cid) return;
-      var q = debut.split(":"), sm = (+q[0]) * 60 + (+q[1] || 0);
-      if (sm <= mins && mins < sm + 120 && sm > bestStart) { bestStart = sm; best = debut; }
-    });
-    return { d: jourISO(d), h: best || "--" };
-  }
-  function cleDe(se) { return se.d + "_" + se.h; }
-  function libelleCourtSeance(cle) {
-    var p2 = cle.split("_"), d = p2[0];
-    return d.slice(8, 10) + "/" + d.slice(5, 7) + (p2[1] && p2[1] !== "--" ? " " + p2[1] : "");
-  }
-  /* Toutes les séances où quelque chose a été enregistré pour cette classe, dans l'ordre. */
-  function seancesTenues(cid) {
-    var vues = {}, m = mat();
-    classEleves(cid).forEach(function (e) {
-      (eData(e.id).behavior || []).forEach(function (ev) {
-        if (!ev || !ev.ts) return;
-        vues[cleDe(seanceDeTs(cid, ev.ts))] = 1;
-      });
-    });
-    (((m.plans || {})[cid] || {}).appels || []).forEach(function (a2) { vues[a2.d + "_" + a2.h] = 1; });
-    return Object.keys(vues).sort();
-  }
-  /* Séance de travail courante : celle choisie pour un rattrapage, sinon celle de maintenant. */
-  function seanceActive(cid) {
-    cid = cid || curClassId();
-    if (saisieSeance && saisieSeance.cid === cid) return { d: saisieSeance.d, h: saisieSeance.h };
-    return seanceDeTs(cid, Date.now());
-  }
-  function scoreSeance(eid, cid, cle) {
-    var n = 0;
-    (eData(eid).behavior || []).forEach(function (ev) {
-      if (!ev || !ev.ts) return;
-      if (cleDe(seanceDeTs(cid, ev.ts)) !== cle) return;
-      n += pointsDeEvenement(ev);
-    });
-    return n;
-  }
-
   /* ============ SAISIE DATÉE : rattraper une heure passée ============
      Par défaut tout est horodaté à l'instant. Quand l'enseignant saisit pour une classe
      qu'il n'a pas à cette heure-ci, il choisit la séance concernée dans un calendrier qui
@@ -3711,15 +3646,6 @@
         + "Renseignez l'emploi du temps (clic sur le badge de semaine) pour obtenir des dates.</span></div>";
     } else {
       box.innerHTML = "";
-      var maintenant = seanceDeTs(cid, Date.now());
-      var ligneNow = document.createElement("div"); ligneNow.className = "row";
-      ligneNow.innerHTML = '<span style="flex:1"><b>Séance en cours</b> <span class="hint">'
-        + esc(libelleCourtSeance(cleDe(maintenant))) + "</span></span>"
-        + '<button class="admbtn ok">⟲ Maintenant</button>';
-      ligneNow.querySelector("button").addEventListener("click", function () {
-        annulerSaisieDatee(); $("dlgSeanceQ").classList.remove("open"); if (apres) apres();
-      });
-      box.appendChild(ligneNow);
       liste.slice(0, 40).forEach(function (se) {
         var deja = saisieSeance && saisieSeance.cid === cid && saisieSeance.d === se.d && saisieSeance.h === se.h;
         var row = document.createElement("div"); row.className = "row";
@@ -3728,7 +3654,6 @@
         row.querySelector("button").addEventListener("click", function () {
           saisieSeance = { cid: cid, d: se.d, h: se.h, ts: se.ts };
           majBandeauSaisie(); $("dlgSeanceQ").classList.remove("open");
-          renderHeader(); renderRoom();
           if (apres) apres();
           flash("Saisie datée du " + libelleSeance(se), 3400);
         });
@@ -3737,7 +3662,7 @@
     }
     closeAllDialogs(); $("dlgSeanceQ").classList.add("open");
   }
-  function annulerSaisieDatee() { saisieSeance = null; majBandeauSaisie(); renderHeader(); renderRoom(); flash("Saisie revenue à maintenant", 2400); }
+  function annulerSaisieDatee() { saisieSeance = null; majBandeauSaisie(); flash("Saisie revenue à maintenant", 2400); }
   function majBandeauSaisie() {
     var bar = $("seanceBar"); if (!bar) return;
     if (!saisieSeance) { bar.classList.add("hidden"); return; }
@@ -3765,16 +3690,16 @@
   }
 
   /* ====================== SCORES / COMPÉTENCES ======================
-     Les scores affichés se calculent désormais à partir de la DATE des saisies (voir
-     scoreSeance plus haut) : il n'y a plus rien à incrémenter et rien ne se perd d'une semaine
-     sur l'autre. L'ancien numéro de cours, propre à chaque classe, n'est conservé que pour
-     rester compatible avec les enregistrements déjà faits. */
+     Le numéro de cours est propre à CHAQUE CLASSE. Auparavant il était unique pour toute la
+     matière : démarrer une heure avec une classe faisait basculer la barre de score de toutes
+     les autres, et les participations de l'heure précédente semblaient effacées. */
   function coursIndex(cid) {
     var m = mat(); if (!m.coursParClasse) m.coursParClasse = {};
     cid = cid || curClassId(); if (!cid) return 0;
     if (m.coursParClasse[cid] == null) m.coursParClasse[cid] = (m.courseIndex || 0); // reprise de l'existant
     return m.coursParClasse[cid];
   }
+  function setCoursIndex(cid, v) { var m = mat(); if (!m.coursParClasse) m.coursParClasse = {}; m.coursParClasse[cid] = v; }
   function classeDeEleve(eid) {
     var cs = state.classes || {};
     var cur = curClassId();
@@ -3782,13 +3707,8 @@
     var k = Object.keys(cs).filter(function (c) { return (cs[c].eleveIds || []).indexOf(eid) >= 0; })[0];
     return k || cur;
   }
-  function scoreCur(eleveId, cid) {
-    var c = cid || classeDeEleve(eleveId);
-    return scoreSeance(eleveId, c, cleDe(seanceActive(c)));
-  }
-  function scoreGlobal(eleveId) {
-    return (eData(eleveId).behavior || []).reduce(function (n, ev) { return n + pointsDeEvenement(ev); }, 0);
-  }
+  function scoreCur(eleveId, cid) { return (eData(eleveId).courseScores[coursIndex(cid || classeDeEleve(eleveId))]) || 0; }
+  function scoreGlobal(eleveId) { return Object.values(eData(eleveId).courseScores).reduce(function (a, b) { return a + (b || 0); }, 0); }
   function compTint(eleveId) { var m = mat(); if (!m.sessionComp.length) return 3; var d = eData(eleveId); return Math.min.apply(null, m.sessionComp.map(function (c) { return C_IDX[d.comp[c] || "S"]; })); }
   function compValidated(eleveId) { var m = mat(), d = eData(eleveId); return m.sessionComp.some(function (c) { return d.compTouched && d.compTouched[c]; }); }
 
@@ -3801,8 +3721,7 @@
     }).join("") || '<option value="">- aucune classe -</option>';
     var m = mat();
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
-    var cidH = curClassId();
-    $("btnSeance").innerHTML = cidH ? ("📅 " + libelleCourtSeance(cleDe(seanceActive(cidH)))) : "📅 Séance";
+    $("btnCourse").innerHTML = "➕ Cours " + (coursIndex(curClassId()) + 1);
     var par = D.weekParity(m.calage, new Date());
     $("weekBadge").dataset.p = par;
     majHorloge(par);
@@ -4471,20 +4390,15 @@
     // Questions et Leçons orales : saisies via les boutons rapides 🎤 Oral et 📖 Leçons du haut
 
     // Score (replié par défaut pour rester compact)
-    var cidS = curClassId(), cleCur = cleDe(seanceActive(cidS));
-    var sceances = seancesTenues(cidS);
-    if (sceances.indexOf(cleCur) < 0) sceances.push(cleCur);
-    sceances = sceances.slice(-12);                       // les douze dernières séances suffisent à l'écran
+    var ciCur = coursIndex(curClassId());
+    var cs = d.courseScores || {}, nC = Math.max(ciCur + 1, 1);
+    Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
     var maxV = 1, bars = [];
-    sceances.forEach(function (cle) {
-      var v = scoreSeance(s.id, cidS, cle);
-      maxV = Math.max(maxV, v);
-      bars.push({ v: v, l: libelleCourtSeance(cle), cur: cle === cleCur });
-    });
+    for (var i = 0; i < nC; i++) { var v = cs[i] || 0; maxV = Math.max(maxV, v); bars.push({ v: v, l: "C" + (i + 1), cur: i === ciCur }); }
     var glob = scoreGlobal(s.id); maxV = Math.max(maxV, glob);
     var barHtml = bars.map(function (b) { return '<div class="bar ' + (b.cur ? "bcur" : "") + '"><span class="bv">' + b.v + '</span><div class="bb" style="height:' + Math.round(6 + b.v / maxV * 54) + 'px"></div><span class="bl">' + b.l + (b.cur ? " •" : "") + "</span></div>"; }).join("") +
       '<div class="bar bglob"><span class="bv">' + glob + '</span><div class="bb" style="height:' + Math.round(6 + glob / maxV * 54) + 'px"></div><span class="bl">Global</span></div>';
-    html += '<details class="block scoredet"><summary>📊 Score - séance du ' + esc(libelleCourtSeance(cleCur)) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
+    html += '<details class="block scoredet"><summary>📊 Score - cours ' + (ciCur + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
 
     // Aménagements (BEP) - en bas ; base liée au handicap en gras + bouton Ajouter
     if (eleveBep(s)) {
@@ -6348,7 +6262,7 @@
     var cid = curClassId(); if (!cid) return; var m = mat();
     var head = ["Classe", "Groupe", "NOM", "Prénom", "Sexe", "Lunettes", "BEP", "Troubles", "Dispositifs", "Contraintes"]
       .concat(m.sessionComp.map(function (c, i) { return "Comp" + (i + 1); }))
-      .concat(["Tendance7j", "Positif7j", "Négatif7j", "Q_bonne", "Q_mauvaise", "Q_pas", "Oral_bonne", "Oral_mauvaise", "Oral_pas", "Score_séance", "Score_global", "Dernière_action"]);
+      .concat(["Tendance7j", "Positif7j", "Négatif7j", "Q_bonne", "Q_mauvaise", "Q_pas", "Oral_bonne", "Oral_mauvaise", "Oral_pas", "Score_cours", "Score_global", "Dernière_action"]);
     var rows = [head];
     classEleves(cid).slice().sort(function (a, b) { return (posOf(cid, a.id).group - posOf(cid, b.id).group) || a.nom.localeCompare(b.nom); }).forEach(function (s) {
       var d = eData(s.id), tr = trendOf(s.id);
@@ -6430,13 +6344,10 @@
       var negList = Object.keys(negCounts).map(function (id) { return esc(labelOfBehavior({ t: "neg", id: id })) + " ×" + negCounts[id]; }).join(", ") || "-";
       var q = d.q, qtot = q.bonne + q.mauvaise + q.pas;
       // graphe scores
-      var listeS = seancesTenues(cid).slice(-14);
-      var mx = 1; listeS.forEach(function (cle) { mx = Math.max(mx, scoreSeance(s.id, cid, cle)); });
-      var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
-      var bars = ""; listeS.forEach(function (cle) {
-        var v = scoreSeance(s.id, cid, cle);
-        bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>' + esc(libelleCourtSeance(cle)) + "</small></div>";
-      });
+      var cs = d.courseScores || {}, nC = Math.max(coursIndex(cid) + 1, 1);
+      Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
+      var mx = 1; for (var i = 0; i < nC; i++) mx = Math.max(mx, cs[i] || 0); var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
+      var bars = ""; for (i = 0; i < nC; i++) { var v = cs[i] || 0; bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>C' + (i + 1) + "</small></div>"; }
       bars += '<div class="rp-bar"><span>' + glob + '</span><div class="rp-bb rp-bg" style="height:' + Math.round(4 + glob / mx * 54) + 'px"></div><small>Global</small></div>';
       // journal
       var log = (d.behavior || []).slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
@@ -6855,11 +6766,15 @@
     $("weekBadge").addEventListener("click", openSchedule);
     $("driveBadge").addEventListener("click", function () { driveConnect(true); });
     $("btnReconnect").addEventListener("click", function () { driveConnect(false); });
-    /* Le bouton n'ouvre plus un compteur : il montre la séance en cours et permet d'en
-       choisir une autre dans le calendrier de la classe (rattrapage). */
-    $("btnSeance").addEventListener("click", function () {
-      var cid = curClassId(); if (!cid) { flash("Affichez une classe d'abord"); return; }
-      ouvrirCalendrierSeance(cid, function () { renderAll(); });
+    $("btnCourse").addEventListener("click", function () {
+      if (!state) return; if (!confirm("Démarrer un nouveau cours ?\nUne nouvelle barre de score démarre à 0 (historique conservé).")) return;
+      var cidC = curClassId(); setCoursIndex(cidC, coursIndex(cidC) + 1); save();
+      if (curClassId()) classEleves(curClassId()).forEach(function (st) { refreshSeat(st.id); });
+      if (ui.activeEleve && !ui.profileFace) buildTracking(state.eleves[ui.activeEleve]); renderHeader();
+      flash("Nouveau cours : Cours " + (coursIndex(curClassId()) + 1) + " - " + state.classes[curClassId()].nom);
+      if (curClassId()) setTimeout(function () {
+        if (confirm("Nouvelle heure démarrée.\n\nFaire l'appel maintenant ?")) openAppel();
+      }, 250);
     });
     $("modeSeg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.m); }); });
     $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée - " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée - nouvelle disposition"); });
