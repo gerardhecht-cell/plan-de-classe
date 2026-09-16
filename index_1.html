@@ -601,7 +601,7 @@
     <button class="iconbtn" id="btnAppel" style="background:#8a6d1a" title="Appel : noter les élèves absents pour cette heure">📋 Appel</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnComp">🎯 Compétences</button>
-    <button class="iconbtn" id="btnCourse">➕ Cours</button>
+    <button class="iconbtn" id="btnSeance" title="Séance en cours - les cours se suivent automatiquement d'après la date et l'emploi du temps">📅 Séance</button>
     <span class="vsep"></span>
     <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger</button>
     <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe : nouvelle disposition à chaque clic">⇄ Replacer</button>
@@ -684,7 +684,7 @@
         <div class="row2"><div><button class="admbtn" id="admSaveClientId" style="width:100%">Enregistrer l'identifiant</button></div><div><button class="admbtn" id="admDriveNow" style="width:100%">☁︎ Sauvegarder maintenant</button></div></div>
         <p class="hint" id="admBackupInfo" style="margin-top:8px"></p>
         <div class="adm" id="admBackupsWrap" style="display:none"><div class="admscroll" id="admBackups"></div></div>
-        <button class="admbtn" id="admPull" style="width:100%;margin-top:8px">⬇︎ Récupérer la sauvegarde Drive (remplace ce poste)</button>
+        <button class="admbtn" id="admPull" style="width:100%;margin-top:8px">⬇︎ Récupérer la sauvegarde Drive (fusion proposée)</button>
         <button class="admbtn" id="admListBackups" style="width:100%;margin-top:8px">🕘 Voir les sauvegardes datées sur Drive</button>
       </div>
 
@@ -2778,10 +2778,16 @@
   /* Le mode Projection est un réglage d'écran, propre à ce poste : il ne part pas sur Drive
      et n'impose rien à l'autre ordinateur. */
   var KEY_PROJECTION = "pdc_projection";
+  /* « Il reste ici du travail que le Drive n'a jamais reçu. » Ce témoin doit survivre à la
+     fermeture du navigateur : sinon, un poste rouvert le lendemain se croit à jour et accepte
+     sans broncher une version distante plus ancienne que ce qu'il contient. */
+  var KEY_NONENVOYE = "pdc_nonenvoye";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-14-a";
+  var APP_VERSION = "2026-09-16-a";
   var saveTimer = null, dirty = false;
+  function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
+  function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
      Chaque appel à save() compare l'état courant au dernier état enregistré. S'ils
@@ -2822,7 +2828,7 @@
   function appliquerEtat(txt) {
     state = migrate(JSON.parse(txt));
     etatSerialise = txt;
-    LS.set(KEY_STATE, state); dirty = true; scheduleDriveSave();
+    LS.set(KEY_STATE, state); marquerNonEnvoye(true); scheduleDriveSave();
     renderAll();
   }
   function annuler() {
@@ -2855,10 +2861,10 @@
       etatSerialise = courant;
     }
     libelleAction = null;
-    LS.set(KEY_STATE, state); dirty = true; scheduleDriveSave();
+    LS.set(KEY_STATE, state); marquerNonEnvoye(true); scheduleDriveSave();
     majBoutonsHistorique();
   }
-  function loadLocal() { var s = LS.get(KEY_STATE); if (s && s.eleves) state = migrate(s); }
+  function loadLocal() { var s = LS.get(KEY_STATE); if (s && s.eleves) state = migrate(s); relireNonEnvoye(); }
   /* Les anciennes classes de démonstration portaient des noms d'élèves français très courants.
      On les réécrit avec les personnages de fiction, en gardant les identifiants : le plan,
      le suivi et l'historique restent intacts, seul l'affichage change. */
@@ -2898,6 +2904,191 @@
       if (!e.placement) e.placement = { types: [], separer: [], eloigner: [] };
       if (!e.placement.eloigner) e.placement.eloigner = []; });
     return s;
+  }
+
+  /* ====================== FUSION DE DEUX POSTES ======================
+     Travailler au collège puis à la maison a longtemps voulu dire choisir : garder une version
+     et perdre l'autre. La fusion supprime ce choix. Elle réunit deux états sans rien écraser :
+     chaque saisie est identifiée par sa signature (type, élève, horodatage, contenu), si bien
+     qu'une même participation présente des deux côtés n'est comptée qu'une fois, et qu'une
+     saisie présente d'un seul côté est toujours conservée. Les compteurs (questions, leçons
+     orales) sont ensuite RECALCULÉS à partir des saisies fusionnées : ils ne peuvent donc pas
+     doubler, même si l'on fusionne plusieurs fois de suite - l'opération est sans effet la
+     deuxième fois. La fusion n'efface jamais : un élève supprimé d'un côté et conservé de
+     l'autre réapparaît, ce qui est le comportement voulu quand l'enjeu est de ne rien perdre. */
+  function sigEvenement(ev) {
+    return [ev.t, ev.id, ev.ts, ev.note == null ? "" : ev.note, ev.lvl == null ? "" : ev.lvl,
+      ev.intensite || "", ev.txt || "", ev.spontane ? 1 : 0].join("|");
+  }
+  function fusionnerListeEvenements(a, b) {
+    var vus = {}, out = [];
+    (a || []).concat(b || []).forEach(function (ev) {
+      if (!ev || !ev.ts) return;
+      var k = sigEvenement(ev);
+      if (vus[k]) return;
+      vus[k] = 1; out.push(ev);
+    });
+    return out.sort(function (x, y) { return x.ts - y.ts; });
+  }
+  /* Les tallies se déduisent des saisies : on les reconstruit plutôt que de les additionner. */
+  function recalculerCompteurs(ed) {
+    var q = { bonne: 0, moyenne: 0, mauvaise: 0, pas: 0 };
+    var oral = { bonne: 0, moyenne: 0, mauvaise: 0, pas: 0 };
+    var notes = [];
+    (ed.behavior || []).forEach(function (ev) {
+      if (ev.t === "oral") { if (oral[ev.id] === undefined) oral[ev.id] = 0; oral[ev.id]++; return; }
+      if (ev.t === "lecon") {
+        if (ev.id === "pas" || ev.note == null) { q.pas++; return; }
+        var n = +ev.note; notes.push(n);
+        if (n >= 4) q.bonne++; else if (n >= 2.5) q.moyenne++; else q.mauvaise++;
+        return;
+      }
+      if (ev.t === "q") { if (q[ev.id] === undefined) q[ev.id] = 0; q[ev.id]++; }
+    });
+    ed.q = q; ed.oral = oral; ed.leconNotes = notes;
+  }
+  function unionListe(a, b) {
+    var out = (a || []).slice();
+    (b || []).forEach(function (x) { if (out.indexOf(x) < 0) out.push(x); });
+    return out;
+  }
+  function fusionnerDonneesEleve(a, b) {
+    if (!a) return b; if (!b) return a;
+    var r = {};
+    r.behavior = fusionnerListeEvenements(a.behavior, b.behavior);
+    r.comp = Object.assign({}, a.comp || {}, b.comp || {});
+    r.compTouched = Object.assign({}, a.compTouched || {}, b.compTouched || {});
+    r.courseScores = Object.assign({}, a.courseScores || {}, b.courseScores || {});
+    // « avec qui » n'est pas horodaté : on garde le plus grand des deux comptages, jamais la somme,
+    // pour qu'une fusion répétée ne gonfle pas artificiellement les duos de bavardage.
+    r.avecQui = Object.assign({}, a.avecQui || {});
+    Object.keys(b.avecQui || {}).forEach(function (k) {
+      r.avecQui[k] = Math.max(r.avecQui[k] || 0, b.avecQui[k] || 0);
+    });
+    var amA = a.amenagements || { added: [], texte: "" }, amB = b.amenagements || { added: [], texte: "" };
+    var txtA = (amA.texte || "").trim(), txtB = (amB.texte || "").trim();
+    r.amenagements = {
+      added: unionListe(amA.added, amB.added),
+      texte: (txtA && txtB && txtA !== txtB) ? (txtA + "\n" + txtB) : (txtA || txtB)
+    };
+    r.lastLeconTs = Math.max(a.lastLeconTs || 0, b.lastLeconTs || 0) || undefined;
+    recalculerCompteurs(r);
+    return r;
+  }
+  function fusionnerEleve(a, b) {
+    if (!a) return b; if (!b) return a;
+    var r = Object.assign({}, a, b);                    // l'apport le plus récent décrit le profil
+    r.troubles = Object.assign({}, a.troubles || {}, b.troubles || {});
+    r.dispositifs = Object.assign({}, a.dispositifs || {}, b.dispositifs || {});
+    r.bepNiveaux = Object.assign({}, a.bepNiveaux || {}, b.bepNiveaux || {});
+    r.glasses = !!(a.glasses || b.glasses);
+    r.agitation = !!(a.agitation || b.agitation);
+    var pa = a.placement || {}, pb = b.placement || {};
+    r.placement = {
+      types: unionListe(pa.types, pb.types),
+      separer: unionListe(pa.separer, pb.separer),
+      eloigner: unionListe(pa.eloigner, pb.eloigner)
+    };
+    return r;
+  }
+  function fusionnerAppels(a, b) {
+    var idx = {};
+    (a || []).concat(b || []).forEach(function (ap) {
+      if (!ap || !ap.d) return;
+      var k = ap.d + "_" + (ap.h || "--"), e = idx[k];
+      if (!e) { idx[k] = Object.assign({}, ap, { abs: (ap.abs || []).slice() }); return; }
+      e.abs = unionListe(e.abs, ap.abs);
+    });
+    return Object.keys(idx).sort().map(function (k) { return idx[k]; });
+  }
+  function fusionnerRefs(a, b) {
+    var r = Object.assign({}, a || {});
+    Object.keys(b || {}).forEach(function (k) {
+      var va = r[k], vb = b[k];
+      if (Array.isArray(va) && Array.isArray(vb)) {
+        // listes d'objets identifiés (k/id) ou listes de textes
+        if (vb.length && typeof vb[0] === "object") {
+          var vus = {}; va.forEach(function (x) { vus[x.k || x.id || x.lab] = 1; });
+          r[k] = va.concat(vb.filter(function (x) { return !vus[x.k || x.id || x.lab]; }));
+        } else r[k] = unionListe(va, vb);
+      } else if (va && vb && typeof va === "object" && typeof vb === "object") {
+        r[k] = Object.assign({}, va, vb);
+      } else if (r[k] === undefined) r[k] = vb;
+    });
+    return r;
+  }
+  /* base = l'état de CE poste, apport = celui que l'on rapatrie. */
+  function fusionnerEtats(base, apport) {
+    base = migrate(JSON.parse(JSON.stringify(base)));
+    apport = migrate(JSON.parse(JSON.stringify(apport)));
+    var r = JSON.parse(JSON.stringify(base));
+    r.refs = fusionnerRefs(base.refs, apport.refs);
+
+    Object.keys(apport.eleves || {}).forEach(function (eid) {
+      r.eleves[eid] = fusionnerEleve(base.eleves[eid], apport.eleves[eid]);
+    });
+    Object.keys(apport.classes || {}).forEach(function (cid) {
+      var ca = base.classes[cid], cb = apport.classes[cid];
+      if (!ca) { r.classes[cid] = cb; return; }
+      r.classes[cid] = Object.assign({}, ca, cb, { eleveIds: unionListe(ca.eleveIds, cb.eleveIds) });
+    });
+
+    Object.keys(apport.matieres || {}).forEach(function (mid) {
+      var ma = base.matieres[mid], mb = apport.matieres[mid];
+      if (!ma) { r.matieres[mid] = mb; return; }
+      var mr = r.matieres[mid];
+      mr.competenceBank = unionListe(ma.competenceBank, mb.competenceBank);
+      mr.edt = { paire: {}, impaire: {} };
+      ["paire", "impaire"].forEach(function (par) {
+        var ga = (ma.edt && ma.edt[par]) || {}, gb = (mb.edt && mb.edt[par]) || {};
+        var jours = unionListe(Object.keys(ga), Object.keys(gb));
+        jours.forEach(function (j) { mr.edt[par][j] = Object.assign({}, ga[j] || {}, gb[j] || {}); });
+      });
+      Object.keys(mb.eleveData || {}).forEach(function (eid) {
+        mr.eleveData[eid] = fusionnerDonneesEleve((ma.eleveData || {})[eid], mb.eleveData[eid]);
+      });
+      Object.keys(mb.plans || {}).forEach(function (cid) {
+        var pa = (ma.plans || {})[cid], pb = mb.plans[cid];
+        if (!pa) { mr.plans[cid] = pb; return; }
+        // le plan de salle reste celui de ce poste ; seuls les appels, eux cumulatifs, se réunissent
+        mr.plans[cid] = Object.assign({}, pa, { appels: fusionnerAppels(pa.appels, pb.appels) });
+        if (!pa.custom && pb.custom) mr.plans[cid].custom = pb.custom;
+        if (!(pa.groupesLibres || []).length && (pb.groupesLibres || []).length) mr.plans[cid].groupesLibres = pb.groupesLibres;
+      });
+    });
+    return r;
+  }
+  /* Ce que la fusion vient d'apporter, pour pouvoir le dire à l'enseignant. */
+  function resumerFusion(avant, apres) {
+    function compteSaisies(s) {
+      var n = 0;
+      Object.keys(s.matieres || {}).forEach(function (mid) {
+        var ed = s.matieres[mid].eleveData || {};
+        Object.keys(ed).forEach(function (eid) { n += (ed[eid].behavior || []).length; });
+      });
+      return n;
+    }
+    return {
+      eleves: Object.keys(apres.eleves || {}).length - Object.keys(avant.eleves || {}).length,
+      classes: Object.keys(apres.classes || {}).length - Object.keys(avant.classes || {}).length,
+      saisies: compteSaisies(apres) - compteSaisies(avant)
+    };
+  }
+  function appliquerFusion(apport, origine) {
+    var avant = state;
+    var fusionne = fusionnerEtats(state, apport);
+    var bilan = resumerFusion(avant, fusionne);
+    state = fusionne;
+    LS.set(KEY_STATE, state); marquerNonEnvoye(true);
+    renderAll(); historiqueRAZ(); closeAllDialogs();
+    var txt = "Fusion faite" + (origine ? " (" + origine + ")" : "") + " : "
+      + (bilan.saisies > 0 ? bilan.saisies + " saisie" + (bilan.saisies > 1 ? "s" : "") + " récupérée" + (bilan.saisies > 1 ? "s" : "") : "aucune saisie nouvelle")
+      + (bilan.eleves > 0 ? ", " + bilan.eleves + " élève" + (bilan.eleves > 1 ? "s" : "") + " ajouté" + (bilan.eleves > 1 ? "s" : "") : "")
+      + (bilan.classes > 0 ? ", " + bilan.classes + " classe" + (bilan.classes > 1 ? "s" : "") + " ajoutée" + (bilan.classes > 1 ? "s" : "") : "")
+      + ". Rien n'a été supprimé.";
+    flash(txt, 7000);
+    scheduleDriveSave();
+    return bilan;
   }
 
   /* ---------- Chiffrement : clé d'appareil + phrase de récupération ---------- */
@@ -2976,6 +3167,12 @@
       error_callback: function () { showReconnectBanner(); updateDriveBadge("Reconnexion requise"); }
     });
     updateDriveBadge();
+    /* REPRISE AU DÉMARRAGE - indispensable quand on travaille sur deux ordinateurs.
+       Sans cela, l'application attendait un retour de focus ou un clic pour aller voir le Drive :
+       en ouvrant le programme à la maison, on voyait les données de la veille et l'on pouvait
+       croire le travail du matin perdu. On demande donc un jeton silencieux dès l'ouverture ;
+       s'il est refusé, la bannière de reconnexion s'affiche, et rien n'est jamais écrasé. */
+    if (origineValide()) setTimeout(function () { if (!tokenValid()) renouvellerJeton(); }, 400);
   }
   function origineValide() { return location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1"; }
   function driveConnect(consent) {
@@ -3027,7 +3224,7 @@
       if (r.status === 401) { onTokenExpired(); return; }
       var j = await r.json(); if (j.id) drive.fileId = j.id;
       memoriserRemoteModif(await driveModifiedTime());
-      dirty = false; updateDriveBadge("Sauvegardé " + heureCourte());
+      marquerNonEnvoye(false); updateDriveBadge("Sauvegardé " + heureCourte());
       driveBackupRotate();
     } catch (e) { updateDriveBadge("Erreur réseau"); }
   }
@@ -3047,14 +3244,28 @@
       return r.ok ? nom : null;
     } catch (e) { return null; }
   }
+  /* Les deux postes ont travaillé. On ne fait plus choisir entre « perdre ici » et « perdre
+     là-bas » : la fusion réunit les deux et reste le choix par défaut. */
   async function resoudreConflit(distantActuel) {
     updateDriveBadge("Conflit");
+    var fusionner = confirm(
+      "Il y a du travail des deux côtés : la sauvegarde Google Drive a changé depuis la dernière\n" +
+      "synchronisation de ce poste, et ce poste contient des saisies non envoyées.\n\n" +
+      "OK  : FUSIONNER les deux (recommandé) - rien n'est perdu, rien n'est compté deux fois.\n" +
+      "Annuler : choisir l'une des deux versions.");
+    if (fusionner) {
+      var distantData = await driveRecupererDonnees();
+      if (!distantData) return;
+      memoriserRemoteModif(distantActuel);
+      appliquerFusion(distantData, "Google Drive");
+      ecrasementAutorise = true;
+      try { await driveSave(true); } finally { ecrasementAutorise = false; }
+      return;
+    }
     var garder = confirm(
-      "La sauvegarde Google Drive a changé depuis la dernière synchronisation de ce poste.\n" +
-      "Un autre ordinateur a probablement travaillé entre-temps.\n\n" +
-      "OK  : récupérer la version du Drive (recommandé).\n" +
+      "OK  : garder la version du Drive (ce qui a été saisi sur ce poste et jamais envoyé sera perdu).\n" +
       "Annuler : imposer la version de CE poste - une copie datée de la version Drive sera\n" +
-      "conservée avant remplacement, rien ne sera perdu.");
+      "conservée avant remplacement, rien ne sera perdu côté Drive.");
     if (garder) { memoriserRemoteModif(distantActuel); await driveLoad(); return; }
     var archive = await archiverDistantAvantEcrasement();
     memoriserRemoteModif(distantActuel);
@@ -3062,18 +3273,40 @@
     try { await driveSave(true); } finally { ecrasementAutorise = false; }
     flash(archive ? ("Version Drive conservée sous « " + archive + " »") : "Version de ce poste envoyée", 6000);
   }
-  async function driveLoad() {
-    if (!tokenValid()) { onTokenExpired(); return; }
-    var id = await driveFindFile(); if (!id) return;
+  /* Lit et déchiffre le fichier Drive SANS toucher à l'état courant. */
+  async function driveRecupererDonnees() {
+    if (!tokenValid()) { onTokenExpired(); return null; }
+    var id = await driveFindFile(); if (!id) return null;
     var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
-    if (r.status === 401) { onTokenExpired(); return; }
+    if (r.status === 401) { onTokenExpired(); return null; }
     var blob = await r.json();
     var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde Drive");
-    if (!data) { updateDriveBadge("Phrase requise"); return; }
-    try { state = migrate(data); LS.set(KEY_STATE, state);
-      memoriserRemoteModif(await driveModifiedTime()); dirty = false;
+    if (!data) { updateDriveBadge("Phrase requise"); return null; }
+    return migrate(data);
+  }
+  async function driveLoad() {
+    var data = await driveRecupererDonnees();
+    if (!data) return;
+    try { state = data; LS.set(KEY_STATE, state);
+      memoriserRemoteModif(await driveModifiedTime()); marquerNonEnvoye(false);
       renderAll(); historiqueRAZ(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
     catch (e) { flash("Drive : sauvegarde illisible."); }
+  }
+  /* Rapatriement volontaire depuis ⚙︎ Classe : fusion par défaut, remplacement sur demande. */
+  async function driveRapatrier() {
+    var data = await driveRecupererDonnees();
+    if (!data) return;
+    if (etatVide()) { state = data; LS.set(KEY_STATE, state); memoriserRemoteModif(await driveModifiedTime());
+      marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données chargées depuis Drive"); return; }
+    if (confirm("OK : FUSIONNER la sauvegarde Drive avec ce poste (recommandé) - rien n'est perdu.\n\n"
+      + "Annuler : REMPLACER le contenu de ce poste par celui du Drive.")) {
+      memoriserRemoteModif(await driveModifiedTime());
+      appliquerFusion(data, "Google Drive");
+      return;
+    }
+    if (!confirm("Remplacer les données de ce poste par celles du Drive ?\nCe qui a été saisi ici sans être envoyé sera perdu.")) return;
+    state = data; LS.set(KEY_STATE, state); memoriserRemoteModif(await driveModifiedTime());
+    marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données du Drive restaurées sur ce poste");
   }
   async function driveSyncAfterConnect() {
     var id = await driveFindFile();
@@ -3145,11 +3378,28 @@
   function onTokenExpired() { if (!renouvellerJeton()) { showReconnectBanner(); updateDriveBadge("Reconnexion requise"); } }
   function showReconnectBanner() { var b = $("reconnect"); if (b) b.classList.remove("hidden"); }
   function hideReconnectBanner() { var b = $("reconnect"); if (b) b.classList.add("hidden"); }
+  /* La pastille doit dire la vérité d'un coup d'œil. Le cas dangereux - du travail saisi ici
+     que le Drive n'a jamais reçu - s'affiche désormais explicitement, au lieu du discret
+     « Connecter » que l'on pouvait prendre pour un détail. */
   function updateDriveBadge(msg) {
     var el = $("driveBadge"); if (!el) return;
     if (!driveConfigured()) { el.textContent = "☁︎ Local"; el.title = "Google Drive non configuré - sauvegarde locale active"; el.dataset.s = "off"; }
-    else if (tokenValid()) { el.textContent = "☁︎ " + (msg || "Drive"); el.dataset.s = "on"; }
+    else if (tokenValid()) {
+      el.textContent = "☁︎ " + (msg || "Drive");
+      el.title = dirty ? "Envoi en attente vers Google Drive" : "Synchronisé avec Google Drive";
+      el.dataset.s = "on";
+    }
+    else if (dirty) {
+      el.textContent = "⚠︎ Non envoyé";
+      el.title = "Des saisies faites sur ce poste n'ont jamais été envoyées sur Drive. Cliquez pour vous connecter.";
+      el.dataset.s = "warn";
+    }
     else { el.textContent = "☁︎ Connecter"; el.dataset.s = "warn"; }
+    var b = $("reconnect");
+    if (b && dirty && !tokenValid() && driveConfigured()) {
+      b.firstChild.nodeValue = "⚠️ Des saisies de ce poste n'ont pas encore été envoyées sur Drive. ";
+      b.classList.remove("hidden");
+    }
   }
 
   /* ====================== IMPORT MULTI-CLASSES ====================== */
@@ -3578,6 +3828,71 @@
     return D.transversal(per, Date.now());
   }
 
+  /* ============ LES COURS SONT DÉCOUPÉS PAR DATE ============
+     Un « cours » n'est plus un compteur qu'il faut incrémenter à la main : c'est une séance,
+     identifiée par sa date et son créneau. Le passage d'une semaine à l'autre se fait donc tout
+     seul, et l'historique des séances précédentes se reconstitue à partir des horodatages déjà
+     enregistrés - rien n'est perdu, même pour les données saisies avant ce changement. */
+  function pointsDeEvenement(ev) {
+    if (!ev) return 0;
+    if (ev.t === "oral" || ev.t === "q") {
+      var lvl = +ev.lvl || 1;
+      if (ev.id === "bonne") return lvl;
+      if (ev.id === "moyenne") return Math.ceil(lvl / 2);
+      return 0;
+    }
+    if (ev.t === "lecon") return (ev.note == null) ? 0 : Math.round(+ev.note) || 0;
+    return 0;
+  }
+  /* Créneau correspondant à un horodatage, d'après l'emploi du temps de la classe.
+     Sans créneau reconnu, la journée entière fait office de séance. */
+  function seanceDeTs(cid, ts) {
+    var m = mat(), d = new Date(ts);
+    var par = D.weekParity(m.calage, d);
+    var jour = ((d.getDay() + 6) % 7) + 1;
+    var mins = d.getHours() * 60 + d.getMinutes();
+    var grille = (m.edt && m.edt[par] && m.edt[par][jour]) || {};
+    var best = null, bestStart = -1;
+    Object.keys(grille).forEach(function (debut) {
+      if (grille[debut] !== cid) return;
+      var q = debut.split(":"), sm = (+q[0]) * 60 + (+q[1] || 0);
+      if (sm <= mins && mins < sm + 120 && sm > bestStart) { bestStart = sm; best = debut; }
+    });
+    return { d: jourISO(d), h: best || "--" };
+  }
+  function cleDe(se) { return se.d + "_" + se.h; }
+  function libelleCourtSeance(cle) {
+    var p2 = cle.split("_"), d = p2[0];
+    return d.slice(8, 10) + "/" + d.slice(5, 7) + (p2[1] && p2[1] !== "--" ? " " + p2[1] : "");
+  }
+  /* Toutes les séances où quelque chose a été enregistré pour cette classe, dans l'ordre. */
+  function seancesTenues(cid) {
+    var vues = {}, m = mat();
+    classEleves(cid).forEach(function (e) {
+      (eData(e.id).behavior || []).forEach(function (ev) {
+        if (!ev || !ev.ts) return;
+        vues[cleDe(seanceDeTs(cid, ev.ts))] = 1;
+      });
+    });
+    (((m.plans || {})[cid] || {}).appels || []).forEach(function (a2) { vues[a2.d + "_" + a2.h] = 1; });
+    return Object.keys(vues).sort();
+  }
+  /* Séance de travail courante : celle choisie pour un rattrapage, sinon celle de maintenant. */
+  function seanceActive(cid) {
+    cid = cid || curClassId();
+    if (saisieSeance && saisieSeance.cid === cid) return { d: saisieSeance.d, h: saisieSeance.h };
+    return seanceDeTs(cid, Date.now());
+  }
+  function scoreSeance(eid, cid, cle) {
+    var n = 0;
+    (eData(eid).behavior || []).forEach(function (ev) {
+      if (!ev || !ev.ts) return;
+      if (cleDe(seanceDeTs(cid, ev.ts)) !== cle) return;
+      n += pointsDeEvenement(ev);
+    });
+    return n;
+  }
+
   /* ============ SAISIE DATÉE : rattraper une heure passée ============
      Par défaut tout est horodaté à l'instant. Quand l'enseignant saisit pour une classe
      qu'il n'a pas à cette heure-ci, il choisit la séance concernée dans un calendrier qui
@@ -3646,6 +3961,15 @@
         + "Renseignez l'emploi du temps (clic sur le badge de semaine) pour obtenir des dates.</span></div>";
     } else {
       box.innerHTML = "";
+      var maintenant = seanceDeTs(cid, Date.now());
+      var ligneNow = document.createElement("div"); ligneNow.className = "row";
+      ligneNow.innerHTML = '<span style="flex:1"><b>Séance en cours</b> <span class="hint">'
+        + esc(libelleCourtSeance(cleDe(maintenant))) + "</span></span>"
+        + '<button class="admbtn ok">⟲ Maintenant</button>';
+      ligneNow.querySelector("button").addEventListener("click", function () {
+        annulerSaisieDatee(); $("dlgSeanceQ").classList.remove("open"); if (apres) apres();
+      });
+      box.appendChild(ligneNow);
       liste.slice(0, 40).forEach(function (se) {
         var deja = saisieSeance && saisieSeance.cid === cid && saisieSeance.d === se.d && saisieSeance.h === se.h;
         var row = document.createElement("div"); row.className = "row";
@@ -3654,6 +3978,7 @@
         row.querySelector("button").addEventListener("click", function () {
           saisieSeance = { cid: cid, d: se.d, h: se.h, ts: se.ts };
           majBandeauSaisie(); $("dlgSeanceQ").classList.remove("open");
+          renderHeader(); renderRoom();
           if (apres) apres();
           flash("Saisie datée du " + libelleSeance(se), 3400);
         });
@@ -3662,7 +3987,7 @@
     }
     closeAllDialogs(); $("dlgSeanceQ").classList.add("open");
   }
-  function annulerSaisieDatee() { saisieSeance = null; majBandeauSaisie(); flash("Saisie revenue à maintenant", 2400); }
+  function annulerSaisieDatee() { saisieSeance = null; majBandeauSaisie(); renderHeader(); renderRoom(); flash("Saisie revenue à maintenant", 2400); }
   function majBandeauSaisie() {
     var bar = $("seanceBar"); if (!bar) return;
     if (!saisieSeance) { bar.classList.add("hidden"); return; }
@@ -3690,16 +4015,16 @@
   }
 
   /* ====================== SCORES / COMPÉTENCES ======================
-     Le numéro de cours est propre à CHAQUE CLASSE. Auparavant il était unique pour toute la
-     matière : démarrer une heure avec une classe faisait basculer la barre de score de toutes
-     les autres, et les participations de l'heure précédente semblaient effacées. */
+     Les scores affichés se calculent désormais à partir de la DATE des saisies (voir
+     scoreSeance plus haut) : il n'y a plus rien à incrémenter et rien ne se perd d'une semaine
+     sur l'autre. L'ancien numéro de cours, propre à chaque classe, n'est conservé que pour
+     rester compatible avec les enregistrements déjà faits. */
   function coursIndex(cid) {
     var m = mat(); if (!m.coursParClasse) m.coursParClasse = {};
     cid = cid || curClassId(); if (!cid) return 0;
     if (m.coursParClasse[cid] == null) m.coursParClasse[cid] = (m.courseIndex || 0); // reprise de l'existant
     return m.coursParClasse[cid];
   }
-  function setCoursIndex(cid, v) { var m = mat(); if (!m.coursParClasse) m.coursParClasse = {}; m.coursParClasse[cid] = v; }
   function classeDeEleve(eid) {
     var cs = state.classes || {};
     var cur = curClassId();
@@ -3707,8 +4032,13 @@
     var k = Object.keys(cs).filter(function (c) { return (cs[c].eleveIds || []).indexOf(eid) >= 0; })[0];
     return k || cur;
   }
-  function scoreCur(eleveId, cid) { return (eData(eleveId).courseScores[coursIndex(cid || classeDeEleve(eleveId))]) || 0; }
-  function scoreGlobal(eleveId) { return Object.values(eData(eleveId).courseScores).reduce(function (a, b) { return a + (b || 0); }, 0); }
+  function scoreCur(eleveId, cid) {
+    var c = cid || classeDeEleve(eleveId);
+    return scoreSeance(eleveId, c, cleDe(seanceActive(c)));
+  }
+  function scoreGlobal(eleveId) {
+    return (eData(eleveId).behavior || []).reduce(function (n, ev) { return n + pointsDeEvenement(ev); }, 0);
+  }
   function compTint(eleveId) { var m = mat(); if (!m.sessionComp.length) return 3; var d = eData(eleveId); return Math.min.apply(null, m.sessionComp.map(function (c) { return C_IDX[d.comp[c] || "S"]; })); }
   function compValidated(eleveId) { var m = mat(), d = eData(eleveId); return m.sessionComp.some(function (c) { return d.compTouched && d.compTouched[c]; }); }
 
@@ -3721,7 +4051,8 @@
     }).join("") || '<option value="">- aucune classe -</option>';
     var m = mat();
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
-    $("btnCourse").innerHTML = "➕ Cours " + (coursIndex(curClassId()) + 1);
+    var cidH = curClassId();
+    $("btnSeance").innerHTML = cidH ? ("📅 " + libelleCourtSeance(cleDe(seanceActive(cidH)))) : "📅 Séance";
     var par = D.weekParity(m.calage, new Date());
     $("weekBadge").dataset.p = par;
     majHorloge(par);
@@ -4390,15 +4721,20 @@
     // Questions et Leçons orales : saisies via les boutons rapides 🎤 Oral et 📖 Leçons du haut
 
     // Score (replié par défaut pour rester compact)
-    var ciCur = coursIndex(curClassId());
-    var cs = d.courseScores || {}, nC = Math.max(ciCur + 1, 1);
-    Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
+    var cidS = curClassId(), cleCur = cleDe(seanceActive(cidS));
+    var sceances = seancesTenues(cidS);
+    if (sceances.indexOf(cleCur) < 0) sceances.push(cleCur);
+    sceances = sceances.slice(-12);                       // les douze dernières séances suffisent à l'écran
     var maxV = 1, bars = [];
-    for (var i = 0; i < nC; i++) { var v = cs[i] || 0; maxV = Math.max(maxV, v); bars.push({ v: v, l: "C" + (i + 1), cur: i === ciCur }); }
+    sceances.forEach(function (cle) {
+      var v = scoreSeance(s.id, cidS, cle);
+      maxV = Math.max(maxV, v);
+      bars.push({ v: v, l: libelleCourtSeance(cle), cur: cle === cleCur });
+    });
     var glob = scoreGlobal(s.id); maxV = Math.max(maxV, glob);
     var barHtml = bars.map(function (b) { return '<div class="bar ' + (b.cur ? "bcur" : "") + '"><span class="bv">' + b.v + '</span><div class="bb" style="height:' + Math.round(6 + b.v / maxV * 54) + 'px"></div><span class="bl">' + b.l + (b.cur ? " •" : "") + "</span></div>"; }).join("") +
       '<div class="bar bglob"><span class="bv">' + glob + '</span><div class="bb" style="height:' + Math.round(6 + glob / maxV * 54) + 'px"></div><span class="bl">Global</span></div>';
-    html += '<details class="block scoredet"><summary>📊 Score - cours ' + (ciCur + 1) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
+    html += '<details class="block scoredet"><summary>📊 Score - séance du ' + esc(libelleCourtSeance(cleCur)) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
 
     // Aménagements (BEP) - en bas ; base liée au handicap en gras + bouton Ajouter
     if (eleveBep(s)) {
@@ -5074,15 +5410,20 @@
     });
   }
   async function driveRestoreBackup(id, jour) {
-    if (!confirm("Restaurer la sauvegarde du " + jour + " ?\nL'état actuel sera remplacé sur cet appareil.")) return;
+    var fusion = etatVide() ? false : confirm(
+      "Sauvegarde du " + jour + ".\n\n"
+      + "OK : FUSIONNER avec l'état actuel (recommandé) - on récupère ce qui manque sans rien effacer.\n"
+      + "Annuler : REMPLACER l'état actuel par cette sauvegarde.");
+    if (!fusion && !etatVide() && !confirm("Remplacer l'état actuel par la sauvegarde du " + jour + " ?")) return;
     try {
       var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
       var blob = await r.json();
       var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde du " + jour);
       if (!data) return;
-      state = migrate(data);
-      LS.set(KEY_STATE, state); dirty = true;
       LS.setRaw(KEY_REMOTEMOD, "");             // volontairement inconnu : la prochaine synchro arbitrera
+      if (fusion) { appliquerFusion(migrate(data), "sauvegarde du " + jour); return; }
+      state = migrate(data);
+      LS.set(KEY_STATE, state); marquerNonEnvoye(true);
       renderAll(); historiqueRAZ(); closeAllDialogs();
       flash("Sauvegarde du " + jour + " restaurée", 3000);
     } catch (e) { flash("Restauration impossible : fichier illisible", 4000); }
@@ -6262,7 +6603,7 @@
     var cid = curClassId(); if (!cid) return; var m = mat();
     var head = ["Classe", "Groupe", "NOM", "Prénom", "Sexe", "Lunettes", "BEP", "Troubles", "Dispositifs", "Contraintes"]
       .concat(m.sessionComp.map(function (c, i) { return "Comp" + (i + 1); }))
-      .concat(["Tendance7j", "Positif7j", "Négatif7j", "Q_bonne", "Q_mauvaise", "Q_pas", "Oral_bonne", "Oral_mauvaise", "Oral_pas", "Score_cours", "Score_global", "Dernière_action"]);
+      .concat(["Tendance7j", "Positif7j", "Négatif7j", "Q_bonne", "Q_mauvaise", "Q_pas", "Oral_bonne", "Oral_mauvaise", "Oral_pas", "Score_séance", "Score_global", "Dernière_action"]);
     var rows = [head];
     classEleves(cid).slice().sort(function (a, b) { return (posOf(cid, a.id).group - posOf(cid, b.id).group) || a.nom.localeCompare(b.nom); }).forEach(function (s) {
       var d = eData(s.id), tr = trendOf(s.id);
@@ -6344,10 +6685,13 @@
       var negList = Object.keys(negCounts).map(function (id) { return esc(labelOfBehavior({ t: "neg", id: id })) + " ×" + negCounts[id]; }).join(", ") || "-";
       var q = d.q, qtot = q.bonne + q.mauvaise + q.pas;
       // graphe scores
-      var cs = d.courseScores || {}, nC = Math.max(coursIndex(cid) + 1, 1);
-      Object.keys(cs).forEach(function (k) { nC = Math.max(nC, +k + 1); });
-      var mx = 1; for (var i = 0; i < nC; i++) mx = Math.max(mx, cs[i] || 0); var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
-      var bars = ""; for (i = 0; i < nC; i++) { var v = cs[i] || 0; bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>C' + (i + 1) + "</small></div>"; }
+      var listeS = seancesTenues(cid).slice(-14);
+      var mx = 1; listeS.forEach(function (cle) { mx = Math.max(mx, scoreSeance(s.id, cid, cle)); });
+      var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
+      var bars = ""; listeS.forEach(function (cle) {
+        var v = scoreSeance(s.id, cid, cle);
+        bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>' + esc(libelleCourtSeance(cle)) + "</small></div>";
+      });
       bars += '<div class="rp-bar"><span>' + glob + '</span><div class="rp-bb rp-bg" style="height:' + Math.round(4 + glob / mx * 54) + 'px"></div><small>Global</small></div>';
       // journal
       var log = (d.behavior || []).slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
@@ -6620,7 +6964,17 @@
         var blob = JSON.parse(e.target.result);
         var data = await dechiffrerOuDemanderPhrase(blob, "Ce fichier de sauvegarde");
         if (!data) return;
-        state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée");
+        if (etatVide()) { state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée"); return; }
+        /* Par défaut on FUSIONNE : le fichier vient souvent de l'autre ordinateur, et écraser
+           ferait disparaître le travail fait ici. Le remplacement reste possible, explicitement. */
+        if (confirm("Ce poste contient déjà des données.\n\n"
+          + "OK : FUSIONNER les deux (recommandé) - aucune saisie n'est perdue, les saisies communes\n"
+          + "ne sont pas comptées deux fois.\n\n"
+          + "Annuler : REMPLACER tout le contenu de ce poste par le fichier.")) {
+          appliquerFusion(migrate(data), "fichier de sauvegarde");
+        } else if (confirm("Remplacer définitivement les données de ce poste ?\nLe travail fait ici et non sauvegardé ailleurs sera perdu.")) {
+          state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée (remplacement)");
+        }
       } catch (err) { flash("Fichier illisible"); }
     };
     reader.readAsText(file);
@@ -6766,15 +7120,11 @@
     $("weekBadge").addEventListener("click", openSchedule);
     $("driveBadge").addEventListener("click", function () { driveConnect(true); });
     $("btnReconnect").addEventListener("click", function () { driveConnect(false); });
-    $("btnCourse").addEventListener("click", function () {
-      if (!state) return; if (!confirm("Démarrer un nouveau cours ?\nUne nouvelle barre de score démarre à 0 (historique conservé).")) return;
-      var cidC = curClassId(); setCoursIndex(cidC, coursIndex(cidC) + 1); save();
-      if (curClassId()) classEleves(curClassId()).forEach(function (st) { refreshSeat(st.id); });
-      if (ui.activeEleve && !ui.profileFace) buildTracking(state.eleves[ui.activeEleve]); renderHeader();
-      flash("Nouveau cours : Cours " + (coursIndex(curClassId()) + 1) + " - " + state.classes[curClassId()].nom);
-      if (curClassId()) setTimeout(function () {
-        if (confirm("Nouvelle heure démarrée.\n\nFaire l'appel maintenant ?")) openAppel();
-      }, 250);
+    /* Le bouton n'ouvre plus un compteur : il montre la séance en cours et permet d'en
+       choisir une autre dans le calendrier de la classe (rattrapage). */
+    $("btnSeance").addEventListener("click", function () {
+      var cid = curClassId(); if (!cid) { flash("Affichez une classe d'abord"); return; }
+      ouvrirCalendrierSeance(cid, function () { renderAll(); });
     });
     $("modeSeg").querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.m); }); });
     $("btnShuffle").addEventListener("click", function () { var cid = curClassId(); if (!cid) return; act("Replacement complet de la classe"); snapshotPlan(cid); var res = rebuildPlan(cid, true); save(); renderRoom(); showUndo(); flash(res.conflicts.length ? "Classe brassée - " + res.conflicts.length + " conflit(s) signalé(s)" : "Classe brassée - nouvelle disposition"); });
@@ -6847,8 +7197,7 @@
     });
     $("admPull").addEventListener("click", async function () {
       if (!driveConfigured() || !tokenValid()) { flash("Connectez-vous à Drive d'abord (badge ☁︎)"); return; }
-      if (!etatVide() && !confirm("Remplacer les données de CE poste par celles de Drive ?\nCe qui est ici et pas encore sauvegardé sera perdu.")) return;
-      await driveLoad(); renderClassAdmin();
+      await driveRapatrier(); renderClassAdmin();
     });
     $("admListBackups").addEventListener("click", function () { renderDriveBackups(); });
     $("btnNote").addEventListener("click", function () { verifierCreneauAvantSaisie(openNoteDlg); });
