@@ -166,6 +166,36 @@
   .seat .amen i{font-style:normal; font-size:.82rem; line-height:1.15; background:#eef3f7;
                 border:1px solid #d3dee6; border-radius:5px; padding:0 3px;}
   .seat .amen i.plus{font-size:.62rem; font-weight:800; color:var(--ink-2); background:transparent; border:none;}
+  /* Pastille d'annotation, dans la rangée des pictogrammes : signale qu'une observation
+     écrite existe, prend la couleur de l'appréciation, et affiche le texte au survol. */
+  .seat .amen i.notepic{cursor:help; background:#eef3f7; border-color:#d3dee6;}
+  .seat .amen i.notepic.pos{background:var(--green-bg); border-color:#9fd6bd;}
+  .seat .amen i.notepic.neg{background:var(--red-bg); border-color:#eebcbc;}
+  .seat .amen i.notepic b{font-weight:800; font-size:.6rem; margin-left:1px;}
+  /* Mode appel : on pointe les absents directement sur le plan. */
+  body.appel-mode .seat{cursor:pointer; outline:2px dashed transparent;}
+  body.appel-mode .seat:hover{outline-color:var(--amber); background:var(--amber-bg);}
+  body.appel-mode .seat.absent{outline-color:var(--amber);}
+  body.appel-mode .slot{opacity:.3;}
+  /* Graphe de score détaillé : au-dessus de l'axe ce qui rapporte, en dessous ce qui alerte. */
+  .chart2{display:flex; gap:9px; overflow-x:auto; padding:6px 2px 2px; -webkit-overflow-scrolling:touch;}
+  .bar2{flex:none; width:46px; display:flex; flex-direction:column; align-items:center;}
+  .bar2 .bv{font-size:.68rem; font-weight:800; color:var(--ink-2); height:14px;}
+  .bar2 .up{height:56px; width:22px; display:flex; flex-direction:column-reverse; justify-content:flex-start;}
+  .bar2 .dn{height:30px; width:22px; display:flex; flex-direction:column; justify-content:flex-start;}
+  .bar2 .up i, .bar2 .dn i{display:block; width:100%;}
+  .bar2 .up i.so{background:#7fb3e0;} .bar2 .up i.sp{background:var(--green);}
+  .bar2 .up i:last-child{border-radius:4px 4px 0 0;}
+  .bar2 .dn i.ko{background:#b8d4ee; border-top:1px solid #7fb3e0;} .bar2 .dn i.bav{background:var(--red);}
+  .bar2 .dn i:last-child{border-radius:0 0 4px 4px;}
+  .bar2 .axe{width:34px; height:2px; background:var(--line);}
+  .bar2 .bl{font-size:.58rem; color:var(--muted); text-align:center; line-height:1.05; margin-top:3px;}
+  .bar2 .bc{font-size:.56rem; color:var(--ink-2); text-align:center; line-height:1.15; white-space:nowrap;}
+  .bar2.bcur .bl{color:var(--blue-d); font-weight:800;}
+  .bar2.bglob2 .up i.sp{background:var(--ink);}
+  .chartleg{display:flex; flex-wrap:wrap; gap:8px; font-size:.6rem; color:var(--muted); padding:2px 10px 8px;}
+  .chartleg span{display:inline-flex; align-items:center; gap:3px;}
+  .chartleg i{width:9px; height:9px; border-radius:2px; display:inline-block;}
   .past{font-size:.56rem; font-weight:800; color:#fff; border-radius:4px; padding:1px 4px; line-height:1.3; letter-spacing:.02em; text-shadow:0 1px 1px rgba(0,0,0,.25);}
   .seat .tally{display:flex; gap:6px; margin-top:auto; padding-top:3px; font-size:.66rem; font-weight:800;}
   .seat .tally .r{color:var(--red);} .seat .tally .g{color:var(--green);} .seat .tally .q{color:var(--blue);}
@@ -374,6 +404,7 @@
   /* --- Tirage au sort : pendant l'animation, seuls NOM et Prénom restent visibles --- */
   /* Mode Oral : aucune information BEP visible par la classe pendant l'interrogation */
   body.oral-discret .seat .amen,
+  body.oral-discret .seat .notepic,
   body.oral-discret .seat .pastilles,
   body.oral-discret .seat .glasses,
   body.oral-discret .seat .agit,
@@ -385,6 +416,7 @@
          les noms et, si vous les affichez, les groupes d'activité. Toute information
          individuelle disparaît : dispositifs, aménagements, scores, tendances, absences. --- */
   body.projection .seat .amen,
+  body.projection .seat .notepic,
   body.projection .seat .pastilles,
   body.projection .seat .glasses,
   body.projection .seat .agit,
@@ -621,6 +653,7 @@
   <button class="bbtn" id="btnReconnect">Se reconnecter</button></div>
 <div class="conflictbar hidden" id="conflictBar"></div>
 <div class="bavardbar hidden" id="bavardBar"></div>
+<div class="bavardbar hidden" id="appelBar" style="background:#8a6d1a"></div>
 <div class="bavardbar hidden" id="roomEditBar" style="background:var(--ink-2)"></div>
 <div class="bavardbar hidden" id="grpBar" style="background:#7c3aad"></div>
 <div class="actgbar hidden" id="actgBar"></div>
@@ -2393,7 +2426,28 @@
     return JSON.parse(new TextDecoder().decode(pt));
   }
 
+  /* ---------- Pondération du tirage au sort ----------
+     Règle pure, isolée ici pour être vérifiable : poids d'un élève selon le nombre de fois
+     où il a déjà participé (n), son rang dans les derniers tirages (-1 s'il n'y est pas)
+     et le fait d'avoir été interrogé il y a moins de vingt minutes. */
+  function poidsParticipation(n, rang, recent) {
+    if (rang === 0) return 0;                       // jamais deux fois de suite
+    var p = 1 / Math.pow(1 + Math.max(0, n || 0), 1.5);
+    if (rang > 0) p *= 0.3;                         // les deux tirages précédents
+    if (recent) p *= 0.1;                           // déjà interrogé dans l'heure
+    return p;
+  }
+  function tirageParPoids(poids, alea) {
+    var total = 0, i;
+    for (i = 0; i < poids.length; i++) total += poids[i];
+    if (!(total > 0)) return -1;
+    var tir = (alea == null ? Math.random() : alea) * total, cum = 0;
+    for (i = 0; i < poids.length; i++) { cum += poids[i]; if (tir < cum) return i; }
+    return poids.length - 1;
+  }
+
   var api = {
+    poidsParticipation: poidsParticipation, tirageParPoids: tirageParPoids,
     stripAccents: stripAccents, keyOf: keyOf, detectSex: detectSex,
     headerRole: headerRole, mapHeaders: mapHeaders, sheetToStudents: sheetToStudents,
     capsFor: capsFor, deskProximity: deskProximity, placeStudents: placeStudents, repairPlacement: repairPlacement,
@@ -2782,9 +2836,11 @@
      fermeture du navigateur : sinon, un poste rouvert le lendemain se croit à jour et accepte
      sans broncher une version distante plus ancienne que ce qu'il contient. */
   var KEY_NONENVOYE = "pdc_nonenvoye";
+  /* Heure exacte du dernier envoi réussi vers le Drive, propre à ce poste. */
+  var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-16-a";
+  var APP_VERSION = "2026-09-16-c";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -3224,7 +3280,8 @@
       if (r.status === 401) { onTokenExpired(); return; }
       var j = await r.json(); if (j.id) drive.fileId = j.id;
       memoriserRemoteModif(await driveModifiedTime());
-      marquerNonEnvoye(false); updateDriveBadge("Sauvegardé " + heureCourte());
+      marquerNonEnvoye(false); LS.setRaw(KEY_DERNIERENVOI, String(Date.now()));
+      updateDriveBadge("Sauvegardé " + heureCourte());
       driveBackupRotate();
     } catch (e) { updateDriveBadge("Erreur réseau"); }
   }
@@ -3234,8 +3291,8 @@
     try {
       var id = await driveFindFile(); if (!id) return null;
       var d = new Date();
-      var nom = "plan-de-classe-avant-ecrasement-" + d.toISOString().slice(0, 10)
-        + "-" + String(d.getHours()).padStart(2, "0") + "h" + String(d.getMinutes()).padStart(2, "0") + ".pdc.json";
+      var nom = "plan-de-classe-avant-ecrasement-" + horodatageFichier(d)
+        + "m" + String(d.getSeconds()).padStart(2, "0") + ".pdc.json";
       var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "/copy", {
         method: "POST",
         headers: { Authorization: "Bearer " + drive.token, "Content-Type": "application/json" },
@@ -3321,7 +3378,13 @@
     }
     if (dirty) await driveSave(); else { memoriserRemoteModif(distant); updateDriveBadge("À jour " + heureCourte()); }
   }
-  function heureCourte() { var d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function heureCourte() { var d = new Date(); return deuxChiffres(d.getHours()) + ":" + deuxChiffres(d.getMinutes()) + ":" + deuxChiffres(d.getSeconds()); }
+  /* Heure exacte du dernier envoi réussi, en clair, pour l'infobulle et le bloc Sauvegarde. */
+  function dernierEnvoiTexte() {
+    var t = LS.raw(KEY_DERNIERENVOI);
+    if (!t) return "Aucun envoi vers Drive depuis ce poste.";
+    return "Dernier envoi vers Drive : " + horodatageLisible(new Date(+t), true) + ".";
+  }
   async function driveModifiedTime() {
     var id = await driveFindFile(); if (!id) return null;
     try {
@@ -3386,12 +3449,12 @@
     if (!driveConfigured()) { el.textContent = "☁︎ Local"; el.title = "Google Drive non configuré - sauvegarde locale active"; el.dataset.s = "off"; }
     else if (tokenValid()) {
       el.textContent = "☁︎ " + (msg || "Drive");
-      el.title = dirty ? "Envoi en attente vers Google Drive" : "Synchronisé avec Google Drive";
+      el.title = (dirty ? "Envoi en attente vers Google Drive. " : "Synchronisé avec Google Drive. ") + dernierEnvoiTexte();
       el.dataset.s = "on";
     }
     else if (dirty) {
       el.textContent = "⚠︎ Non envoyé";
-      el.title = "Des saisies faites sur ce poste n'ont jamais été envoyées sur Drive. Cliquez pour vous connecter.";
+      el.title = "Des saisies faites sur ce poste n'ont jamais été envoyées sur Drive. Cliquez pour vous connecter. " + dernierEnvoiTexte();
       el.dataset.s = "warn";
     }
     else { el.textContent = "☁︎ Connecter"; el.dataset.s = "warn"; }
@@ -3578,6 +3641,7 @@
   var bavardMode = null; // null | {step:"who"|"with", whoId}
   function startBavardMode() {
     if (!curClassId()) { flash("Aucune classe active"); return; }
+    if (appelMode) stopAppelMode();
     if (oralMode) stopOralMode();
     if (leconMode) stopLeconMode();
     bavardMode = { step: "who", whoId: null };
@@ -3627,6 +3691,7 @@
   var oralMode = null; // null | {step, eleveId, spontane, niveau}
   function startOralMode() {
     if (!curClassId()) { flash("Aucune classe active"); return; }
+    if (appelMode) stopAppelMode();
     if (bavardMode) stopBavardMode();
     if (leconMode) stopLeconMode();
     oralMode = { step: "who", eleveId: null, spontane: null, niveau: null };
@@ -3713,6 +3778,7 @@
     var ciO = coursIndexSaisie(curClassId());
     if (pts) d.courseScores[ciO] = (d.courseScores[ciO] || 0) + pts;
     d.behavior.push({ t: "oral", id: out, lvl: lvl, spontane: !!oralMode.spontane, ts: horodatageSaisie(), ci: ciO });
+    d.lastOralTs = Date.now();                 // sert au tirage au sort pour éviter les tout récents
     save(); refreshSeat(id);
     if (ui.activeEleve === id) buildTracking(state.eleves[id]);
     $("dlgOralStep").classList.remove("open");
@@ -3723,6 +3789,7 @@
   var leconMode = null; // null | {active:true}
   function startLeconMode() {
     if (!curClassId()) { flash("Aucune classe active"); return; }
+    if (appelMode) stopAppelMode();
     if (bavardMode) stopBavardMode();
     if (oralMode) stopOralMode();
     leconMode = { active: true };
@@ -3891,6 +3958,87 @@
       n += pointsDeEvenement(ev);
     });
     return n;
+  }
+  /* Détail d'une séance pour le graphe : ce qui rapporte des points d'un côté, ce qui alerte
+     de l'autre. Les mauvaises réponses n'enlèvent aucun point - elles se lisent quand même
+     sous l'axe, parce qu'une participation ratée est une information, pas un zéro invisible. */
+  function detailSeance(eid, cid, cle) {
+    var r = { pts: 0, ptsSpont: 0, ptsSoll: 0, bonne: 0, moyenne: 0, mauvaise: 0, pas: 0, bavard: 0 };
+    (eData(eid).behavior || []).forEach(function (ev) {
+      if (!ev || !ev.ts) return;
+      if (cleDe(seanceDeTs(cid, ev.ts)) !== cle) return;
+      if (ev.t === "neg" && ev.id === "bavard") { r.bavard++; return; }
+      var pts = pointsDeEvenement(ev);
+      if (ev.t === "oral" || ev.t === "q") {
+        if (ev.id === "bonne") r.bonne++;
+        else if (ev.id === "moyenne") r.moyenne++;
+        else if (ev.id === "pas") r.pas++;
+        else r.mauvaise++;
+        if (ev.t === "oral" && ev.spontane) r.ptsSpont += pts; else r.ptsSoll += pts;
+        r.pts += pts;
+        return;
+      }
+      if (ev.t === "lecon") {                       // une leçon est toujours sollicitée
+        if (ev.id === "pas" || ev.note == null) r.pas++;
+        else if (+ev.note >= 4) r.bonne++;
+        else if (+ev.note >= 2.5) r.moyenne++;
+        else r.mauvaise++;
+        r.ptsSoll += pts; r.pts += pts;
+      }
+    });
+    return r;
+  }
+  /* Graphe commun à la fiche et au bilan imprimé : une colonne par séance. */
+  function chartSeancesHtml(eid, cid, cles, cleCur, glob) {
+    var det = cles.map(function (cle) { return detailSeance(eid, cid, cle); });
+    var hautMax = 1, basMax = 1;
+    det.forEach(function (x) {
+      hautMax = Math.max(hautMax, x.pts);
+      basMax = Math.max(basMax, x.mauvaise + x.pas + x.bavard);
+    });
+    if (glob != null) hautMax = Math.max(hautMax, glob);
+    var unite = 50 / Math.max(hautMax, basMax, 1);
+    function seg(cls, v) { return v > 0 ? '<i class="' + cls + '" style="height:' + Math.max(4, Math.round(v * unite)) + 'px"></i>' : ""; }
+    function compte(x) {
+      var p = [];
+      if (x.bonne) p.push('<b style="color:var(--green)">✓' + x.bonne + "</b>");
+      if (x.moyenne) p.push('<b style="color:#5f92c4">≈' + x.moyenne + "</b>");
+      if (x.mauvaise) p.push('<b style="color:#5f92c4">✗' + x.mauvaise + "</b>");
+      if (x.pas) p.push('<b style="color:var(--muted)">–' + x.pas + "</b>");
+      if (x.bavard) p.push('<b style="color:var(--red)">🗣' + x.bavard + "</b>");
+      return p.join(" ") || "&nbsp;";
+    }
+    var html = cles.map(function (cle, i) {
+      var x = det[i], courant = (cle === cleCur);
+      var infos = libelleCourtSeance(cle) + " : " + x.pts + " pt" + (x.pts > 1 ? "s" : "")
+        + (x.bonne ? " · " + x.bonne + " bonne" + (x.bonne > 1 ? "s" : "") : "")
+        + (x.moyenne ? " · " + x.moyenne + " moyenne" + (x.moyenne > 1 ? "s" : "") : "")
+        + (x.mauvaise ? " · " + x.mauvaise + " mauvaise" + (x.mauvaise > 1 ? "s" : "") : "")
+        + (x.pas ? " · " + x.pas + " sans réponse" : "")
+        + (x.bavard ? " · " + x.bavard + " bavardage" + (x.bavard > 1 ? "s" : "") : "");
+      return '<div class="bar2' + (courant ? " bcur" : "") + '" title="' + esc(infos) + '">'
+        + '<span class="bv">' + (x.pts || "") + "</span>"
+        + '<span class="up">' + seg("so", x.ptsSoll) + seg("sp", x.ptsSpont) + "</span>"
+        + '<span class="axe"></span>'
+        + '<span class="dn">' + seg("ko", x.mauvaise + x.pas) + seg("bav", x.bavard) + "</span>"
+        + '<span class="bl">' + esc(libelleCourtSeance(cle)) + (courant ? " •" : "") + "</span>"
+        + '<span class="bc">' + compte(x) + "</span></div>";
+    }).join("");
+    if (glob != null) {
+      html += '<div class="bar2 bglob2" title="Total de l\'année"><span class="bv">' + glob + "</span>"
+        + '<span class="up"><i class="sp" style="height:' + Math.max(4, Math.round(glob * unite)) + 'px"></i></span>'
+        + '<span class="axe"></span><span class="dn"></span>'
+        + '<span class="bl">Global</span><span class="bc">&nbsp;</span></div>';
+    }
+    return html;
+  }
+  function chartLegendeHtml() {
+    return '<div class="chartleg">'
+      + '<span><i style="background:var(--green)"></i>participation spontanée</span>'
+      + '<span><i style="background:#7fb3e0"></i>sollicitée</span>'
+      + '<span><i style="background:#b8d4ee"></i>réponse fausse ou absente</span>'
+      + '<span><i style="background:var(--red)"></i>bavardage</span>'
+      + "<span>sous l'axe : ce qui n'enlève pas de point mais se retient</span></div>";
   }
 
   /* ============ SAISIE DATÉE : rattraper une heure passée ============
@@ -4538,16 +4686,39 @@
     return { type: "back", cap: cap, cols: cols, cells: cells };
   }
   /* Bande de pictogrammes d'une place : au plus 6, puis un compteur « +n ». */
-  function amenHtmlSeat(eid) {
-    var liste = amenagementsDe(eid);
+  /* Toutes les annotations écrites d'un élève, toutes matières confondues, récentes d'abord. */
+  function annotationsDe(eid) {
+    var out = [];
+    Object.keys(state.matieres).forEach(function (mid) {
+      var ed = state.matieres[mid].eleveData[eid]; if (!ed) return;
+      (ed.behavior || []).forEach(function (b2) { if (b2.t === "note") out.push(b2); });
+    });
+    return out.sort(function (a2, b2) { return b2.ts - a2.ts; });
+  }
+  function tonClasse(ton) { return ton === "positif" ? "pos" : (ton === "negatif" ? "neg" : ""); }
+  function couleurTon(ton) { return ton === "positif" ? "var(--green)" : (ton === "negatif" ? "var(--red)" : "var(--muted)"); }
+  /* Pictogramme d'annotation sur la place : le survol rappelle ce qui a été écrit. */
+  function noteChipSeat(eid) {
+    var liste = annotationsDe(eid);
     if (!liste.length) return "";
+    var apercu = liste.slice(0, 5).map(function (n) {
+      return fmtTs(n.ts) + " · " + catInfo(n.id).lab + (n.txt ? " : " + n.txt : "");
+    }).join("\n");
+    if (liste.length > 5) apercu += "\n… et " + (liste.length - 5) + " autre" + (liste.length - 5 > 1 ? "s" : "");
+    return '<i class="notepic ' + tonClasse(catInfo(liste[0].id).ton) + '" title="' + esc(apercu) + '">📝<b>'
+      + liste.length + "</b></i>";
+  }
+  function amenHtmlSeat(eid) {
+    var note = noteChipSeat(eid);
+    var liste = amenagementsDe(eid);
+    if (!liste.length) return note ? ('<span class="amen">' + note + "</span>") : "";
     var max = 6, vus = liste.slice(0, max);
     var html = vus.map(function (a2) { return '<i title="' + esc(a2.txt) + '">' + a2.icone + "</i>"; }).join("");
     if (liste.length > max) {
       var reste = liste.slice(max).map(function (a2) { return a2.txt; }).join(" · ");
       html += '<i class="plus" title="' + esc(reste) + '">+' + (liste.length - max) + "</i>";
     }
-    return '<span class="amen" title="Aménagements">' + html + "</span>";
+    return '<span class="amen">' + note + html + "</span>";
   }
   function emptySlot(gi, order) { var d = document.createElement("div"); d.className = "slot"; d.dataset.group = gi; d.dataset.order = order; d.textContent = "＋"; return d; }
   function seatEl(s) {
@@ -4720,21 +4891,36 @@
     // Questions + Leçons orales : intitulé + niveau + résultats sur une seule ligne
     // Questions et Leçons orales : saisies via les boutons rapides 🎤 Oral et 📖 Leçons du haut
 
+    // Annotations écrites : le rappel daté, coloré selon l'appréciation - utile sur tablette,
+    // où le survol d'un pictogramme n'existe pas.
+    var notes = annotationsDe(s.id);
+    if (notes.length) {
+      html += '<div class="block"><h4><span class="dot" style="background:#7d57c4"></span>Annotations ('
+        + notes.length + ")</h4>"
+        + notes.slice(0, 8).map(function (n) {
+            var ci = catInfo(n.id), c = couleurTon(ci.ton);
+            return '<div class="crow" style="border-left:3px solid ' + c + ';padding-left:7px">'
+              + '<span class="cname"><b style="color:' + c + '">' + esc(fmtTs(n.ts)) + "</b> · "
+              + esc(ci.lab) + (n.txt ? " : " + esc(n.txt) : "") + "</span></div>";
+          }).join("")
+        + (notes.length > 8 ? '<p class="hint">… ' + (notes.length - 8) + " de plus dans 📝 Annoter</p>" : "")
+        + "</div>";
+    }
+
     // Score (replié par défaut pour rester compact)
     var cidS = curClassId(), cleCur = cleDe(seanceActive(cidS));
     var sceances = seancesTenues(cidS);
     if (sceances.indexOf(cleCur) < 0) sceances.push(cleCur);
     sceances = sceances.slice(-12);                       // les douze dernières séances suffisent à l'écran
-    var maxV = 1, bars = [];
-    sceances.forEach(function (cle) {
-      var v = scoreSeance(s.id, cidS, cle);
-      maxV = Math.max(maxV, v);
-      bars.push({ v: v, l: libelleCourtSeance(cle), cur: cle === cleCur });
-    });
-    var glob = scoreGlobal(s.id); maxV = Math.max(maxV, glob);
-    var barHtml = bars.map(function (b) { return '<div class="bar ' + (b.cur ? "bcur" : "") + '"><span class="bv">' + b.v + '</span><div class="bb" style="height:' + Math.round(6 + b.v / maxV * 54) + 'px"></div><span class="bl">' + b.l + (b.cur ? " •" : "") + "</span></div>"; }).join("") +
-      '<div class="bar bglob"><span class="bv">' + glob + '</span><div class="bb" style="height:' + Math.round(6 + glob / maxV * 54) + 'px"></div><span class="bl">Global</span></div>';
-    html += '<details class="block scoredet"><summary>📊 Score - séance du ' + esc(libelleCourtSeance(cleCur)) + ' : ' + scoreCur(s.id) + ' pts · global : ' + glob + '</summary><div class="chart">' + barHtml + "</div></details>";
+    var glob = scoreGlobal(s.id);
+    var det = detailSeance(s.id, cidS, cleCur);
+    var resume = "📊 Score - séance du " + esc(libelleCourtSeance(cleCur)) + " : " + det.pts + " pts"
+      + (det.bonne ? " · ✓" + det.bonne : "") + (det.moyenne ? " · ≈" + det.moyenne : "")
+      + (det.mauvaise + det.pas ? " · ✗" + (det.mauvaise + det.pas) : "")
+      + (det.bavard ? ' · <span style="color:var(--red)">🗣' + det.bavard + "</span>" : "")
+      + " · global : " + glob;
+    html += '<details class="block scoredet" open><summary>' + resume + '</summary><div class="chart2">'
+      + chartSeancesHtml(s.id, cidS, sceances, cleCur, glob) + "</div>" + chartLegendeHtml() + "</details>";
 
     // Aménagements (BEP) - en bas ; base liée au handicap en gras + bouton Ajouter
     if (eleveBep(s)) {
@@ -4971,11 +5157,75 @@
     if (!appelSel) appelSel = creneauDuMoment();
     return appelSel;
   }
+  /* Séance que le PLAN reflète : celle en cours, ou celle que l'on est en train de pointer
+     quand le mode appel est actif sur une autre date. En sortant du mode, le plan revient
+     à la séance du jour : consulter le passé ne change jamais l'affichage courant. */
+  function seanceAffichee() {
+    if (appelMode) return { d: appelMode.d, h: appelMode.h };
+    return creneauDuMoment();
+  }
   function estAbsentMaintenant(eid) {
     var cid = curClassId(); if (!cid) return false;
-    var m = creneauDuMoment();
+    var m = seanceAffichee();
     var se = seanceTrouver(cid, m.d, m.h);
     return !!(se && se.abs.indexOf(eid) >= 0);
+  }
+
+  /* ---------- APPEL DIRECTEMENT SUR LE PLAN ----------
+     Chercher un nom dans une liste alphabétique pendant que la classe s'installe fait perdre
+     du temps et oblige à quitter des yeux la salle. Ici l'enseignant regarde les places vides
+     et tape dessus : le plan EST la feuille d'appel. La fenêtre détaillée reste accessible
+     depuis le bandeau, pour les cumuls, l'historique et les corrections de date. */
+  var appelMode = null;   // null | { cid, d, h }
+  function startAppelMode(jour, heure) {
+    var cid = curClassId(); if (!cid) { flash("Aucune classe affichée"); return; }
+    if (bavardMode) stopBavardMode();
+    if (oralMode) stopOralMode();
+    if (leconMode) stopLeconMode();
+    var cr = creneauDuMoment();
+    appelMode = { cid: cid, d: jour || cr.d, h: heure || cr.h };
+    appelSel = { d: appelMode.d, h: appelMode.h };
+    document.body.classList.add("appel-mode");
+    updateAppelBanner(); renderRoom();
+  }
+  function stopAppelMode() {
+    if (!appelMode) return;
+    appelMode = null;
+    document.body.classList.remove("appel-mode");
+    var bar = $("appelBar"); if (bar) bar.classList.add("hidden");
+    renderRoom();
+  }
+  function appelTapSeat(eid) {
+    if (!appelMode) return;
+    var se = seanceAssurer(appelMode.cid, appelMode.d, appelMode.h);
+    var i = se.abs.indexOf(eid);
+    if (i >= 0) se.abs.splice(i, 1); else se.abs.push(eid);
+    act((i >= 0 ? "Présence" : "Absence") + " - " + nomCourt(eid));
+    save(); refreshSeat(eid); updateAppelBanner();
+    if ($("dlgAppel").classList.contains("open")) { renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul(); }
+  }
+  function updateAppelBanner() {
+    var bar = $("appelBar"); if (!bar) return;
+    if (!appelMode) { bar.classList.add("hidden"); return; }
+    bar.classList.remove("hidden");
+    var se = seanceTrouver(appelMode.cid, appelMode.d, appelMode.h);
+    var n = se ? se.abs.length : 0;
+    var jj = appelMode.d.slice(8, 10) + "/" + appelMode.d.slice(5, 7);
+    var cr = creneauDuMoment();
+    var enCours = (appelMode.d === cr.d && appelMode.h === cr.h);
+    bar.innerHTML = "📋 <b>Appel du " + jj + " à " + appelMode.h + "</b>"
+      + (enCours ? "" : ' <span style="opacity:.85">(séance passée)</span>')
+      + " - tapez les élèves <b>absents</b> sur le plan · <b>" + n + "</b> absent" + (n > 1 ? "s" : "")
+      + ' <button id="apModeTous">✓ Tout le monde est là</button>'
+      + ' <button id="apModeDetail">🗓 Dates et cumuls</button>'
+      + ' <button id="apModeStop">Terminer</button>';
+    $("apModeStop").addEventListener("click", function () { stopAppelMode(); flash("Appel terminé", 2000); });
+    $("apModeDetail").addEventListener("click", openAppel);
+    $("apModeTous").addEventListener("click", function () {
+      var s2 = seanceAssurer(appelMode.cid, appelMode.d, appelMode.h);
+      act("Appel - tout le monde présent");
+      s2.abs = []; save(); renderRoom(); updateAppelBanner(); flash("Classe au complet", 2000);
+    });
   }
   function cumulAbsences(cid, periode) {
     var ref = jourISO(), tri = trimestreDe(ref), an = anneeScolaireDe(ref), out = {};
@@ -5006,7 +5256,7 @@
   }
   function openAppel() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe affichée"); return; }
-    appelSel = creneauDuMoment();
+    appelSel = appelMode ? { d: appelMode.d, h: appelMode.h } : creneauDuMoment();
     renderAppelEntete(); renderAppelGrid(); renderAppelSeances(); renderAppelCumul();
     closeAllDialogs(); $("dlgAppel").classList.add("open");
   }
@@ -5028,7 +5278,17 @@
             : "aucun appel fait pour cette séance")
       + (enCours ? " · <b>séance en cours</b>" : " · <b style=\"color:var(--amber)\">séance passée ou à venir</b>");
   }
+  /* La fenêtre et le pointage sur le plan visent toujours la même séance. */
+  function synchroniserModeAppel() {
+    if (!appelMode) return;
+    var sel = seanceSelection(curClassId());
+    if (appelMode.d !== sel.d || appelMode.h !== sel.h) {
+      appelMode.d = sel.d; appelMode.h = sel.h;
+      updateAppelBanner(); renderRoom();
+    }
+  }
   function renderAppelGrid() {
+    synchroniserModeAppel();
     var cid = curClassId(); if (!cid) return;
     var sel = seanceSelection(cid);
     var se = seanceTrouver(cid, sel.d, sel.h), box = $("apGrid");
@@ -5236,6 +5496,35 @@
      un élève et ouvrir sa fiche BEP, régler la synchronisation Drive et restaurer
      une sauvegarde datée. Tout ce qui part sur Drive est chiffré. */
   var BACKUP_PREFIX = "plan-de-classe-sauvegarde-", BACKUP_KEEP = 10, backupDoneToday = "";
+  /* ---------- Horodatage des sauvegardes ----------
+     Une copie datée du seul jour ne dit pas grand-chose quand on cherche « la version d'avant
+     la récréation ». Les noms de fichiers portent donc la date ET l'heure, en heure locale,
+     et la liste les affiche en clair. Les anciennes copies, datées du jour seulement,
+     restent lisibles et restaurables. */
+  function deuxChiffres(n) { return String(n).padStart(2, "0"); }
+  function dateLocaleISO(d) {
+    d = d || new Date();
+    return d.getFullYear() + "-" + deuxChiffres(d.getMonth() + 1) + "-" + deuxChiffres(d.getDate());
+  }
+  function horodatageFichier(d) {
+    d = d || new Date();
+    return dateLocaleISO(d) + "_" + deuxChiffres(d.getHours()) + "h" + deuxChiffres(d.getMinutes());
+  }
+  function horodatageLisible(d, avecSecondes) {
+    d = d || new Date();
+    return deuxChiffres(d.getDate()) + "/" + deuxChiffres(d.getMonth() + 1) + "/" + d.getFullYear()
+      + " à " + deuxChiffres(d.getHours()) + " h " + deuxChiffres(d.getMinutes())
+      + (avecSecondes ? (" min " + deuxChiffres(d.getSeconds()) + " s") : "");
+  }
+  /* « 2026-09-16_14h32 » ou « 2026-09-16 » -> « 16/09/2026 à 14 h 32 » */
+  function libelleSauvegarde(cle, secours) {
+    var m2 = /^(\d{4})-(\d{2})-(\d{2})(?:_(\d{2})h(\d{2}))?$/.exec(cle || "");
+    if (!m2) return cle || "";
+    var txt = m2[3] + "/" + m2[2] + "/" + m2[1];
+    if (m2[4]) return txt + " à " + m2[4] + " h " + m2[5];
+    if (secours) { var d = new Date(secours); if (!isNaN(d)) return txt + " à " + deuxChiffres(d.getHours()) + " h " + deuxChiffres(d.getMinutes()) + " (heure du fichier)"; }
+    return txt + " (heure non enregistrée)";
+  }
 
   function renderClassAdmin() {
     renderAdmClasses(); renderAdmEleves();
@@ -5251,7 +5540,7 @@
       ? (tokenValid() ? "Connecté à Google Drive - sauvegarde chiffrée dès qu'une modification est faite, contrôle des deux sens toutes les 3 minutes et à chaque retour sur l'onglet, plus une copie datée par jour (10 conservées)."
                       : "Identifiant enregistré. Touchez le badge ☁︎ de la barre de titre pour vous connecter.")
       : "Aucun identifiant : les données restent sur cet appareil uniquement.";
-    $("admBackupInfo").textContent += "  •  Version du programme : " + APP_VERSION;
+    $("admBackupInfo").textContent += "  •  " + dernierEnvoiTexte() + "  •  Version du programme : " + APP_VERSION;
   }
 
   function renderAdmClasses() {
@@ -5369,14 +5658,15 @@
     var j = await r.json();
     return (j.files || []).sort(function (a, b) { return b.name.localeCompare(a.name); });
   }
-  async function driveBackupRotate() {
+  async function driveBackupRotate(forcer) {
     if (!tokenValid()) return;
-    var day = new Date().toISOString().slice(0, 10);
-    if (backupDoneToday === day) return;
+    var day = dateLocaleISO();
+    if (!forcer && backupDoneToday === day) return;
     try {
       var list = await driveListBackups();
-      var name = BACKUP_PREFIX + day + ".pdc.json";
-      if (!list.some(function (f) { return f.name === name; })) {
+      var name = BACKUP_PREFIX + horodatageFichier() + ".pdc.json";
+      var dejaAujourdhui = list.some(function (f) { return f.name.indexOf(BACKUP_PREFIX + day) === 0; });
+      if (forcer || !dejaAujourdhui) {
         await ensureDeviceKey();
         var body = JSON.stringify(await D.encryptJSON(state, deviceKeyRaw));
         var meta = { name: name, mimeType: "application/json" }, boundary = "pdcb" + Date.now();
@@ -5401,11 +5691,12 @@
     box.innerHTML = "";
     if (!list.length) { box.innerHTML = '<div class="row"><span class="hint">Aucune sauvegarde datée pour l\'instant.</span></div>'; return; }
     list.forEach(function (f) {
-      var jour = f.name.replace(BACKUP_PREFIX, "").replace(".pdc.json", "");
+      var cle = f.name.replace(BACKUP_PREFIX, "").replace(".pdc.json", "");
+      var libelle = libelleSauvegarde(cle, f.modifiedTime);
       var ko = f.size ? Math.round(f.size / 1024) + " Ko" : "";
       var row = document.createElement("div"); row.className = "row";
-      row.innerHTML = '<span style="flex:1">' + esc(jour) + '</span><span class="nb">' + ko + '</span><button class="admbtn">Restaurer</button>';
-      row.querySelector("button").addEventListener("click", function () { driveRestoreBackup(f.id, jour); });
+      row.innerHTML = '<span style="flex:1">' + esc(libelle) + '</span><span class="nb">' + ko + '</span><button class="admbtn">Restaurer</button>';
+      row.querySelector("button").addEventListener("click", function () { driveRestoreBackup(f.id, libelle); });
       box.appendChild(row);
     });
   }
@@ -5434,18 +5725,52 @@
      Les noms s'éclairent les uns après les autres en ralentissant, puis s'arrêtent
      sur un élève. Pendant toute l'animation, la classe ne voit que NOM et Prénom :
      scores, pastilles BEP, tendances et compteurs sont masqués. */
-  function roulettePool(cid, kind) {
-    var eleves = classEleves(cid).filter(function (s) { return !estAbsentMaintenant(s.id); });
-    if (!eleves.length) eleves = classEleves(cid);     // appel non fait ou classe entière absente
-    if (eleves.length < 2) return eleves;
+  /* ---------- Tirage pondéré : le silencieux passe avant le bavard ----------
+     Un tirage uniforme redemande le même élève pendant que d'autres traversent l'année sans
+     jamais parler. Chaque élève reçoit donc un poids inversement proportionnel au nombre de
+     fois où il a déjà participé dans ce mode : 1 / (1 + n)^1,5. Celui qui n'a jamais participé
+     part avec 1, celui qui a participé trois fois avec 0,125 - huit fois moins, mais jamais
+     zéro : personne n'est mis hors jeu. Trois garde-fous s'y ajoutent : l'élève tiré juste
+     avant est exclu (jamais deux fois de suite), les deux d'avant sont fortement dépréciés,
+     et celui déjà interrogé dans les vingt dernières minutes devient très improbable. */
+  var KEY_TIRAGES = "pdc_tirages";
+  var FENETRE_RECENTE = 20 * 60 * 1000;
+  function derniersTires(cid) { var t = LS.get(KEY_TIRAGES) || {}; return t[cid] || []; }
+  function memoriserTirage(cid, eid) {
+    var t = LS.get(KEY_TIRAGES) || {};
+    t[cid] = [eid].concat((t[cid] || []).filter(function (x) { return x !== eid; })).slice(0, 3);
+    LS.set(KEY_TIRAGES, t);
+  }
+  /* Nombre de participations dans ce mode, spontanées comprises, sur les six dernières
+     semaines. La fenêtre glissante évite qu'au mois de juin un élève très actif en septembre
+     soit écarté pour de bon : ce qui compte est l'équilibre de la période en cours. */
+  var FENETRE_PARTICIPATION = 42 * 86400000;
+  function nbParticipations(eid, kind) {
+    var t = (kind === "oral") ? "oral" : "lecon", n = 0, depuis = Date.now() - FENETRE_PARTICIPATION;
+    (eData(eid).behavior || []).forEach(function (ev) { if (ev && ev.t === t && ev.ts >= depuis) n++; });
+    return n;
+  }
+  function poidsTirage(eid, kind, recents) {
     var champ = (kind === "oral") ? "lastOralTs" : "lastLeconTs";
-    var now = Date.now(), RECENT = 20 * 60 * 1000;
-    var pool = eleves.filter(function (s) { return (now - (eData(s.id)[champ] || 0)) > RECENT; });
-    if (!pool.length) {
-      var tri = eleves.slice().sort(function (a, b) { return (eData(a.id)[champ] || 0) - (eData(b.id)[champ] || 0); });
-      pool = tri.slice(0, Math.max(1, Math.ceil(tri.length / 2)));
+    var recent = (Date.now() - (eData(eid)[champ] || 0)) < FENETRE_RECENTE;
+    return D.poidsParticipation(nbParticipations(eid, kind), recents.indexOf(eid), recent);
+  }
+  function elevesTirables(cid) {
+    var eleves = classEleves(cid).filter(function (s) { return !estAbsentMaintenant(s.id); });
+    return eleves.length ? eleves : classEleves(cid);           // appel non fait ou classe entière absente
+  }
+  function tirerEleve(cid, kind) {
+    var eleves = elevesTirables(cid);
+    if (eleves.length < 2) return eleves[0] || null;
+    var recents = derniersTires(cid);
+    var poids = eleves.map(function (s) { return poidsTirage(s.id, kind, recents); });
+    var i = D.tirageParPoids(poids);
+    if (i < 0) {                                                // cas limite : tout est à zéro
+      poids = eleves.map(function (s) { return recents.indexOf(s.id) === 0 ? 0 : 1; });
+      i = D.tirageParPoids(poids);
+      if (i < 0) i = Math.floor(Math.random() * eleves.length);
     }
-    return pool;
+    return eleves[i];
   }
   var rouletteBusy = false;
   var SON_KEY = "pdc_tirage_son";
@@ -5476,11 +5801,11 @@
   function rouletteRun(kind, cb) {
     var cid = curClassId(); if (!cid) { flash("Aucune classe affichée"); return; }
     if (rouletteBusy) return;
-    var pool = roulettePool(cid, kind);
-    if (!pool.length) { flash("Aucun élève à tirer"); return; }
+    var gagnant = tirerEleve(cid, kind);
+    if (!gagnant) { flash("Aucun élève à tirer"); return; }
     var tous = classEleves(cid);
-    if (tous.length < 2) { cb(pool[0]); return; }
-    var gagnant = pool[Math.floor(Math.random() * pool.length)];
+    if (tous.length < 2) { memoriserTirage(cid, gagnant.id); cb(gagnant); return; }
+    memoriserTirage(cid, gagnant.id);
     rouletteBusy = true;
     document.body.classList.add("tirage");
 
@@ -5704,7 +6029,7 @@
       var d = document.createElement("div"); d.className = "nitem";
       d.innerHTML = '<div class="nhead"><span class="ntag" style="background:' + ci.c + '">' + esc(ci.lab) + " " + tonInfo(ci.ton).sig + '</span>'
         + '<span class="nwho">' + esc(n.nom) + " " + esc(n.prenom) + '</span>'
-        + '<span class="nwhen">' + esc(fmtTs(n.ts)) + '</span>'
+        + '<span class="nwhen" style="color:' + couleurTon(ci.ton) + ';font-weight:800">' + esc(fmtTs(n.ts)) + '</span>'
         + '<button class="ndel" title="Supprimer">✕</button></div>'
         + '<div>' + esc(n.txt) + "</div>";
       d.querySelector(".ndel").addEventListener("click", function () {
@@ -5722,8 +6047,9 @@
     if (!list.length) { flash("Aucune annotation à imprimer"); return; }
     var lignes = list.map(function (n) {
       var ci = catInfo(n.cat);
-      return '<tr><td>' + esc(fmtTs(n.ts)) + '</td><td><b>' + esc(n.nom) + " " + esc(n.prenom) + '</b></td>'
-        + '<td><span style="background:' + ci.c + ';color:#fff;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:700">' + esc(ci.lab) + '</span> <small style="color:#7b8489">' + esc(tonInfo(ci.ton).lab) + '</small></td>'
+      var c = couleurTonImpr(ci.ton);
+      return '<tr><td style="color:' + c + ';font-weight:800;white-space:nowrap">' + esc(fmtTs(n.ts)) + '</td><td><b>' + esc(n.nom) + " " + esc(n.prenom) + '</b></td>'
+        + '<td><span style="background:' + ci.c + ';color:#fff;border-radius:5px;padding:2px 7px;font-size:.75rem;font-weight:700">' + esc(ci.lab) + " " + tonInfo(ci.ton).sig + '</span> <small style="color:#7b8489">' + esc(tonInfo(ci.ton).lab) + '</small></td>'
         + '<td>' + esc(n.txt) + "</td></tr>";
     }).join("");
     var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Annotations - ' + esc(cl ? cl.nom : "") + '</title>'
@@ -6548,10 +6874,10 @@
     if (!drag) return; clearTimeout(drag.timer);
     var wasStarted = drag.started, id = drag.id;
     if (wasStarted) { e.preventDefault(); var t = targetAt(e.clientX, e.clientY); if (t) performMove(id, t); endDrag(); }
-    else { endDrag(); if (bavardMode) bavardTapSeat(id); else if (oralMode) oralTapSeat(id); else if (leconMode) leconTapSeat(id); else if (grpMode) grpTapSeat(id); else openSheet(id); }
+    else { endDrag(); if (appelMode) appelTapSeat(id); else if (bavardMode) bavardTapSeat(id); else if (oralMode) oralTapSeat(id); else if (leconMode) leconTapSeat(id); else if (grpMode) grpTapSeat(id); else openSheet(id); }
   }
   function beginDrag(x, y) {
-    if (bavardMode || oralMode || leconMode || grpMode || roomEdit) return; // modes tap : pas de glisser
+    if (appelMode || bavardMode || oralMode || leconMode || grpMode || roomEdit) return; // modes tap : pas de glisser
     if (!drag || drag.started) return; drag.started = true; document.body.classList.add("dragging-active");
     var r = drag.seat.getBoundingClientRect(), clone = drag.seat.cloneNode(true);
     clone.classList.add("drag-clone"); clone.style.width = r.width + "px"; clone.style.height = r.height + "px";
@@ -6652,20 +6978,21 @@
       + heuresTxt(t ? t.heures : 0) + ") · <b>" + a2.seances + "</b> sur l'année (" + heuresTxt(a2.heures) + ")</p>"
       + '<p style="color:#555;font-size:.78rem">' + esc(a2.dates.join(" · ")) + "</p></div>";
   }
+  /* Toutes les annotations de l'élève dans le bilan, sans exception, chacune avec la DATE DES
+     FAITS en vert si l'appréciation est positive, en rouge si elle est négative : en conseil de
+     classe, ce qui compte est de pouvoir dire quand cela s'est passé. */
   function notesHtml(eid) {
-    var out = [];
-    Object.keys(state.matieres).forEach(function (mid) {
-      var ed = state.matieres[mid].eleveData[eid]; if (!ed) return;
-      (ed.behavior || []).forEach(function (b) { if (b.t === "note") out.push(b); });
-    });
+    var out = annotationsDe(eid);
     if (!out.length) return "";
-    out.sort(function (a, b) { return b.ts - a.ts; });
     return '<div class="rp-notes"><h3>Annotations (' + out.length + ")</h3>" + out.map(function (n) {
-      var ci = catInfo(n.id);
-      return '<div class="rp-note"><span class="rp-ntag" style="background:' + ci.c + '">' + esc(ci.lab) + '</span>'
-        + '<span class="rp-nwhen">' + esc(fmtTs(n.ts)) + "</span><div>" + esc(n.txt || "") + "</div></div>";
+      var ci = catInfo(n.id), c = couleurTonImpr(ci.ton);
+      return '<div class="rp-note" style="border-left:3px solid ' + c + ';padding-left:7px">'
+        + '<span class="rp-ntag" style="background:' + ci.c + '">' + esc(ci.lab) + " " + tonInfo(ci.ton).sig + '</span>'
+        + '<span class="rp-nwhen" style="color:' + c + ';font-weight:800">' + esc(fmtTs(n.ts)) + "</span>"
+        + "<div>" + esc(n.txt || "") + "</div></div>";
     }).join("") + "</div>";
   }
+  function couleurTonImpr(ton) { return ton === "positif" ? "#2f9e6f" : (ton === "negatif" ? "#d64545" : "#7b8489"); }
   function buildReport() {
     var cid = curClassId(); if (!cid) return; var m = mat();
     var dateStr = new Date().toLocaleString("fr-FR");
@@ -6686,13 +7013,11 @@
       var q = d.q, qtot = q.bonne + q.mauvaise + q.pas;
       // graphe scores
       var listeS = seancesTenues(cid).slice(-14);
-      var mx = 1; listeS.forEach(function (cle) { mx = Math.max(mx, scoreSeance(s.id, cid, cle)); });
-      var glob = scoreGlobal(s.id); mx = Math.max(mx, glob);
-      var bars = ""; listeS.forEach(function (cle) {
-        var v = scoreSeance(s.id, cid, cle);
-        bars += '<div class="rp-bar"><span>' + v + '</span><div class="rp-bb" style="height:' + Math.round(4 + v / mx * 54) + 'px"></div><small>' + esc(libelleCourtSeance(cle)) + "</small></div>";
-      });
-      bars += '<div class="rp-bar"><span>' + glob + '</span><div class="rp-bb rp-bg" style="height:' + Math.round(4 + glob / mx * 54) + 'px"></div><small>Global</small></div>';
+      var cleCourante = cleDe(seanceActive(cid));
+      if (listeS.indexOf(cleCourante) < 0) listeS = listeS.concat([cleCourante]);
+      var glob = scoreGlobal(s.id);
+      var bars = chartSeancesHtml(s.id, cid, listeS, cleCourante, glob);
+      var legende = chartLegendeHtml();
       // journal
       var log = (d.behavior || []).slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
       var journal = log.length ? log.map(function (e) {
@@ -6730,7 +7055,7 @@
         '<div><h3>Comportement à reprendre</h3><p>' + negList + "</p></div>" +
         '<div class="rp-q2"><h3>Questions & leçons orales</h3><p>Questions : ✓ ' + q.bonne + " · ✗ " + q.mauvaise + " · – " + q.pas + " &nbsp;|&nbsp; Leçons orales : ✓ " + d.oral.bonne + " · ✗ " + d.oral.mauvaise + " · – " + d.oral.pas + "</p></div></div>" +
         bep + absHtml(s.id) +
-        '<div class="rp-chartwrap"><h3>Score par cours</h3><div class="rp-chart">' + bars + "</div></div>" +
+        '<div class="rp-chartwrap"><h3>Score par séance</h3><div class="rp-chart">' + bars + "</div>" + legende + "</div>" +
         notesHtml(s.id) +
         '<details class="rp-journal"><summary>Journal horodaté (' + log.length + ")</summary><table><thead><tr><th>Date & heure</th><th>Type</th><th>Détail</th></tr></thead><tbody>" + journal + "</tbody></table></details></section>";
     }).join("");
@@ -6757,7 +7082,20 @@
       '.rp-nwhen{color:#7b8489;font-size:.72rem}'+
       '.rp-journal{margin-top:10px}.rp-journal summary{cursor:pointer;font-weight:700;font-size:.82rem;color:#2f6fb0}.rp-journal table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.8rem}.rp-journal th,.rp-journal td{text-align:left;padding:5px 8px;border-bottom:1px solid #eee}.rp-journal th{color:#7b8489;font-size:.7rem;text-transform:uppercase}' +
       '.rp-bepbox{margin-top:12px;background:#f7f3ec;border:1px solid #e7ddcb;border-radius:10px;padding:10px 12px}.rp-bepbox h3{font-size:.72rem;text-transform:uppercase;color:#7b8489;margin:0 0 7px}.rp-bepi{display:flex;gap:8px;margin-bottom:7px;font-size:.84rem}.rp-bepi .rp-past{align-self:flex-start}' +
-      '.rp-chartwrap{margin-top:12px}.rp-chartwrap h3{font-size:.72rem;text-transform:uppercase;color:#7b8489;margin:0 0 6px}.rp-chart{display:flex;gap:10px;align-items:flex-end;overflow-x:auto;padding-bottom:4px}.rp-bar{flex:none;width:40px;display:flex;flex-direction:column;align-items:center;gap:3px}.rp-bar span{font-size:.72rem;font-weight:800}.rp-bar .rp-bb{width:100%;background:#2f6fb0;border-radius:5px 5px 0 0;min-height:4px}.rp-bar .rp-bg{background:#1f2a30}.rp-bar small{font-size:.62rem;color:#7b8489}' +
+      '.rp-chartwrap{margin-top:12px}.rp-chartwrap h3{font-size:.72rem;text-transform:uppercase;color:#7b8489;margin:0 0 6px}.rp-chart{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px}' +
+      '.bar2{flex:none;width:46px;display:flex;flex-direction:column;align-items:center}' +
+      '.bar2 .bv{font-size:.68rem;font-weight:800;height:14px}' +
+      '.bar2 .up{height:54px;width:22px;display:flex;flex-direction:column-reverse;justify-content:flex-start}' +
+      '.bar2 .dn{height:36px;width:22px;display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden}' +
+      '.bar2 .up i,.bar2 .dn i{display:block;width:100%}' +
+      '.bar2 .up i.so{background:#7fb3e0}.bar2 .up i.sp{background:#2f9e6f}' +
+      '.bar2 .dn i.ko{background:#b8d4ee;border-top:1px solid #7fb3e0}.bar2 .dn i.bav{background:#d64545}' +
+      '.bar2 .axe{width:34px;height:2px;background:#d9d4c8}' +
+      '.bar2 .bl{font-size:.58rem;color:#7b8489;text-align:center;line-height:1.05;margin-top:3px}' +
+      '.bar2 .bc{font-size:.56rem;text-align:center;line-height:1.15;white-space:nowrap}' +
+      '.bar2.bcur .bl{color:#235688;font-weight:800}.bar2.bglob2 .up i.sp{background:#1f2a30}' +
+      '.chartleg{display:flex;flex-wrap:wrap;gap:8px;font-size:.6rem;color:#7b8489;padding:3px 0 0}' +
+      '.chartleg span{display:inline-flex;align-items:center;gap:3px}.chartleg i{width:9px;height:9px;border-radius:2px;display:inline-block}' +
       '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
       '.rp-card.rp-flag{border-left-width:7px;border-left-style:solid}' +
       '.rp-sigles{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}' +
@@ -6953,8 +7291,8 @@
     if (!D.cryptoReady()) { flash("Chiffrement indisponible ici : ouvrez l'app en https (GitHub Pages) ou localhost."); return; }
     await ensureDeviceKey();
     var blob = await D.encryptJSON(state, deviceKeyRaw); // PAS de phrase en clair dans le fichier
-    downloadBlob(JSON.stringify(blob), "application/json", "sauvegarde_chiffree_" + today() + ".pdc.json");
-    flash("Sauvegarde chiffrée téléchargée - notez bien votre phrase de récupération pour rouvrir ailleurs.");
+    downloadBlob(JSON.stringify(blob), "application/json", "sauvegarde_chiffree_" + horodatageFichier() + ".pdc.json");
+    flash("Sauvegarde chiffrée du " + horodatageLisible(new Date(), true) + " téléchargée - notez bien votre phrase de récupération pour rouvrir ailleurs.", 6000);
   }
   function importEncrypted(file) {
     if (!D.cryptoReady()) { flash("Chiffrement indisponible ici : ouvrez l'app en https ou localhost."); return; }
@@ -7042,7 +7380,7 @@
     $("sqFermer").addEventListener("click", function () { $("dlgSeanceQ").classList.remove("open"); });
     $("sqMaintenant").addEventListener("click", function () { annulerSaisieDatee(); $("dlgSeanceQ").classList.remove("open"); });
     $("btnProjection").addEventListener("click", basculerProjection);
-    $("btnAppel").addEventListener("click", openAppel);
+    $("btnAppel").addEventListener("click", function () { if (appelMode) { stopAppelMode(); return; } startAppelMode(); });
     $("dlgAppelX").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); });
     $("apClose").addEventListener("click", function () { $("dlgAppel").classList.remove("open"); renderRoom(); });
     $("apPeriode").addEventListener("change", renderAppelCumul);
@@ -7192,8 +7530,8 @@
       if (!tokenValid()) { driveConnect(true); return; }
       if (etatVide() && !confirm("L'application est vide sur ce poste.\nEnvoyer quand même ? Cela écrasera la sauvegarde Drive.")) return;
       ecrasementAutorise = true;
-      await driveSave(); backupDoneToday = ""; await driveBackupRotate(); ecrasementAutorise = false;
-      flash("Sauvegarde envoyée sur Drive", 2500);
+      await driveSave(); await driveBackupRotate(true); ecrasementAutorise = false;
+      flash("Sauvegarde envoyée sur Drive le " + horodatageLisible(new Date(), true), 5000);
     });
     $("admPull").addEventListener("click", async function () {
       if (!driveConfigured() || !tokenValid()) { flash("Connectez-vous à Drive d'abord (badge ☁︎)"); return; }
