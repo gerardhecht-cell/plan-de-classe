@@ -196,6 +196,21 @@
   .chartleg{display:flex; flex-wrap:wrap; gap:8px; font-size:.6rem; color:var(--muted); padding:2px 10px 8px;}
   .chartleg span{display:inline-flex; align-items:center; gap:3px;}
   .chartleg i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+  /* Tableau transversal : un élève par ligne, une matière par colonne. */
+  .transwrap{overflow:auto; max-height:56vh; border:1px solid var(--line); border-radius:10px;}
+  table.transtab{border-collapse:separate; border-spacing:0; width:100%; font-size:.8rem;}
+  table.transtab th{position:sticky; top:0; background:var(--ink); color:#fff; font-size:.66rem;
+    text-transform:uppercase; letter-spacing:.04em; padding:6px 8px; text-align:left; z-index:2;}
+  table.transtab td{padding:5px 8px; border-bottom:1px solid #eee; white-space:nowrap;}
+  table.transtab td.who{position:sticky; left:0; background:#fff; font-weight:700; z-index:1;}
+  table.transtab tr.alerte td.who{background:var(--red-bg); color:var(--red);}
+  table.transtab tr.alerte td{background:#fff7f7;}
+  .tcell{display:inline-block; min-width:44px; text-align:center; border-radius:6px; padding:1px 6px; font-weight:700; font-size:.72rem;}
+  .tcell.neg{background:var(--red); color:#fff;}
+  .tcell.pos{background:var(--green); color:#fff;}
+  .tcell.neutre{background:#eef1f3; color:var(--ink-2);}
+  .tcell.vide{background:transparent; color:#c4cacd;}
+  .tflag{font-size:.95rem; color:var(--red);}
   .past{font-size:.56rem; font-weight:800; color:#fff; border-radius:4px; padding:1px 4px; line-height:1.3; letter-spacing:.02em; text-shadow:0 1px 1px rgba(0,0,0,.25);}
   .seat .tally{display:flex; gap:6px; margin-top:auto; padding-top:3px; font-size:.66rem; font-weight:800;}
   .seat .tally .r{color:var(--red);} .seat .tally .g{color:var(--green);} .seat .tally .q{color:var(--blue);}
@@ -614,6 +629,7 @@
   <div class="topbar">
     <div class="brand"><b>Plan de classe</b></div>
     <select class="classchip" id="classSelect" aria-label="Classe active"></select>
+    <select class="classchip hidden" id="matSelect" aria-label="Matière active" title="Matière affichée"></select>
     <span class="weekbadge" id="weekBadge" title="Emploi du temps · semaine paire/impaire">Sem. -</span>
     <span class="hspace"></span>
     <button class="drivebadge" id="driveBadge" data-s="off">☁︎ Local</button>
@@ -642,7 +658,7 @@
     <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
     <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes</button>
     <span class="vsep"></span>
-    <button class="iconbtn" id="btnDashboard" title="Climat et profils de chaque îlot du plan">📊 Bilan îlots</button>
+    <button class="iconbtn" id="btnDashboard" title="Climat des îlots et regard transversal sur toutes les matières">📊 Tableau de bord</button>
     <button class="iconbtn" id="btnExport">📤 Bilans</button>
     <button class="iconbtn" id="btnRefs">📚 Listes</button>
     <div class="legend" id="legend"></div>
@@ -700,6 +716,12 @@
       <div class="adm"><div class="admscroll" id="admClasses"></div>
         <div class="admadd"><input type="text" id="admNewClass" placeholder="Nom d'une nouvelle classe (ex. 6e2)" autocomplete="off"><button class="admbtn ok" id="admAddClass">＋ Créer</button></div>
       </div>
+
+      <div class="secttl">Matières</div>
+      <div class="adm"><div class="admscroll" id="admMatieres"></div>
+        <div class="admadd"><input type="text" id="admNewMat" placeholder="Nom de la matière (ex. Mathématiques)" autocomplete="off"><input type="text" id="admNewMatEns" placeholder="Professeur (facultatif)" autocomplete="off"><button class="admbtn ok" id="admAddMat">＋ Créer</button></div>
+      </div>
+      <p class="hint">Les <b>classes et les élèves sont communs</b> à toutes les matières. Ce qui est propre à chaque matière : le plan de salle, l'emploi du temps, les compétences et tout le suivi. Une deuxième matière fait apparaître un sélecteur en haut de l'écran et allume le <b>tableau transversal</b>.</p>
 
       <div class="secttl">Élèves de la classe affichée</div>
       <div class="adm"><div class="admscroll" id="admEleves"></div>
@@ -965,11 +987,22 @@
 <!-- Tableau de bord des groupes -->
 <div class="dlg" id="dlgDashboard">
   <div class="panel">
-    <div class="ph">📊 Tableau de bord des groupes <button class="x" id="dlgDashboardX">✕</button></div>
+    <div class="ph">📊 Tableau de bord de la classe <button class="x" id="dlgDashboardX">✕</button></div>
     <div class="pc">
-      <p class="hint">Lecture du climat (positif/négatif sur 7 jours) et des profils de chaque groupe, d'après ce que vous notez. <b>Informatif</b> : rien n'est déplacé automatiquement - à vous de décider.</p>
-      <div id="dashBody"></div>
-      <p class="hint" style="margin-top:12px">⚡ moteur (s'investit / autonome) · 🤝 aidant (coopère) · 🧩 élève fragile (BEP) · 🗣️ agité. Un profil apparaît après quelques notations.</p>
+      <div class="seg" id="dashSeg" style="margin-bottom:10px">
+        <button data-t="ilots" class="on">Îlots</button>
+        <button data-t="transversal">Transversal</button>
+      </div>
+      <div id="dashIlots">
+        <p class="hint">Lecture du climat (positif/négatif sur 7 jours) et des profils de chaque groupe, d'après ce que vous notez. <b>Informatif</b> : rien n'est déplacé automatiquement - à vous de décider.</p>
+        <div id="dashBody"></div>
+        <p class="hint" style="margin-top:12px">⚡ moteur (s'investit / autonome) · 🤝 aidant (coopère) · 🧩 élève fragile (BEP) · 🗣️ agité. Un profil apparaît après quelques notations.</p>
+      </div>
+      <div id="dashTransversal" class="hidden">
+        <p class="hint">Élève par élève, le climat des <b>30 derniers jours</b> dans chaque matière renseignée. Le drapeau ⚑ se lève quand le bilan est nettement négatif dans <b>au moins deux matières</b> : c'est le signal à traiter sans attendre le conseil de classe.</p>
+        <div id="transBody"></div>
+        <div class="actions" style="margin-top:12px"><button class="ghost2" id="transPrint">🖨️ Imprimer ce tableau</button></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2678,7 +2711,63 @@
       uiPrefs: { matiereActive: "tech", classeActive: null }
     };
   }
-  function mat() { return state.matieres[state.uiPrefs.matiereActive]; }
+  /* ====================== MATIÈRES ======================
+     Les classes et les élèves sont communs à tout l'établissement ; le suivi, le plan de
+     salle, l'emploi du temps et les compétences appartiennent à UNE matière. C'est ce
+     découpage qui permet à plusieurs professeurs de travailler sur les mêmes élèves sans se
+     marcher dessus, et qui rend possible le regard transversal : un élève en difficulté dans
+     plusieurs matières se voit tout de suite, sans attendre le conseil de classe. */
+  function mat() {
+    var m = state.matieres[state.uiPrefs.matiereActive];
+    if (!m) { state.uiPrefs.matiereActive = Object.keys(state.matieres)[0]; m = state.matieres[state.uiPrefs.matiereActive]; }
+    return m;
+  }
+  function matieresListe() {
+    return Object.keys(state.matieres).map(function (id) {
+      return { id: id, nom: state.matieres[id].nom || id, ens: state.matieres[id].enseignant || "" };
+    }).sort(function (a, b) { return a.nom.localeCompare(b.nom); });
+  }
+  function nouvelleMatiere(nom, ens) {
+    nom = (nom || "").trim(); if (!nom) return null;
+    var doublon = matieresListe().filter(function (x) { return x.nom.toLowerCase() === nom.toLowerCase(); })[0];
+    if (doublon) { flash("Cette matière existe déjà", 3000); return null; }
+    var id = uid("m");
+    state.matieres[id] = {
+      nom: nom, enseignant: (ens || "").trim(),
+      competenceBank: DEF_COMP_BANK.slice(), sessionComp: [], courseIndex: 0,
+      calage: { refMondayISO: isoMonday(new Date()), refParity: "paire" },
+      edt: { paire: {}, impaire: {} }, plans: {}, eleveData: {}
+    };
+    act("Nouvelle matière " + nom); save();
+    return id;
+  }
+  function supprimerMatiere(mid) {
+    if (Object.keys(state.matieres).length < 2) { flash("Il faut garder au moins une matière", 3500); return; }
+    var m = state.matieres[mid]; if (!m) return;
+    if (!confirm("Supprimer la matière « " + m.nom + " » ?\n\n"
+      + "Tout son suivi disparaît : participations, comportements, annotations, plans de salle\n"
+      + "et emploi du temps de cette matière. Les élèves et les classes, eux, sont conservés.\n\n"
+      + "Cette suppression peut s'annuler avec ↩︎ Annuler.")) return;
+    act("Suppression de la matière " + m.nom);
+    delete state.matieres[mid];
+    if (state.uiPrefs.matiereActive === mid) state.uiPrefs.matiereActive = Object.keys(state.matieres)[0];
+    save(); renderAll(); renderMatieres();
+    flash("Matière supprimée", 3000);
+  }
+  /* Changer de matière, c'est changer de plan de salle, d'emploi du temps et de suivi :
+     on referme donc ce qui appartenait à la précédente. */
+  function changerMatiere(mid) {
+    if (!state.matieres[mid] || state.uiPrefs.matiereActive === mid) return;
+    if (appelMode) stopAppelMode();
+    if (bavardMode) stopBavardMode();
+    if (oralMode) stopOralMode();
+    if (leconMode) stopLeconMode();
+    saisieSeance = null; appelSel = null; creneauApplique = null;
+    state.uiPrefs.matiereActive = mid;
+    act("Changement de matière"); save();
+    majBandeauSaisie(); renderAll();
+    flash("Matière : " + state.matieres[mid].nom, 2600);
+  }
   function curClassId() { return state.uiPrefs.classeActive; }
   function curClass() { return state.classes[curClassId()]; }
   function classEleves(cid) { var c = state.classes[cid]; return c ? c.eleveIds.map(function (id) { return state.eleves[id]; }).filter(Boolean) : []; }
@@ -2840,7 +2929,7 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-16-d";
+  var APP_VERSION = "2026-09-17-a";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -4217,6 +4306,13 @@
       return '<option value="' + id + '"' + (id === curClassId() ? " selected" : "") + ">" + esc(state.classes[id].nom) + "</option>";
     }).join("") || '<option value="">- aucune classe -</option>';
     var m = mat();
+    var lm = matieresListe(), selMat = $("matSelect");
+    if (selMat) {
+      selMat.classList.toggle("hidden", lm.length < 2);
+      selMat.innerHTML = lm.map(function (x) {
+        return '<option value="' + x.id + '"' + (x.id === state.uiPrefs.matiereActive ? " selected" : "") + ">" + esc(x.nom) + "</option>";
+      }).join("");
+    }
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
     var cidH = curClassId();
     $("btnSeance").innerHTML = cidH ? ("📅 " + libelleCourtSeance(cleDe(seanceActive(cidH)))) : "📅 Séance";
@@ -4301,6 +4397,90 @@
     horlogeTimer = setInterval(tickEmploiDuTemps, 30000);
   }
   var GROUP_TITLES = { 0: "devant le bureau", 1: "devant le bureau", 2: "milieu", 3: "milieu", 4: "fond" };
+  /* ====================== REGARD TRANSVERSAL ======================
+     La raison d'être du multi-matières : repérer l'élève qui décroche partout AVANT le conseil
+     de classe. Fenêtre de 30 jours, parce qu'une matière à une heure par semaine ne dit rien
+     en sept jours. Le drapeau se lève à partir de deux matières nettement négatives. */
+  var TRANS_FENETRE = 30;
+  function etatMatiere(t) {
+    if (t.neg - t.pos >= 3) return "neg";
+    if (t.pos - t.neg >= 3) return "pos";
+    return t.count ? "neutre" : "vide";
+  }
+  function donneesTransversales(cid) {
+    var mats = matieresListe(), maintenant = Date.now();
+    var lignes = classEleves(cid).map(function (e) {
+      var cols = mats.map(function (x) {
+        var ed = state.matieres[x.id].eleveData[e.id];
+        var t = D.trend(ed ? ed.behavior : [], maintenant, TRANS_FENETRE);
+        return { nom: x.nom, t: t, etat: etatMatiere(t) };
+      });
+      var nbNeg = cols.filter(function (c) { return c.etat === "neg"; }).length;
+      var nbPos = cols.filter(function (c) { return c.etat === "pos"; }).length;
+      return { e: e, cols: cols, nbNeg: nbNeg, nbPos: nbPos, alerte: nbNeg >= 2 };
+    });
+    lignes.sort(function (a, b) {
+      return (b.nbNeg - a.nbNeg) || (b.nbPos - a.nbPos) || a.e.nom.localeCompare(b.e.nom);
+    });
+    return { mats: mats, lignes: lignes };
+  }
+  function celluleTrans(c) {
+    var txt = c.etat === "vide" ? "-" : ("+" + c.t.pos + " / −" + c.t.neg);
+    return '<span class="tcell ' + c.etat + '" title="' + esc(c.nom + " : +" + c.t.pos + " / −" + c.t.neg + " sur " + TRANS_FENETRE + " jours") + '">' + txt + "</span>";
+  }
+  function renderTransversal() {
+    var cid = curClassId(), box = $("transBody"); if (!box) return;
+    if (!cid) { box.innerHTML = '<p class="hint">Aucune classe affichée.</p>'; return; }
+    var d = donneesTransversales(cid);
+    var entete = '<tr><th>Élève</th>' + d.mats.map(function (x) {
+      return "<th>" + esc(x.nom) + (x.ens ? '<br><span style="opacity:.7;text-transform:none">' + esc(x.ens) + "</span>" : "") + "</th>";
+    }).join("") + "<th>⚑</th></tr>";
+    var corps = d.lignes.map(function (l) {
+      return '<tr class="' + (l.alerte ? "alerte" : "") + '"><td class="who">' + esc(l.e.nom) + " " + esc(l.e.prenom) + "</td>"
+        + l.cols.map(function (c) { return "<td>" + celluleTrans(c) + "</td>"; }).join("")
+        + '<td>' + (l.alerte ? '<span class="tflag" title="Bilan négatif dans ' + l.nbNeg + ' matières">⚑ ' + l.nbNeg + "</span>" : "") + "</td></tr>";
+    }).join("");
+    var alertes = d.lignes.filter(function (l) { return l.alerte; });
+    var tete = alertes.length
+      ? '<p style="font-weight:800;color:var(--red);margin:0 0 8px">⚑ ' + alertes.length + " élève" + (alertes.length > 1 ? "s" : "")
+        + " en difficulté dans plusieurs matières : " + alertes.map(function (l) { return esc(l.e.nom + " " + l.e.prenom); }).join(", ") + "</p>"
+      : '<p class="hint" style="margin:0 0 8px">Aucun élève en difficulté dans plusieurs matières sur les ' + TRANS_FENETRE + " derniers jours.</p>";
+    var avertissement = d.mats.length < 2
+      ? '<div class="banner warn" style="position:static;margin:0 0 10px">Une seule matière est renseignée pour l\'instant. '
+        + "Le regard transversal s'allumera dès qu'une deuxième matière sera alimentée : créez-la dans ⚙︎ Classe → Matières.</div>"
+      : "";
+    box.innerHTML = avertissement + tete
+      + '<div class="transwrap"><table class="transtab"><thead>' + entete + "</thead><tbody>" + corps + "</tbody></table></div>";
+  }
+  function printTransversal() {
+    var cid = curClassId(); if (!cid) return;
+    var d = donneesTransversales(cid), cl = state.classes[cid];
+    var lignes = d.lignes.map(function (l) {
+      return "<tr" + (l.alerte ? ' class="al"' : "") + "><td><b>" + esc(l.e.nom) + " " + esc(l.e.prenom) + "</b></td>"
+        + l.cols.map(function (c) {
+            var bg = c.etat === "neg" ? "#d64545" : (c.etat === "pos" ? "#2f9e6f" : (c.etat === "neutre" ? "#eef1f3" : "transparent"));
+            var fg = (c.etat === "neg" || c.etat === "pos") ? "#fff" : "#2c3a42";
+            return '<td style="text-align:center"><span style="background:' + bg + ";color:" + fg + ';border-radius:5px;padding:1px 7px;font-weight:700">'
+              + (c.etat === "vide" ? "-" : "+" + c.t.pos + " / −" + c.t.neg) + "</span></td>";
+          }).join("")
+        + '<td style="text-align:center;color:#d64545;font-weight:800">' + (l.alerte ? "⚑ " + l.nbNeg : "") + "</td></tr>";
+    }).join("");
+    var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Suivi transversal - ' + esc(cl.nom) + "</title>"
+      + '<style>body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#1f2a30;margin:22px}'
+      + "h1{font-size:1.15rem;margin:0 0 4px}.sub{color:#7b8489;font-size:.82rem;margin-bottom:14px}"
+      + "table{width:100%;border-collapse:collapse;font-size:.84rem}"
+      + "th{background:#1f2a30;color:#fff;text-align:left;padding:6px 8px;font-size:.7rem;text-transform:uppercase}"
+      + "td{border-bottom:1px solid #eee;padding:5px 8px}tr.al td{background:#fff7f7}"
+      + "footer{margin-top:18px;font-size:.72rem;color:#7b8489;font-style:italic}"
+      + "@media print{.np{display:none}}</style></head><body>"
+      + '<button class="np" onclick="window.print()" style="float:right;padding:9px 15px;border:none;border-radius:8px;background:#2f6fb0;color:#fff;font-weight:700;cursor:pointer">🖨️ Imprimer</button>'
+      + "<h1>Suivi transversal - " + esc(cl.nom) + "</h1>"
+      + '<div class="sub">Climat positif/négatif des ' + TRANS_FENETRE + " derniers jours, par matière · édité le " + horodatageLisible() + "</div>"
+      + "<table><thead><tr><th>Élève</th>" + d.mats.map(function (x) { return "<th>" + esc(x.nom) + "</th>"; }).join("") + "<th>⚑</th></tr></thead><tbody>"
+      + lignes + "</tbody></table>"
+      + "<footer>⚑ = bilan nettement négatif dans au moins deux matières. Document interne équipe pédagogique - données sensibles, ne pas diffuser.</footer></body></html>";
+    openPrintable(html, "transversal_" + slug(cl.nom) + "_" + today() + ".html");
+  }
   function openDashboard() {
     var cid = curClassId(); if (!cid) { flash("Aucune classe active"); return; }
     var p = plan(cid), n = p.groups, eleves = classEleves(cid);
@@ -4338,6 +4518,7 @@
         }).join("") + "</div>";
     }
     $("dashBody").innerHTML = html || '<p class="hint">Aucune donnée pour l\'instant. Notez quelques attitudes positives et comportements, puis revenez ici.</p>';
+    renderTransversal();
     $("dlgDashboard").classList.add("open");
   }
   /* ==================== SALLE PERSONNALISÉE : édition & rendu ==================== */
@@ -4646,6 +4827,13 @@
     if (!state || !curClassId() || !curClass()) { empty.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
     empty.classList.add("hidden"); wrap.classList.remove("hidden");
     var cid = curClassId(), p = plan(cid), n = p.groups, eleves = classEleves(cid);
+    /* Première ouverture d'une classe dans une matière : le professeur hérite d'un placement
+       de départ construit par les règles (BEP devant, séparations tenues), qu'il réarrange
+       ensuite comme il veut. Sans cela, changer de matière affichait une salle vide. */
+    if (eleves.length && !customOn(cid) && !eleves.some(function (s) { return p.pos[s.id]; })) {
+      rebuildPlan(cid); save();
+      p = plan(cid); n = p.groups;
+    }
     var cf = p.lastConflicts || [];
     $("conflictBar").classList.toggle("hidden", !cf.length);
     if (cf.length) $("conflictBar").innerHTML = "⚠️ Contraintes non tenues : " + cf.map(esc).join(" · ");
@@ -5563,7 +5751,7 @@
   }
 
   function renderClassAdmin() {
-    renderAdmClasses(); renderAdmEleves();
+    renderAdmClasses(); renderAdmEleves(); renderMatieres();
     try { $("admClientId").value = localStorage.getItem(KEY_CLIENTID) || ""; } catch (e) {}
     if (!origineValide()) {
       $("admBackupInfo").innerHTML = "<b>Cette page est ouverte depuis votre disque dur</b> (" + location.protocol
@@ -5579,6 +5767,31 @@
     $("admBackupInfo").textContent += "  •  " + dernierEnvoiTexte() + "  •  Version du programme : " + APP_VERSION;
   }
 
+  function renderMatieres() {
+    var box = $("admMatieres"); if (!box) return;
+    box.innerHTML = "";
+    matieresListe().forEach(function (x) {
+      var actif = (x.id === state.uiPrefs.matiereActive);
+      var nbEl = Object.keys(state.matieres[x.id].eleveData || {}).length;
+      var row = document.createElement("div"); row.className = "row" + (actif ? " on" : "");
+      row.innerHTML = '<input type="text" value="' + esc(x.nom) + '" data-mid="' + x.id + '" style="flex:1">'
+        + '<input type="text" value="' + esc(x.ens) + '" data-ens="' + x.id + '" placeholder="Professeur" style="flex:1">'
+        + '<span class="nb">' + nbEl + " él. suivis</span>"
+        + '<button class="admbtn act" data-use="' + x.id + '">' + (actif ? "Affichée" : "Afficher") + "</button>"
+        + '<button class="admbtn del" data-delmat="' + x.id + '">Supprimer</button>';
+      var inpNom = row.querySelector("[data-mid]"), inpEns = row.querySelector("[data-ens]");
+      inpNom.addEventListener("change", function () {
+        var v = inpNom.value.trim(); if (!v) { inpNom.value = x.nom; return; }
+        act("Matière renommée"); state.matieres[x.id].nom = v; save(); renderHeader(); renderMatieres(); flash("Matière renommée");
+      });
+      inpEns.addEventListener("change", function () {
+        state.matieres[x.id].enseignant = inpEns.value.trim(); save();
+      });
+      row.querySelector("[data-use]").addEventListener("click", function () { changerMatiere(x.id); renderClassAdmin(); });
+      row.querySelector("[data-delmat]").addEventListener("click", function () { supprimerMatiere(x.id); renderClassAdmin(); });
+      box.appendChild(row);
+    });
+  }
   function renderAdmClasses() {
     var box = $("admClasses"); box.innerHTML = "";
     var ids = Object.keys(state.classes);
@@ -7512,6 +7725,27 @@
     $("actNom").addEventListener("keydown", function (e) { if (e.key === "Enter") actEnregistrer(); });
     $("actPrint").addEventListener("click", actImprimer);
     $("btnDashboard").addEventListener("click", openDashboard);
+    $("dashSeg").querySelectorAll("button").forEach(function (b2) {
+      b2.addEventListener("click", function () {
+        $("dashSeg").querySelectorAll("button").forEach(function (o) { o.classList.remove("on"); });
+        b2.classList.add("on");
+        var trans = (b2.dataset.t === "transversal");
+        $("dashIlots").classList.toggle("hidden", trans);
+        $("dashTransversal").classList.toggle("hidden", !trans);
+        if (trans) renderTransversal();
+      });
+    });
+    $("transPrint").addEventListener("click", printTransversal);
+    $("matSelect").addEventListener("change", function () { changerMatiere(this.value); });
+    $("admAddMat").addEventListener("click", function () {
+      var id = nouvelleMatiere($("admNewMat").value, $("admNewMatEns").value);
+      if (!id) return;
+      $("admNewMat").value = ""; $("admNewMatEns").value = "";
+      renderHeader(); renderMatieres();
+      flash("Matière créée - sélectionnez-la pour y travailler", 4000);
+    });
+    $("admNewMat").addEventListener("keydown", function (e) { if (e.key === "Enter") $("admAddMat").click(); });
+    $("admNewMatEns").addEventListener("keydown", function (e) { if (e.key === "Enter") $("admAddMat").click(); });
     $("dlgDashboardX").addEventListener("click", function () { $("dlgDashboard").classList.remove("open"); });
     // flux rapide bavardage : sélection directe sur le plan
     $("btnFastBavard").addEventListener("click", function () { verifierCreneauAvantSaisie(startBavardMode); });
