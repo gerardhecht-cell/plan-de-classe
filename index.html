@@ -11,7 +11,7 @@
 <style>
   :root{
     --ink:#1f2a30; --ink-2:#2c3a42; --paper:#f4f2ec; --card:#ffffff;
-    --line:#d9d4c8; --muted:#7b8489;
+    --line:#d9d4c8; --muted:#7b8489; --barw:186px;
     --blue:#2f6fb0; --blue-d:#235688;
     --red:#d64545; --red-bg:#fbeaea;
     --green:#2f9e6f; --green-bg:#e7f5ee;
@@ -60,6 +60,69 @@
      de pousser les boutons hors champ. La clé de lecture complète figure sur le plan imprimé. */
   @media (max-width:1960px){ .legend{display:none;} }
   .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+
+  /* ---------- Poignée, menu Outils, zoom ---------- */
+  .barhandle{flex:none; background:#3a4a52; color:#c4ccd0; border-radius:8px; padding:4px 7px; font-size:.9rem;
+    line-height:1; min-height:30px; cursor:grab; letter-spacing:-1px;}
+  .barhandle:active{cursor:grabbing; background:var(--blue);}
+  .menuwrap{position:relative; flex:none;}
+  .menupop{position:absolute; top:calc(100% + 6px); right:0; z-index:60; background:var(--ink);
+    border:1px solid #45545c; border-radius:11px; padding:7px; display:flex; flex-direction:column; gap:5px;
+    box-shadow:0 10px 26px rgba(0,0,0,.4); min-width:232px;}
+  .menupop .iconbtn{width:100%; justify-content:flex-start;}
+  .menupop hr{border:none; border-top:1px solid #45545c; margin:3px 0;}
+  .zoomgrp{display:flex; flex:none; background:var(--ink-2); border-radius:9px; overflow:hidden;}
+  .zoomgrp button{color:#fff; font-weight:800; font-size:.78rem; padding:5px 9px; min-height:30px; min-width:30px;}
+  .zoomgrp button:active{background:#45545c;}
+  #btnZoomVal{font-size:.7rem; min-width:52px; border-left:1px solid #45545c; border-right:1px solid #45545c;}
+
+  /* ---------- Barre déplaçable sur les quatre côtés ----------
+     Sur un écran d'ordinateur portable, la hauteur est la ressource rare : poser la barre
+     à gauche ou à droite rend une centaine de pixels au plan de classe, donc des tables
+     plus grandes et des noms lisibles. La position est propre à ce poste. */
+  body[data-bar="bas"] header.top{position:fixed; top:auto; bottom:0; left:0; right:0;
+    box-shadow:0 -2px 10px rgba(0,0,0,.18); padding-bottom:calc(env(safe-area-inset-bottom) + 6px);}
+  body[data-bar="bas"] main{padding-top:14px; padding-bottom:170px;}
+  body[data-bar="bas"] .menupop{top:auto; bottom:calc(100% + 6px);}
+
+  body[data-bar="gauche"] header.top, body[data-bar="droite"] header.top{
+    position:fixed; top:0; bottom:0; width:var(--barw); overflow-y:auto; overflow-x:hidden;
+    padding:calc(env(safe-area-inset-top) + 8px) 8px 12px;}
+  body[data-bar="gauche"] header.top{left:0; right:auto;}
+  body[data-bar="droite"] header.top{right:0; left:auto;}
+  body[data-bar="gauche"] .topbar, body[data-bar="droite"] .topbar,
+  body[data-bar="gauche"] .toolrow, body[data-bar="droite"] .toolrow{
+    flex-direction:column; align-items:stretch; flex-wrap:nowrap; overflow:visible;
+    -webkit-mask-image:none; mask-image:none; gap:6px;}
+  body[data-bar="gauche"] .toolrow, body[data-bar="droite"] .toolrow{margin-top:10px;}
+  body[data-bar="gauche"] .iconbtn, body[data-bar="droite"] .iconbtn,
+  body[data-bar="gauche"] .drivebadge, body[data-bar="droite"] .drivebadge,
+  body[data-bar="gauche"] .weekbadge, body[data-bar="droite"] .weekbadge{width:100%; justify-content:flex-start; text-align:left;}
+  body[data-bar="gauche"] select.classchip, body[data-bar="droite"] select.classchip{width:100%;}
+  body[data-bar="gauche"] .seg, body[data-bar="droite"] .seg{width:100%;}
+  body[data-bar="gauche"] .seg button, body[data-bar="droite"] .seg button{flex:1;}
+  body[data-bar="gauche"] .hspace, body[data-bar="droite"] .hspace,
+  body[data-bar="gauche"] .vsep, body[data-bar="droite"] .vsep,
+  body[data-bar="gauche"] .legend, body[data-bar="droite"] .legend{display:none;}
+  body[data-bar="gauche"] #btnConfig, body[data-bar="droite"] #btnConfig{margin-left:0;}
+  body[data-bar="gauche"] .menuwrap, body[data-bar="droite"] .menuwrap{width:100%;}
+  body[data-bar="gauche"] .menupop{left:0; right:auto; top:calc(100% + 6px);}
+  body[data-bar="droite"] .menupop{right:0; left:auto; top:calc(100% + 6px);}
+  body[data-bar="gauche"] .zoomgrp, body[data-bar="droite"] .zoomgrp{width:100%;}
+  body[data-bar="gauche"] .zoomgrp button, body[data-bar="droite"] .zoomgrp button{flex:1;}
+  body[data-bar="gauche"] main, body[data-bar="gauche"] .banner, body[data-bar="gauche"] .conflictbar,
+  body[data-bar="gauche"] .bavardbar, body[data-bar="gauche"] .oralbar, body[data-bar="gauche"] .actgbar,
+  body[data-bar="gauche"] .seancebar{margin-left:var(--barw);}
+  body[data-bar="droite"] main, body[data-bar="droite"] .banner, body[data-bar="droite"] .conflictbar,
+  body[data-bar="droite"] .bavardbar, body[data-bar="droite"] .oralbar, body[data-bar="droite"] .actgbar,
+  body[data-bar="droite"] .seancebar{margin-right:var(--barw);}
+  body[data-bar="gauche"] main, body[data-bar="droite"] main{max-width:none;}
+
+  /* Aperçu pendant le déplacement de la barre */
+  .barzone{position:fixed; z-index:200; background:rgba(47,111,176,.22); border:3px dashed var(--blue);
+    pointer-events:none; display:flex; align-items:center; justify-content:center;
+    color:var(--blue-d); font-weight:800; font-size:1rem; text-shadow:0 1px 0 #fff;}
+  body.bar-drag{cursor:grabbing; user-select:none;}
 
   /* ---------- Bandeaux ---------- */
   .banner{padding:9px 14px; font-size:.8rem; font-weight:600; display:flex; align-items:center; gap:10px;}
@@ -121,6 +184,10 @@
   .orient{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; margin:2px 2px 10px;}
   .orient hr{flex:1; border:none; border-top:1px dashed var(--line);}
   .room{display:grid; gap:14px; grid-template-columns:1fr;}
+  /* Zoom demandé : on privilégie la taille des tables sur la vue d'ensemble. Chaque îlot
+     prend toute la largeur et la page défile. */
+  body[data-zoomon="1"] .room{grid-template-columns:1fr !important; grid-template-areas:none !important;}
+  body[data-zoomon="1"] .room .ilot{grid-area:auto !important;}
   @media(min-width:900px){
     main{padding-bottom:18px;}
     .room.photo5{grid-template-columns:1fr 1fr; grid-template-areas:"p4 p4" "p2 p3" "p0 p1";}
@@ -128,19 +195,25 @@
     .room.photo5 .ilot.g3{grid-area:p3;}.room.photo5 .ilot.g4{grid-area:p4;}
     .room:not(.photo5){grid-template-columns:1fr 1fr;}
   }
-  @media(max-width:899px){ .ilot{overflow-x:auto;} .ilot .seats{min-width:330px;} }
-  .ilot{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden;}
+  @media(max-width:899px){ .ilot{overflow-x:auto;} .ilot .seats{min-width:352px;} }
+  .ilot{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; min-width:0;}
   .ilot.fond{border-color:var(--blue);}
   .ilot h2{margin:0; font-size:.76rem; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:var(--blue); padding:9px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .ilot h2 .ilot-dash{color:#eaf2fb; font-weight:700; letter-spacing:0; text-transform:none; font-size:.72rem; background:rgba(255,255,255,.14); border-radius:7px; padding:2px 7px;}
   .ilot h2 .ilot-eff{margin-left:auto; color:#dce8f4; font-weight:600; letter-spacing:0; text-transform:none;}
   .ilot.fond h2{background:var(--blue-d);}
   .ilot h2 span{color:#dce8f4; font-weight:600; letter-spacing:0; text-transform:none;}
-  .seats{display:grid; grid-template-columns:repeat(4,1fr); gap:9px; padding:12px; grid-auto-rows:minmax(86px,auto);}
+  /* Une place ne descend jamais sous 172 px : c'est la largeur qui laisse écrire un NOM,
+     un prénom et les pictogrammes. Le nombre de colonnes s'adapte à la place disponible. */
+  /* Le nombre de colonnes est calculé en JS (ajusterColonnes) pour garantir la largeur
+     minimale d'une place quelle que soit la largeur de l'îlot : « auto-fit » se trompait de
+     compte dès qu'un zoom entrait dans le calcul, et écrasait la dernière colonne. */
+  .seats{display:grid; min-width:0; grid-template-columns:repeat(4, 1fr);
+    gap:calc(9px * var(--zoom,1)); padding:12px; grid-auto-rows:minmax(calc(96px * var(--zoom,1)),auto);}
   .frontcap{grid-column:1/-1; font-size:.62rem; letter-spacing:.12em; color:var(--muted); text-transform:uppercase; margin:-2px 0; text-align:center;}
 
   .seat{position:relative; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:11px;
-    padding:28px 10px 9px; min-height:86px; display:flex; flex-direction:column; gap:3px; touch-action:manipulation; overflow:hidden;
+    padding:calc(28px * var(--zoom,1)) 10px calc(22px * var(--zoom,1)); min-height:calc(96px * var(--zoom,1)); display:flex; flex-direction:column; gap:3px; touch-action:manipulation; overflow:hidden;
     transition:transform .18s cubic-bezier(.25,.1,.25,1), border-color .18s, background .18s, box-shadow .18s;}
   @media(hover:hover){ .seat:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(31,42,48,.14);} }
   .seat:active{transform:scale(.97);}
@@ -149,21 +222,23 @@
   .seat.front{box-shadow:inset 0 -3px 0 #bcd2ea;}
   .seat.cadre-bep{border-color:var(--cadre-c); border-width:2px; background:var(--cadre-bg);}
   .seat.cadre-bep.front{box-shadow:inset 0 -3px 0 var(--cadre-c);}
-  .seat .nom{font-weight:800; font-size:1.02rem; line-height:1.2; border-radius:5px; padding:0 3px; margin:0 -3px;
-    align-self:stretch; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; word-break:normal;}
+  /* Le nom doit se lire EN ENTIER : s'il ne tient pas sur une ligne, il passe à la ligne
+     suivante et la place s'agrandit. Jamais de troncature, jamais de police illisible. */
+  .seat .nom{font-weight:800; font-size:calc(1.02rem * var(--zoom,1)); line-height:1.18; border-radius:5px; padding:0 3px; margin:0 -3px;
+    align-self:stretch; max-width:100%; white-space:normal; overflow-wrap:break-word;}
   .seat .nom.tend-pos{background:rgba(47,158,111,.26); box-shadow:inset 0 0 0 1px rgba(47,158,111,.5);}
   .seat .nom.tend-neg{background:rgba(214,69,69,.24); box-shadow:inset 0 0 0 1px rgba(214,69,69,.5);}
-  .seat .prenom{font-size:.88rem; color:var(--ink-2); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+  .seat .prenom{font-size:calc(.9rem * var(--zoom,1)); color:var(--ink-2); line-height:1.18; white-space:normal; overflow-wrap:break-word; max-width:100%;}
   .seat .glasses{position:absolute; bottom:6px; left:7px; font-size:.74rem;}
   .seat .agit{position:absolute; bottom:6px; left:22px; font-size:.7rem;}
   .seat .sepmark{position:absolute; bottom:6px; left:24px; font-size:.74rem; color:var(--blue-d); font-weight:800;}
   .seat .qmark{position:absolute; bottom:6px; right:7px; width:16px;height:16px;border-radius:50%; background:var(--amber); color:#fff; font-size:.66rem; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.2);}
-  .seat .score{position:absolute; top:7px; left:9px; background:var(--blue); color:#fff; font-size:.6rem; font-weight:800; border-radius:6px; padding:1px 5px; box-shadow:0 1px 2px rgba(0,0,0,.18);}
+  .seat .score{position:absolute; top:7px; left:9px; background:var(--blue); color:#fff; font-size:calc(.6rem * var(--zoom,1)); font-weight:800; border-radius:6px; padding:1px 5px; box-shadow:0 1px 2px rgba(0,0,0,.18);}
   #roomInner{transform-origin:top center;}
   .seat .pastilles{display:flex; flex-wrap:wrap; gap:3px; margin-top:3px;}
   /* Pictogrammes d'aménagement : une bande d'icônes sous les sigles, lisible d'un coup d'oeil. */
   .seat .amen{display:flex; flex-wrap:wrap; gap:2px; margin-top:3px; align-items:center;}
-  .seat .amen i{font-style:normal; font-size:.82rem; line-height:1.15; background:#eef3f7;
+  .seat .amen i{font-style:normal; font-size:calc(.82rem * var(--zoom,1)); line-height:1.15; background:#eef3f7;
                 border:1px solid #d3dee6; border-radius:5px; padding:0 3px;}
   .seat .amen i.plus{font-size:.62rem; font-weight:800; color:var(--ink-2); background:transparent; border:none;}
   /* Pastille d'annotation, dans la rangée des pictogrammes : signale qu'une observation
@@ -211,8 +286,8 @@
   .tcell.neutre{background:#eef1f3; color:var(--ink-2);}
   .tcell.vide{background:transparent; color:#c4cacd;}
   .tflag{font-size:.95rem; color:var(--red);}
-  .past{font-size:.56rem; font-weight:800; color:#fff; border-radius:4px; padding:1px 4px; line-height:1.3; letter-spacing:.02em; text-shadow:0 1px 1px rgba(0,0,0,.25);}
-  .seat .tally{display:flex; gap:6px; margin-top:auto; padding-top:3px; font-size:.66rem; font-weight:800;}
+  .past{font-size:calc(.56rem * var(--zoom,1)); font-weight:800; color:#fff; border-radius:4px; padding:1px 4px; line-height:1.3; letter-spacing:.02em; text-shadow:0 1px 1px rgba(0,0,0,.25);}
+  .seat .tally{display:flex; gap:6px; margin-top:auto; padding-top:3px; font-size:calc(.66rem * var(--zoom,1)); font-weight:800;}
   .seat .tally .r{color:var(--red);} .seat .tally .g{color:var(--green);} .seat .tally .q{color:var(--blue);}
   .seat .tally span{display:none;} .seat .tally span.show{display:inline;}
 
@@ -625,7 +700,7 @@
 </head>
 <body data-mode="suivi">
 
-<header class="top">
+<header class="top" id="barreHaut">
   <div class="topbar">
     <div class="brand"><b>Plan de classe</b></div>
     <select class="classchip" id="classSelect" aria-label="Classe active"></select>
@@ -637,6 +712,7 @@
     <button class="iconbtn ghost" id="btnConfig">⚙︎ Classe</button>
   </div>
   <div class="toolrow">
+    <button class="barhandle" id="barHandle" title="Attrapez cette poignée et déposez la barre en haut, en bas, à gauche ou à droite. Un simple clic fait le tour des quatre positions.">⠿</button>
     <div class="seg" id="modeSeg">
       <button data-m="suivi" class="on">Suivi</button>
       <button data-m="competence">Compétences</button>
@@ -648,19 +724,30 @@
     <button class="iconbtn" id="btnNote" style="background:#7d57c4">📝 Annoter</button>
     <button class="iconbtn" id="btnAppel" style="background:#8a6d1a" title="Appel : noter les élèves absents pour cette heure">📋 Appel</button>
     <span class="vsep"></span>
-    <button class="iconbtn" id="btnComp">🎯 Compétences</button>
     <button class="iconbtn" id="btnSeance" title="Séance en cours - les cours se suivent automatiquement d'après la date et l'emploi du temps">📅 Séance</button>
-    <span class="vsep"></span>
-    <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger</button>
-    <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe : nouvelle disposition à chaque clic">⇄ Replacer</button>
     <button class="iconbtn" id="btnUndo" title="Annuler la dernière action (Ctrl+Z)" disabled>↩︎ Annuler</button>
     <button class="iconbtn" id="btnRedo" title="Rétablir l'action annulée (Ctrl+Y)" disabled>↪︎ Rétablir</button>
-    <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Salle</button>
-    <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes</button>
     <span class="vsep"></span>
-    <button class="iconbtn" id="btnDashboard" title="Climat des îlots et regard transversal sur toutes les matières">📊 Tableau de bord</button>
-    <button class="iconbtn" id="btnExport">📤 Bilans</button>
-    <button class="iconbtn" id="btnRefs">📚 Listes</button>
+    <div class="zoomgrp" id="zoomGrp" title="Taille des tables sur l'écran">
+      <button id="btnZoomMoins" aria-label="Réduire">−</button>
+      <button id="btnZoomVal" title="Cliquer pour revenir à l'ajustement automatique">Auto</button>
+      <button id="btnZoomPlus" aria-label="Agrandir">＋</button>
+    </div>
+    <span class="vsep"></span>
+    <div class="menuwrap">
+      <button class="iconbtn" id="btnOutils" title="Placement, salle, groupes, compétences, bilans et listes">⋯ Outils</button>
+      <div class="menupop hidden" id="popOutils">
+        <button class="iconbtn" id="btnRepair" title="Corrige uniquement les élèves en conflit (séparations, agités mal placés), sans toucher au reste">🔧 Corriger le placement</button>
+        <button class="iconbtn" id="btnShuffle" title="Brasse toute la classe : nouvelle disposition à chaque clic">⇄ Replacer toute la classe</button>
+        <button class="iconbtn" id="btnRoomEdit" title="Créer / modifier la disposition de la salle">🏗️ Dessiner la salle</button>
+        <button class="iconbtn" id="btnGroupes" title="Composer des groupes de travail équilibrés et les reporter sur le plan">👥 Groupes de travail</button>
+        <hr>
+        <button class="iconbtn" id="btnComp">🎯 Compétences de la séance</button>
+        <button class="iconbtn" id="btnDashboard" title="Climat des îlots et regard transversal sur toutes les matières">📊 Tableau de bord</button>
+        <button class="iconbtn" id="btnExport">📤 Bilans et exports</button>
+        <button class="iconbtn" id="btnRefs">📚 Listes et référentiels</button>
+      </div>
+    </div>
     <div class="legend" id="legend"></div>
   </div>
 </header>
@@ -2929,7 +3016,7 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-17-a";
+  var APP_VERSION = "2026-09-17-b";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -4367,7 +4454,7 @@
   function basculerProjection() {
     LS.setRaw(KEY_PROJECTION, projectionActive() ? "0" : "1");
     appliquerProjection();
-    requestAnimationFrame(function () { fitNames(); fitRoom(); });
+    requestAnimationFrame(function () { ajusterColonnes(); fitNames(); fitRoom(); });
     flash(projectionActive()
       ? "Mode Projection : dispositifs, aménagements, scores et absences masqués"
       : "Affichage complet rétabli", 2800);
@@ -4838,7 +4925,7 @@
     $("conflictBar").classList.toggle("hidden", !cf.length);
     if (cf.length) $("conflictBar").innerHTML = "⚠️ Contraintes non tenues : " + cf.map(esc).join(" · ");
     var room = $("room"); room.innerHTML = "";
-    if (plan(cid).custom && plan(cid).custom.on && (plan(cid).custom.desk || roomEdit)) { renderCustomRoom(cid); requestAnimationFrame(function(){ fitNames(); fitRoom(); }); return; }
+    if (plan(cid).custom && plan(cid).custom.on && (plan(cid).custom.desk || roomEdit)) { renderCustomRoom(cid); requestAnimationFrame(function(){ ajusterColonnes(); fitNames(); fitRoom(); }); return; }
     var photo = (n === 5), caps = D.capsFor(n, eleves.length);
     // analyse par groupe (climat + profils) - lecture seule, pour le résumé sur le plan
     var groupsForAnalysis = [];
@@ -4870,7 +4957,8 @@
       var seats = document.createElement("div"); seats.className = "seats";
       if (photo) {
         var shape = clusterShape(gi, caps[4]), byOrder = {}; list.forEach(function (s) { byOrder[posOf(cid, s.id).order] = s; });
-        if (shape.type === "back") seats.style.gridTemplateColumns = "repeat(" + shape.cols + ",1fr)";
+        seats.dataset.forme = "1";                 // colonnes imposées par la forme de l'îlot
+        seats.style.gridTemplateColumns = "repeat(" + shape.cols + ",1fr)";
         shape.cells.forEach(function (cell) {
           var s = byOrder[cell.o], el = s ? seatEl(s) : emptySlot(gi, cell.o);
           el.style.gridRow = cell.r; el.style.gridColumn = cell.c; seats.appendChild(el);
@@ -4882,7 +4970,7 @@
       }
       il.appendChild(seats); room.appendChild(il);
     });
-    requestAnimationFrame(function(){ fitNames(); fitRoom(); });
+    requestAnimationFrame(function(){ ajusterColonnes(); fitNames(); fitRoom(); });
   }
   function clusterShape(gi, backCap) {
     var Lr = { type: "L", cols: 4, cells: [{ o: 0, r: 3, c: 1 }, { o: 1, r: 3, c: 2 }, { o: 2, r: 3, c: 3 }, { o: 3, r: 3, c: 4 }, { o: 4, r: 2, c: 4 }, { o: 5, r: 1, c: 4 }] };
@@ -5004,38 +5092,134 @@
   }
   /* NOM et Prénom sur une seule ligne : on réduit la police jusqu'à ce que le texte tienne.
      Mesure de la largeur réelle par Range (scrollWidth arrondit et laisse passer des dépassements). */
+  /* Un nom doit se lire en entier, et de préférence d'un seul tenant. On cherche donc
+     d'abord à le faire tenir sur une ligne en réduisant un peu la police, sans jamais
+     descendre sous 12 px ; si cela ne suffit pas, il passe à la ligne - aux espaces et aux
+     traits d'union en priorité. Jamais de troncature. */
+  var TAILLE_NOM_MIN = 11;   // plancher, proportionnel au zoom : en dessous on ne lit plus
   function fitNames(root){
-    const rng = document.createRange();
     var base = root || document;
     var cibles = (base.matches && base.matches(".seat"))
       ? base.querySelectorAll(".nom, .prenom")
       : base.querySelectorAll(".seat .nom, .seat .prenom");
     cibles.forEach(function (el) {
-      el.style.fontSize = "";
-      const cs = getComputedStyle(el);
-      const avail = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) - 0.5;
-      if (!(avail > 0)) return;
-      let fs = parseFloat(cs.fontSize) || 12, n = 0;
-      rng.selectNodeContents(el);
-      while (rng.getBoundingClientRect().width > avail && fs > 7 && n++ < 30) {
-        fs -= 0.4; el.style.fontSize = fs.toFixed(1) + "px"; rng.selectNodeContents(el);
+      el.style.fontSize = ""; el.style.whiteSpace = "nowrap";
+      var plancher = TAILLE_NOM_MIN * (zoomPlan() || 1);
+      var fs = parseFloat(getComputedStyle(el).fontSize) || 14, n = 0;
+      while (el.scrollWidth > el.clientWidth + 1 && fs > plancher && n++ < 24) {
+        fs -= 0.5; el.style.fontSize = fs.toFixed(1) + "px";
       }
+      el.style.whiteSpace = (el.scrollWidth > el.clientWidth + 1) ? "normal" : "nowrap";
+    });
+  }
+  /* ====================== TAILLE DES TABLES ET PLACE DE LA BARRE ======================
+     Sur un portable, la hauteur manque et l'ajustement automatique rapetissait tout jusqu'à
+     rendre les noms illisibles. Deux réponses : un zoom explicite qui agrandit VRAIMENT les
+     tables (le plan défile au lieu de rétrécir), et une barre d'outils que l'on pose où l'on
+     veut - à gauche ou à droite, elle rend une bonne centaine de pixels de hauteur au plan. */
+  var KEY_ZOOM = "pdc_zoom", KEY_BARRE = "pdc_barre";
+  var ZOOM_MIN = 0.8, ZOOM_MAX = 2, ZOOM_PAS = 0.1;
+  function zoomPlan() { var n = parseFloat(LS.raw(KEY_ZOOM)); return (n >= ZOOM_MIN && n <= ZOOM_MAX) ? n : null; }
+  function appliquerZoom() {
+    var z = zoomPlan();
+    if (z) { document.body.style.setProperty("--zoom", z); document.body.dataset.zoomon = "1"; }
+    else { document.body.style.removeProperty("--zoom"); delete document.body.dataset.zoomon; }
+    var b = $("btnZoomVal"); if (b) b.textContent = z ? (Math.round(z * 100) + " %") : "Auto";
+    var g = $("zoomGrp"); if (g) g.title = z ? "Tables agrandies à " + Math.round(z * 100) + " % - cliquez sur la valeur pour revenir à l'ajustement automatique"
+                                             : "Taille ajustée automatiquement à l'écran - ＋ pour agrandir les tables";
+    ajusterColonnes(); fitRoom(); fitNames();
+  }
+  function setZoom(n) {
+    if (n == null) LS.setRaw(KEY_ZOOM, "");
+    else LS.setRaw(KEY_ZOOM, String(Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, n)) * 100) / 100));
+    appliquerZoom();
+  }
+  /* Autant de colonnes que la largeur en autorise, jamais une de plus : une place ne doit
+     jamais être compressée au point de couper un nom. */
+  var LARGEUR_PLACE_MIN = 172;
+  function ajusterColonnes() {
+    var z = zoomPlan() || 1, minw = LARGEUR_PLACE_MIN * z, gap = 9 * z;
+    document.querySelectorAll(".seats").forEach(function (g) {
+      if (g.dataset.forme === "1") return;       // îlot dessiné en L ou en U : forme conservée
+      var w = g.clientWidth;
+      if (!w) return;
+      var n = Math.max(1, Math.floor((w + gap) / (minw + gap)));
+      var total = g.children.length || 1;
+      g.style.gridTemplateColumns = "repeat(" + Math.min(n, total) + ", 1fr)";
     });
   }
   function fitRoom() {
     var inner = $("roomInner"), wrap = $("roomWrap"); if (!inner || !wrap) return;
     inner.style.transform = ""; wrap.style.height = "";
-    if (window.innerWidth < 900) return; // mobile / portrait : déjà pleine largeur
+    if (zoomPlan()) return;                       // zoom choisi à la main : on ne rapetisse plus rien
+    if (window.innerWidth < 900) return;          // mobile / portrait : déjà pleine largeur
     var top = inner.getBoundingClientRect().top;
-    var availH = window.innerHeight - top - 20;
+    var basse = (document.body.dataset.bar === "bas" && $("barreHaut")) ? ($("barreHaut").offsetHeight + 12) : 0;
+    var availH = window.innerHeight - top - 20 - basse;
     var availW = wrap.clientWidth;
     var h = inner.scrollHeight, w = inner.scrollWidth;
     if (!h || !w) return;
     // se caler sur le support : agrandir jusqu'à remplir (borné), ou réduire pour tenir
+    /* Plancher volontairement haut : en dessous de 80 %, les noms deviennent illisibles.
+       Mieux vaut faire défiler la page que présenter un plan qu'on ne peut pas lire. */
     var sc = Math.min(availH / h, availW / w, 2.2);
-    sc = Math.max(sc, 0.55);
+    sc = Math.max(sc, 0.8);
     if (Math.abs(sc - 1) > 0.02) { inner.style.transform = "scale(" + sc + ")"; wrap.style.height = (h * sc) + "px"; }
   }
+
+  var COTES = ["haut", "droite", "bas", "gauche"];
+  var COTE_LIB = { haut: "En haut", droite: "À droite", bas: "En bas", gauche: "À gauche" };
+  function barrePosition() { var v = LS.raw(KEY_BARRE); return COTES.indexOf(v) >= 0 ? v : "haut"; }
+  function appliquerBarre(pos, silencieux) {
+    pos = (COTES.indexOf(pos) >= 0) ? pos : "haut";
+    document.body.dataset.bar = pos;
+    LS.setRaw(KEY_BARRE, pos);
+    fermerOutils();
+    setTimeout(function () { ajusterColonnes(); fitRoom(); fitNames(); }, 60);
+    if (!silencieux) flash("Barre d'outils : " + COTE_LIB[pos].toLowerCase(), 2200);
+  }
+  function coteLePlusProche(x, y) {
+    var W = window.innerWidth, H = window.innerHeight;
+    var d = [{ c: "gauche", v: x }, { c: "droite", v: W - x }, { c: "haut", v: y }, { c: "bas", v: H - y }];
+    d.sort(function (a, b) { return a.v - b.v; });
+    return d[0].c;
+  }
+  var zoneBarre = null;
+  function montrerZone(cote) {
+    if (!zoneBarre) { zoneBarre = document.createElement("div"); zoneBarre.className = "barzone"; document.body.appendChild(zoneBarre); }
+    var z = zoneBarre, W = window.innerWidth, H = window.innerHeight, e = 96;
+    z.textContent = COTE_LIB[cote];
+    if (cote === "gauche") { z.style.cssText += ";left:0;top:0;width:" + e + "px;height:" + H + "px;"; }
+    else if (cote === "droite") { z.style.cssText += ";left:" + (W - e) + "px;top:0;width:" + e + "px;height:" + H + "px;"; }
+    else if (cote === "haut") { z.style.cssText += ";left:0;top:0;width:" + W + "px;height:" + e + "px;"; }
+    else { z.style.cssText += ";left:0;top:" + (H - e) + "px;width:" + W + "px;height:" + e + "px;"; }
+  }
+  function cacherZone() { if (zoneBarre) { zoneBarre.remove(); zoneBarre = null; } }
+  function initBarreDeplacable() {
+    var h = $("barHandle"); if (!h) return;
+    var drag = null;
+    h.addEventListener("pointerdown", function (e) {
+      drag = { x: e.clientX, y: e.clientY, bouge: false };
+      document.body.classList.add("bar-drag");
+      try { h.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    h.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      if (!drag.bouge && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+      drag.bouge = true; e.preventDefault();
+      montrerZone(coteLePlusProche(e.clientX, e.clientY));
+    });
+    function finir(e) {
+      if (!drag) return;
+      var bouge = drag.bouge; drag = null;
+      document.body.classList.remove("bar-drag"); cacherZone();
+      if (bouge) appliquerBarre(coteLePlusProche(e.clientX, e.clientY));
+      else appliquerBarre(COTES[(COTES.indexOf(barrePosition()) + 1) % COTES.length]);   // simple clic : on fait le tour
+    }
+    h.addEventListener("pointerup", finir);
+    h.addEventListener("pointercancel", function () { drag = null; document.body.classList.remove("bar-drag"); cacherZone(); });
+  }
+  function fermerOutils() { var p2 = $("popOutils"); if (p2) p2.classList.add("hidden"); }
 
   /* ====================== FICHE ÉLÈVE ====================== */
   function openSheet(id) { ui.activeEleve = id; ui.profileFace = false; var s = state.eleves[id]; if (!s) return; syncSheetHeader(s); buildSheet(s); $("scrim").classList.add("open"); $("sheet").classList.add("open"); }
@@ -7724,6 +7908,16 @@
     $("actSave").addEventListener("click", actEnregistrer);
     $("actNom").addEventListener("keydown", function (e) { if (e.key === "Enter") actEnregistrer(); });
     $("actPrint").addEventListener("click", actImprimer);
+    $("btnZoomPlus").addEventListener("click", function () { setZoom((zoomPlan() || 1) + ZOOM_PAS); });
+    $("btnZoomMoins").addEventListener("click", function () { setZoom((zoomPlan() || 1) - ZOOM_PAS); });
+    $("btnZoomVal").addEventListener("click", function () { setZoom(null); flash("Taille ajustée automatiquement", 2200); });
+    $("btnOutils").addEventListener("click", function (e) { e.stopPropagation(); $("popOutils").classList.toggle("hidden"); });
+    $("popOutils").addEventListener("click", function () { setTimeout(fermerOutils, 0); });
+    document.addEventListener("click", function (e) {
+      if ($("popOutils").classList.contains("hidden")) return;
+      if (!e.target.closest(".menuwrap")) fermerOutils();
+    });
+    initBarreDeplacable();
     $("btnDashboard").addEventListener("click", openDashboard);
     $("dashSeg").querySelectorAll("button").forEach(function (b2) {
       b2.addEventListener("click", function () {
@@ -7901,7 +8095,7 @@
     window.addEventListener("pointerup", pointerUp);
     window.addEventListener("pointercancel", function () { if (drag) endDrag(); });
     // resize
-    var fitT; window.addEventListener("resize", function () { clearTimeout(fitT); fitT = setTimeout(fitRoom, 120); });
+    var fitT; window.addEventListener("resize", function () { clearTimeout(fitT); fitT = setTimeout(function () { ajusterColonnes(); fitRoom(); fitNames(); }, 120); });
     window.addEventListener("orientationchange", function () { setTimeout(function () { renderRoom(); }, 250); });
   }
 
@@ -7918,6 +8112,8 @@
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
+    try { appliquerBarre(barrePosition(), true); } catch (e) { console.error("barre", e); }
+    try { appliquerZoom(); } catch (e) { console.error("zoom", e); }
     try { appliquerProjection(); } catch (e) { console.error("projection", e); }
     try { majBandeauSaisie(); } catch (e) { console.error("bandeau saisie", e); }
     try { demarrerHorloge(); } catch (e) { console.error("horloge", e); }
