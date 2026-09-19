@@ -149,11 +149,12 @@
   .croom .ctable{background:#eef2f5; border:2px solid #cdd6dc; border-radius:10px; z-index:0;}
   .croom .ctable.round{border-radius:50%; background:#eef5ef; border-color:#bfd8c4;}
   .croom .ctable.selected{border-color:var(--blue); box-shadow:0 0 0 3px rgba(47,111,176,.3); background:#e8f1fa;}
-  .croom .seat{z-index:1; min-height:56px;}
-  .croom .slot{z-index:1; min-height:56px;}
+  .room.salle{grid-template-columns:1fr !important; grid-template-areas:none !important;}
+  .croom .seat{z-index:1; min-height:calc(96px * var(--zoom,1));}
+  .croom .slot{z-index:1; min-height:calc(96px * var(--zoom,1));}
   .croom .cdesk{background:var(--ink); color:#fff; border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; letter-spacing:.14em; font-size:.72rem; z-index:1; min-height:40px;}
   .croom .cdesk.selected{box-shadow:0 0 0 3px rgba(47,111,176,.5);}
-  .croom .gcell{border:1.5px dashed #e2ddd2; border-radius:8px; min-height:56px; z-index:0; background:transparent;}
+  .croom .gcell{border:1.5px dashed #e2ddd2; border-radius:8px; min-height:46px; z-index:0; background:transparent;}
   .croom .gcell:active{background:#eef1f4;}
   body.roomedit .croom .gcell{cursor:pointer;}
   .redit-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
@@ -2283,10 +2284,15 @@
      Tables posées librement sur une grille : rect2 (2 places, pivotable horizontale/verticale)
      et round4 (table ronde, 4 places). Le bureau (3×1) sert d'origine : « proche du bureau »
      = distance euclidienne au centre du bureau. */
+  /* Tables de 1, 2, 4 ou 6 places, plus la ronde de 4 : une place occupe une case de la
+     grille, la table s'étire donc sur autant de cases qu'elle a de places. */
+  var PLACES_TABLE = { t1: 1, rect2: 2, t2: 2, t4: 4, t6: 6, round4: 4 };
+  function placesDe(kind) { return PLACES_TABLE[kind] || 2; }
   function tableSeats(t) { // -> cellules occupées = sièges [{c,r}], ordre stable
     if (t.kind === "round4") return [{ c: t.c, r: t.r }, { c: t.c + 1, r: t.r }, { c: t.c, r: t.r + 1 }, { c: t.c + 1, r: t.r + 1 }];
-    if (t.rot) return [{ c: t.c, r: t.r }, { c: t.c, r: t.r + 1 }];   // verticale 1×2
-    return [{ c: t.c, r: t.r }, { c: t.c + 1, r: t.r }];              // horizontale 2×1
+    var n = placesDe(t.kind), out = [];
+    for (var i = 0; i < n; i++) out.push(t.rot ? { c: t.c, r: t.r + i } : { c: t.c + i, r: t.r });
+    return out;
   }
   function deskCells(d) { return [{ c: d.c, r: d.r }, { c: d.c + 1, r: d.r }, { c: d.c + 2, r: d.r }]; }
   function customSeatList(custom) { // liste plate des sièges, triés du plus proche au plus loin du bureau
@@ -2566,7 +2572,7 @@
     poidsParticipation: poidsParticipation, tirageParPoids: tirageParPoids,
     stripAccents: stripAccents, keyOf: keyOf, detectSex: detectSex,
     headerRole: headerRole, mapHeaders: mapHeaders, sheetToStudents: sheetToStudents,
-    capsFor: capsFor, deskProximity: deskProximity, placeStudents: placeStudents, repairPlacement: repairPlacement,
+    capsFor: capsFor, deskProximity: deskProximity, placesDe: placesDe, placeStudents: placeStudents, repairPlacement: repairPlacement,
     tableSeats: tableSeats, deskCells: deskCells, customSeatList: customSeatList, placeCustom: placeCustom, fixSeparationsCustom: fixSeparationsCustom, seatViolates: seatViolates,
     planMerge: planMerge, trend: trend, transversal: transversal, groupAnalysis: groupAnalysis,
     weekParity: weekParity, classNow: classNow, mondayOf: mondayOf,
@@ -3012,7 +3018,7 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-17-c";
+  var APP_VERSION = "2026-09-18-b";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -4643,7 +4649,10 @@
         "<b>Salle personnalisée</b> · " + nT + "/" + MAX_TABLES + " tables") +
       ' <button class="tool ' + (roomEdit.tool === "desk" ? "on" : "") + '" data-tool="desk">Bureau</button>' +
       (needDesk ? "" :
-        '<button class="tool ' + (roomEdit.tool === "rect2" ? "on" : "") + '" data-tool="rect2">+ Table 2 pl.</button>' +
+        '<button class="tool ' + (roomEdit.tool === "t1" ? "on" : "") + '" data-tool="t1">+ 1 pl.</button>' +
+        '<button class="tool ' + (roomEdit.tool === "rect2" ? "on" : "") + '" data-tool="rect2">+ 2 pl.</button>' +
+        '<button class="tool ' + (roomEdit.tool === "t4" ? "on" : "") + '" data-tool="t4">+ 4 pl.</button>' +
+        '<button class="tool ' + (roomEdit.tool === "t6" ? "on" : "") + '" data-tool="t6">+ 6 pl.</button>' +
         '<button class="tool ' + (roomEdit.tool === "round4" ? "on" : "") + '" data-tool="round4">+ Ronde 4 pl.</button>' +
         '<button class="tool" id="reRotate">🔄 Pivoter</button>' +
         '<button class="tool" id="reDelete">🗑 Supprimer</button>') +
@@ -4700,7 +4709,7 @@
       else flash("Pas la place pour le bureau ici (3 cases en largeur)");
       return;
     }
-    if (roomEdit.tool === "rect2" || roomEdit.tool === "round4") {
+    if (roomEdit.tool && ["t1", "rect2", "t4", "t6", "round4"].indexOf(roomEdit.tool) >= 0) {
       if (cu.tables.length >= MAX_TABLES) { flash("Maximum " + MAX_TABLES + " tables atteint"); return; }
       var nt = { id: "t_" + Math.random().toString(36).slice(2, 8), kind: roomEdit.tool, c: c, r: r, rot: 0 };
       if (fitsAt(nt, c, r)) { cu.tables.push(nt); save(); updateRoomEditBar(); renderRoom(); }
@@ -4715,9 +4724,27 @@
   function renderCustomRoom(cid) {
     var p = plan(cid), cu = p.custom;
     var room = $("room"); room.innerHTML = "";
+    /* La salle occupe TOUTE la zone : sans cela elle héritait de la grille à deux colonnes
+       des îlots et ne prenait que la moitié de l'écran. */
+    room.className = "room salle";
     var grid = document.createElement("div"); grid.className = "croom";
-    grid.style.gridTemplateColumns = "repeat(" + cu.cols + ",1fr)";
-    grid.style.gridTemplateRows = "repeat(" + cu.rows + ",minmax(52px,auto))";
+    var z = zoomPlan() || 1;
+    if (roomEdit) {
+      // en dessin, toutes les cases sont égales : on doit pouvoir poser une table partout
+      grid.style.gridTemplateColumns = "repeat(" + cu.cols + ",minmax(0,1fr))";
+      grid.style.gridTemplateRows = "repeat(" + cu.rows + ",minmax(" + Math.round(46 * z) + "px,auto))";
+    } else {
+      /* En classe, seules les colonnes et les lignes qui portent des places ont besoin de
+         largeur : les autres sont des allées. Chaque place reçoit ainsi la largeur qu'il faut
+         pour écrire le NOM, le prénom et les informations, au lieu d'un quatorzième d'écran. */
+      var colOcc = {}, rowOcc = {};
+      cu.tables.forEach(function (t) { D.tableSeats(t).forEach(function (x) { colOcc[x.c] = 1; rowOcc[x.r] = 1; }); });
+      var cols = [], rows = [];
+      for (var c2 = 1; c2 <= cu.cols; c2++) cols.push(colOcc[c2] ? ("minmax(" + Math.round(LARGEUR_PLACE_MIN * z) + "px,1fr)") : ("minmax(" + Math.round(14 * z) + "px,auto)"));
+      for (var r2 = 1; r2 <= cu.rows; r2++) rows.push(rowOcc[r2] ? ("minmax(" + Math.round(96 * z) + "px,auto)") : ("minmax(" + Math.round(10 * z) + "px,auto)"));
+      grid.style.gridTemplateColumns = cols.join(" ");
+      grid.style.gridTemplateRows = rows.join(" ");
+    }
     if (roomEdit) {
       for (var r = 1; r <= cu.rows; r++) for (var c = 1; c <= cu.cols; c++) {
         var g = document.createElement("div"); g.className = "gcell"; g.dataset.c = c; g.dataset.r = r;
@@ -4728,9 +4755,10 @@
       var d = document.createElement("div");
       d.className = "ctable" + (t.kind === "round4" ? " round" : "") + (roomEdit && roomEdit.sel === t.id ? " selected" : "");
       d.dataset.tid = t.id;
+      var np = D.placesDe(t.kind);
       if (t.kind === "round4") { d.style.gridColumn = t.c + " / span 2"; d.style.gridRow = t.r + " / span 2"; }
-      else if (t.rot) { d.style.gridColumn = t.c; d.style.gridRow = t.r + " / span 2"; }
-      else { d.style.gridColumn = t.c + " / span 2"; d.style.gridRow = t.r; }
+      else if (t.rot) { d.style.gridColumn = t.c; d.style.gridRow = t.r + " / span " + np; }
+      else { d.style.gridColumn = t.c + " / span " + np; d.style.gridRow = t.r; }
       grid.appendChild(d);
     });
     if (cu.desk) {
@@ -5092,21 +5120,48 @@
      d'abord à le faire tenir sur une ligne en réduisant un peu la police, sans jamais
      descendre sous 12 px ; si cela ne suffit pas, il passe à la ligne - aux espaces et aux
      traits d'union en priorité. Jamais de troncature. */
+  /* ---------- Une SEULE taille de police pour toute la classe ----------
+     Ajuster chaque place indépendamment donnait un plan bariolé : un nom court en grand à côté
+     d'un nom long en petit. On cherche donc la plus grande taille qui convienne à TOUS, et on
+     l'applique partout. Les rares noms qui ne tiennent toujours pas passent à la ligne. */
   var TAILLE_NOM_MIN = 11;   // plancher, proportionnel au zoom : en dessous on ne lit plus
-  function fitNames(root){
-    var base = root || document;
-    var cibles = (base.matches && base.matches(".seat"))
-      ? base.querySelectorAll(".nom, .prenom")
-      : base.querySelectorAll(".seat .nom, .seat .prenom");
-    cibles.forEach(function (el) {
-      el.style.fontSize = ""; el.style.whiteSpace = "nowrap";
-      var plancher = TAILLE_NOM_MIN * (zoomPlan() || 1);
-      var fs = parseFloat(getComputedStyle(el).fontSize) || 14, n = 0;
-      while (el.scrollWidth > el.clientWidth + 1 && fs > plancher && n++ < 24) {
-        fs -= 0.5; el.style.fontSize = fs.toFixed(1) + "px";
-      }
-      el.style.whiteSpace = (el.scrollWidth > el.clientWidth + 1) ? "normal" : "nowrap";
+  var taillesNoms = null;    // { nom: px, prenom: px } communes à toutes les places
+  function mesurerTaillesNoms() {
+    var z = zoomPlan() || 1, plancher = TAILLE_NOM_MIN * z, out = {};
+    [["nom", 1.02], ["prenom", 0.9]].forEach(function (spec) {
+      var cls = spec[0];
+      var els = document.querySelectorAll(".seat ." + cls);
+      if (!els.length) { out[cls] = null; return; }
+      var base = 16 * spec[1] * z, ratios = [];
+      els.forEach(function (el) { el.style.fontSize = ""; el.style.whiteSpace = "nowrap"; });
+      els.forEach(function (el) {
+        var w = el.clientWidth, sw = el.scrollWidth;
+        ratios.push((w > 0 && sw > w) ? (w / sw) : 1);
+      });
+      els.forEach(function (el) { el.style.whiteSpace = ""; });
+      /* Un seul nom à rallonge ne doit pas rapetisser toute la classe : on ignore les 15 %
+         les plus longs, qui passeront simplement à la ligne, et on cale la taille sur le reste. */
+      ratios.sort(function (a2, b2) { return a2 - b2; });
+      var ratio = ratios[Math.min(ratios.length - 1, Math.floor(ratios.length * 0.15))] || 1;
+      out[cls] = Math.max(plancher, base * ratio);
     });
+    // le prénom reste toujours plus discret que le NOM, jamais plus gros
+    if (out.nom && out.prenom) out.prenom = Math.min(out.prenom, out.nom * 0.88);
+    taillesNoms = out;
+  }
+  function appliquerTaillesNoms(racine) {
+    if (!taillesNoms) return;
+    var base = racine || document;
+    ["nom", "prenom"].forEach(function (cls) {
+      if (!taillesNoms[cls]) return;
+      var sel = (base.matches && base.matches(".seat")) ? ("." + cls) : (".seat ." + cls);
+      base.querySelectorAll(sel).forEach(function (el) { el.style.fontSize = taillesNoms[cls].toFixed(1) + "px"; });
+    });
+  }
+  function fitNames(root){
+    // Rafraîchissement d'une seule place : on lui applique la taille commune en vigueur.
+    if (root && root.matches && root.matches(".seat")) { appliquerTaillesNoms(root); return; }
+    mesurerTaillesNoms(); appliquerTaillesNoms(document);
   }
   /* ====================== TAILLE DES TABLES ET PLACE DE LA BARRE ======================
      Sur un portable, la hauteur manque et l'ajustement automatique rapetissait tout jusqu'à
@@ -5132,7 +5187,7 @@
   }
   /* Autant de colonnes que la largeur en autorise, jamais une de plus : une place ne doit
      jamais être compressée au point de couper un nom. */
-  var LARGEUR_PLACE_MIN = 172;
+  var LARGEUR_PLACE_MIN = 156;
   function ajusterColonnes() {
     var z = zoomPlan() || 1, minw = LARGEUR_PLACE_MIN * z, gap = 9 * z;
     document.querySelectorAll(".seats").forEach(function (g) {
@@ -5156,10 +5211,10 @@
     var h = inner.scrollHeight, w = inner.scrollWidth;
     if (!h || !w) return;
     // se caler sur le support : agrandir jusqu'à remplir (borné), ou réduire pour tenir
-    /* Plancher volontairement haut : en dessous de 80 %, les noms deviennent illisibles.
-       Mieux vaut faire défiler la page que présenter un plan qu'on ne peut pas lire. */
+    /* « Auto » a une seule mission : faire tenir le plan dans l'écran. On ne lui impose donc
+       pas de plancher qui l'en empêcherait - pour de grandes tables, c'est le zoom qui sert. */
     var sc = Math.min(availH / h, availW / w, 2.2);
-    sc = Math.max(sc, 0.8);
+    sc = Math.max(sc, 0.3);
     if (Math.abs(sc - 1) > 0.02) { inner.style.transform = "scale(" + sc + ")"; wrap.style.height = (h * sc) + "px"; }
   }
 
