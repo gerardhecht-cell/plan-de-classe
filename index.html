@@ -3066,7 +3066,20 @@
     return salleParDefaut() || "";
   }
   function salleDe(cid) { var id = salleActiveId(cid); return id ? state.salles[id] : null; }
-  function customOn(cid) { var s = salleDe(cid); return !!(s && s.desk); }
+  /* Une salle sans table n'est pas utilisable : on retombe sur les îlots plutôt que
+     d'afficher une pièce vide (c'est exactement ce qui bloquait la 3e4). */
+  function customOn(cid) { var s = salleDe(cid); return !!(s && s.desk && (s.tables || []).length); }
+  /* Combien d'élèves sont réellement assis sur une place qui existe encore ? Une table
+     supprimée, une salle changée ou une fusion laissent des affectations orphelines :
+     sans ce contrôle, le plan restait vide alors que la classe était bien là. */
+  function assisValides(cid) {
+    var sa = salleDe(cid); if (!sa) return 0;
+    var existe = {};
+    (sa.tables || []).forEach(function (t) { D.tableSeats(t).forEach(function (cell, si) { existe[t.id + "#" + si] = 1; }); });
+    var cp = plan(cid).cpos || {}, n = 0;
+    classEleves(cid).forEach(function (e) { var x = cp[e.id]; if (x && existe[x.t + "#" + x.s]) n++; });
+    return n;
+  }
   function nomSalleLibre(base) {
     var pris = {}; sallesListe().forEach(function (s) { pris[s.nom] = 1; });
     if (!pris[base]) return base;
@@ -3137,11 +3150,17 @@
     });
     if (!trouves.length) return;
     trouves.sort(function (a, b) { return (b.cu.tables || []).length - (a.cu.tables || []).length; });
-    /* Un dessin d'une seule table n'est pas une salle, c'est un essai abandonné : on ne le
-       remonte pas en bibliothèque, la classe concernée prendra la salle par défaut. */
-    var vraies = trouves.filter(function (x) { return (x.cu.tables || []).length >= 2; });
-    if (vraies.length) trouves = vraies;
-    else trouves = trouves.slice(0, 1);
+    /* Un dessin d'une seule table n'est pas une salle, c'est un essai abandonné. On ne le
+       remonte JAMAIS en bibliothèque - sinon une classe restée sur un brouillon de deux places
+       deviendrait la salle par défaut de toutes les autres, qui vont très bien en îlots.
+       Le brouillon est effacé : la classe concernée retrouve simplement ses îlots et ses élèves. */
+    var brouillons = trouves.filter(function (x) { return (x.cu.tables || []).length < 2; });
+    brouillons.forEach(function (x) {
+      var pl = s.matieres[x.mid].plans[x.cid];
+      delete pl.custom; delete pl.salleId; pl.cpos = {};
+    });
+    trouves = trouves.filter(function (x) { return (x.cu.tables || []).length >= 2; });
+    if (!trouves.length) return;
     var parSignature = {}, n = 0;
     trouves.forEach(function (x) {
       var sig = signatureSalle(x.cu), sid = parSignature[sig];
@@ -3191,7 +3210,7 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-19-b";
+  var APP_VERSION = "2026-09-19-c";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -5143,6 +5162,14 @@
       : "Importez un classeur Excel multi-onglets (un onglet = une classe) ou utilisez la classe de démonstration.";
   }
 
+  /* Le plan doit toujours montrer la classe. On le reconstruit dès qu'il manque des élèves :
+     salle neuve, salle changée, tables supprimées, ou données revenues d'un autre poste. */
+  function placementIncomplet(cid, eleves) {
+    if (!customOn(cid)) return !eleves.some(function (s) { return plan(cid).pos[s.id]; });
+    var capacite = Math.min(eleves.length, placesSalle(salleDe(cid)));
+    return assisValides(cid) < capacite;
+  }
+
   function renderRoom() {
     var wrap = $("roomWrap"), empty = $("emptyState");
     updateActgBar();
@@ -5153,7 +5180,7 @@
     /* Première ouverture d'une classe dans une matière : le professeur hérite d'un placement
        de départ construit par les règles (BEP devant, séparations tenues), qu'il réarrange
        ensuite comme il veut. Sans cela, changer de matière affichait une salle vide. */
-    if (eleves.length && !roomEdit && !eleves.some(function (s) { return customOn(cid) ? p.cpos[s.id] : p.pos[s.id]; })) {
+    if (eleves.length && !roomEdit && placementIncomplet(cid, eleves)) {
       rebuildPlan(cid); save();
       p = plan(cid); n = p.groups;
     }
