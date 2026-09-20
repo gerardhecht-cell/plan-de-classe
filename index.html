@@ -720,6 +720,7 @@
     <div class="brand"><b>Plan de classe</b></div>
     <select class="classchip" id="classSelect" aria-label="Classe active"></select>
     <select class="classchip hidden" id="matSelect" aria-label="Matière active" title="Matière affichée"></select>
+    <button class="weekbadge" id="salleBadge" title="Salle où se fait cours · cliquez pour la changer">🏗️ -</button>
     <span class="weekbadge" id="weekBadge" title="Emploi du temps · semaine paire/impaire">Sem. -</span>
     <span class="hspace"></span>
     <button class="drivebadge" id="driveBadge" data-s="off">☁︎ Local</button>
@@ -831,8 +832,9 @@
       <div class="adm"><div class="admscroll" id="admSalles"></div>
         <div class="admadd"><input type="text" id="admNewSalle" placeholder="Nom d'une salle (ex. T04)" autocomplete="off"><button class="admbtn ok" id="admAddSalle">＋ Créer</button><button class="admbtn" id="admSalleDepuisIlots" title="Enregistrer la disposition en îlots actuellement affichée comme une salle réutilisable">＋ Depuis les îlots affichés</button></div>
         <div class="admadd"><label for="admSalleClasse" style="margin:0 8px 0 2px;white-space:nowrap">Exception pour la classe affichée</label><select id="admSalleClasse" style="flex:1"></select></div>
+        <div class="admadd"><label for="admSalleTempo" style="margin:0 8px 0 2px;white-space:nowrap">Changement temporaire (toute la matière)</label><select id="admSalleTempo" style="flex:1;min-width:120px"></select><input type="date" id="admTempoDu" title="Premier jour (vide = tout de suite)" style="max-width:150px"><input type="date" id="admTempoAu" title="Dernier jour (vide = sans limite)" style="max-width:150px"></div>
       </div>
-      <p class="hint">Une salle est un <b>lieu</b>, et elle appartient à la <b>matière</b> : le professeur de technologie fait cours en T04, donc <b>toutes ses classes</b> y sont, et changer de classe ne change pas la salle. <b>★ Salle de la matière</b> la désigne ; <b>✎ Tables</b> ouvre l'éditeur ; <b>＋ Depuis les îlots affichés</b> fige la disposition à l'écran en salle. La ligne du bas ne sert qu'aux <b>exceptions</b> : une classe que vous avez ponctuellement ailleurs. Laissée sur « suivre la matière », elle ne pose aucune question.</p>
+      <p class="hint">Une salle est un <b>lieu</b>, et elle appartient à la <b>matière</b> : le professeur de technologie fait cours en T04, donc <b>toutes ses classes</b> y sont, et changer de classe ne change pas la salle. <b>★ Salle de la matière</b> la désigne ; <b>✎ Tables</b> ouvre l'éditeur ; <b>＋ Depuis les îlots affichés</b> fige la disposition à l'écran en salle. Les deux lignes du bas servent aux cas particuliers. <b>Exception pour la classe affichée</b> : une seule classe ailleurs ; laissée sur « Suivre la matière », elle ne pose aucune question. <b>Changement temporaire</b> : toute la matière ailleurs pendant une période - une semaine au CDI pour une recherche, un trimestre en salle informatique. Les dates sont facultatives : sans date de fin, le changement dure jusqu'à ce que vous le leviez. Hors de la période, la salle habituelle revient d'elle-même. La pastille <b>🏗️</b> en haut de l'écran indique à tout moment la salle affichée.</p>
 
       <div class="secttl">Élèves de la classe affichée</div>
       <div class="adm"><div class="admscroll" id="admEleves"></div>
@@ -3065,9 +3067,24 @@
      changer de classe ne doit rien changer à la salle. La salle est donc portée par la matière.
      Une classe peut faire exception (cours déplacé, groupe en salle informatique) : c'est alors
      une préférence explicite, posée classe par classe, qui l'emporte sur celle de la matière. */
+  /* Changement temporaire : la matière se fait ailleurs pour une période (une semaine au CDI
+     pour une recherche, un trimestre en salle informatique). Hors de la période, on retrouve
+     la salle habituelle sans rien avoir à défaire. Dates vides = sans limite de ce côté-là. */
+  function tempoActif(mid) {
+    var m = mid ? state.matieres[mid] : mat();
+    var t = m && m.salleTempo;
+    if (!t || !t.salleId && t.salleId !== "") return null;
+    if (t.salleId && !state.salles[t.salleId]) return null;
+    var today = dateLocaleISO(new Date());
+    if (t.du && today < t.du) return null;
+    if (t.au && today > t.au) return null;
+    return t;
+  }
   function salleMatiereId(mid) {
     var m = mid ? state.matieres[mid] : mat();
     if (!m) return null;
+    var t = tempoActif(mid);
+    if (t) return t.salleId;
     if (m.salleId === "") return "";
     if (m.salleId && state.salles[m.salleId]) return m.salleId;
     return null;
@@ -3297,7 +3314,7 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-09-20";
+  var APP_VERSION = "2026-09-20-b";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
@@ -3562,6 +3579,12 @@
       var ma = base.matieres[mid], mb = apport.matieres[mid];
       if (!ma) { r.matieres[mid] = mb; return; }
       var mr = r.matieres[mid];
+      /* La salle est portée par la MATIÈRE. On accepte celle de l'autre poste si ce poste-ci
+         n'a rien décidé, mais on ne réimporte JAMAIS une exception posée classe par classe :
+         un poste resté sur une ancienne version la replaquait à chaque synchronisation, et la
+         salle semblait changer dès qu'on changeait de classe. */
+      if (mr.salleId === undefined && mb.salleId !== undefined) mr.salleId = mb.salleId;
+      if (mr.salleTempo === undefined && mb.salleTempo !== undefined) mr.salleTempo = mb.salleTempo;
       mr.competenceBank = unionListe(ma.competenceBank, mb.competenceBank);
       mr.edt = { paire: {}, impaire: {} };
       ["paire", "impaire"].forEach(function (par) {
@@ -3577,7 +3600,6 @@
         if (!pa) { mr.plans[cid] = pb; return; }
         // le plan de salle reste celui de ce poste ; seuls les appels, eux cumulatifs, se réunissent
         mr.plans[cid] = Object.assign({}, pa, { appels: fusionnerAppels(pa.appels, pb.appels) });
-        if (pa.salleId === undefined && pb.salleId !== undefined) mr.plans[cid].salleId = pb.salleId;
         if (!pa.custom && pb.custom) mr.plans[cid].custom = pb.custom;
         if (!(pa.groupesLibres || []).length && (pb.groupesLibres || []).length) mr.plans[cid].groupesLibres = pb.groupesLibres;
       });
@@ -4701,6 +4723,7 @@
     $("btnComp").innerHTML = m.sessionComp.length ? ("🎯 " + m.sessionComp.length + " comp.") : "🎯 Compétences";
     var cidH = curClassId();
     $("btnSeance").innerHTML = cidH ? ("📅 " + libelleCourtSeance(cleDe(seanceActive(cidH)))) : "📅 Séance";
+    try { renderSalleBadge(); } catch (e) { /* jamais bloquant */ }
     var par = D.weekParity(m.calage, new Date());
     $("weekBadge").dataset.p = par;
     majHorloge(par);
@@ -6464,6 +6487,54 @@
       renderClassAdmin();
       flash(sel.value === "auto" ? (state.classes[cid].nom + " suit la salle de la matière") : ("Exception posée pour " + state.classes[cid].nom), 3000);
     };
+    renderSalleTempo();
+  }
+  /* Le changement temporaire de salle, pour toute la matière et pour une période donnée. */
+  function renderSalleTempo() {
+    var sel = $("admSalleTempo"), du = $("admTempoDu"), au = $("admTempoAu");
+    if (!sel || !du || !au) return;
+    var m = mat(), t = m.salleTempo || null;
+    var html = '<option value="none"' + (t ? "" : " selected") + ">Aucun (salle habituelle)</option>";
+    sallesListe().forEach(function (sa) {
+      html += '<option value="' + sa.id + '"' + (t && t.salleId === sa.id ? " selected" : "") + ">" + esc(sa.nom) + "</option>";
+    });
+    html += '<option value="ilots"' + (t && t.salleId === "" ? " selected" : "") + ">Îlots standard</option>";
+    sel.innerHTML = html;
+    du.value = (t && t.du) || "";
+    au.value = (t && t.au) || "";
+    var appliquer = function () {
+      var m2 = mat();
+      if (sel.value === "none") { delete m2.salleTempo; }
+      else {
+        m2.salleTempo = { salleId: (sel.value === "ilots" ? "" : sel.value), du: du.value || "", au: au.value || "" };
+      }
+      var eleves;
+      Object.keys(state.classes).forEach(function (cid2) {
+        eleves = classEleves(cid2);
+        if (eleves.length && placementIncomplet(cid2, eleves)) rebuildPlan(cid2);
+      });
+      save(); renderAll(); renderSalles();
+      var act = tempoActif();
+      flash(sel.value === "none" ? "Retour à la salle habituelle"
+        : (act ? ("Changement en cours : " + (act.salleId ? state.salles[act.salleId].nom : "îlots standard"))
+               : "Changement enregistré, il prendra effet aux dates indiquées"), 3600);
+    };
+    sel.onchange = appliquer; du.onchange = appliquer; au.onchange = appliquer;
+  }
+  /* La salle où l'on se trouve doit se lire d'un coup d'oeil, sans ouvrir aucun menu. */
+  function renderSalleBadge() {
+    var b = $("salleBadge"); if (!b) return;
+    var cid = state && curClassId();
+    if (!cid || !state.classes[cid]) { b.classList.add("hidden"); return; }
+    b.classList.remove("hidden");
+    var id = salleActiveId(cid), sa = id ? state.salles[id] : null;
+    var t = tempoActif(), exception = (plan(cid).salleId !== undefined);
+    var nom = sa ? sa.nom : "Îlots standard";
+    b.textContent = "🏗️ " + nom + (t ? " · temporaire" : (exception ? " · exception" : ""));
+    b.title = t
+      ? ("Changement temporaire en cours" + (t.au ? " jusqu'au " + t.au : "") + " - cliquez pour le modifier")
+      : (exception ? ("Exception posée pour " + state.classes[cid].nom + " - cliquez pour la lever")
+                   : ("Salle de " + (mat().nom || "la matière") + " - cliquez pour la changer"));
   }
   function renderAdmClasses() {
     var box = $("admClasses"); box.innerHTML = "";
@@ -8338,6 +8409,8 @@
       save(); renderAll();
     });
     $("btnStart").addEventListener("click", openConfig);
+    var sb = $("salleBadge");
+    if (sb) sb.addEventListener("click", function () { openConfig(); setTimeout(function () { var e = $("admSalles"); if (e) e.scrollIntoView({ block: "center", behavior: "smooth" }); }, 120); });
     var bev = $("btnEmptyDrive");
     if (bev) bev.addEventListener("click", function () { flash("Connexion à Google Drive…"); driveConnect(false); });
     $("btnConfig").addEventListener("click", openConfig);
@@ -8652,6 +8725,9 @@
     try { majBandeauSaisie(); } catch (e) { console.error("bandeau saisie", e); }
     try { demarrerHorloge(); } catch (e) { console.error("horloge", e); }
   }
+  /* Surface de contrôle pour les tests automatiques : aucune action, seulement de la lecture
+     des fonctions de fusion, pour vérifier qu'un poste ancien ne peut rien replaquer. */
+  window.PDCX = { fusionnerEtats: fusionnerEtats, migrate: migrate };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init(); // DOM déjà prêt (script chargé tardivement) : démarrer tout de suite
 })();
