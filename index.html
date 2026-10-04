@@ -923,6 +923,8 @@
   <button class="iconbtn" id="btnDashboard" title="Climat des îlots et regard transversal sur toutes les matières">📊 Tableau de bord</button>
   <button class="iconbtn" id="btnExport">📤 Bilans et exports</button>
   <button class="iconbtn" id="btnRefs">📚 Listes et référentiels</button>
+  <hr>
+  <button class="iconbtn" id="btnEchanges" title="Échanges d'heures entre collègues, sorties et voyages (page Échanges d'heures et sorties)">🔁 Échanges d'heures et sorties</button>
 </div>
 
 <div class="banner warn hidden" id="reconnect">⚠️ Session Google expirée - vos saisies restent en local.
@@ -10227,6 +10229,18 @@
     $("btnComp").addEventListener("click", openCompPicker);
     $("btnRefs").addEventListener("click", openRefs);
     $("btnExport").addEventListener("click", openExport);
+    /* Échanges d'heures et sorties : page sœur posée dans le même dossier (echanges-heures.html).
+       Application installée sur iPad ou iPhone : même fenêtre, la page affiche un bouton « Plan de classe »
+       pour revenir. Navigateur : nouvel onglet, le plan de classe reste ouvert à côté.
+       Les données du plan de classe sont déjà enregistrées sur le poste à chaque modification. */
+    $("btnEchanges").addEventListener("click", function () {
+      var page = "echanges-heures.html";
+      var installee = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+      if (!installee) { var w = window.open(page, "_blank"); if (w) return; }
+      var ici = location.pathname.split("/").pop() || "index.html";
+      location.href = page + "?retour=" + encodeURIComponent(ici);
+    });
     $("btnRoomEdit").addEventListener("click", function () { if (roomEdit) stopRoomEdit(); else startRoomEdit(); });
     $("btnGroupes").addEventListener("click", openActDlg);
     $("dlgActX").addEventListener("click", closeAllDialogs);
