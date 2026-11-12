@@ -50,6 +50,7 @@
   .drivebadge{flex:none; border-radius:8px; padding:5px 9px; font-size:.66rem; font-weight:700; min-height:30px; white-space:nowrap; border:1px solid #45545c; color:#fff;}
   .drivebadge[data-s="on"]{background:#1f5e44; border-color:#2f9e6f;}
   .drivebadge[data-s="warn"]{background:#7a5a1e; border-color:var(--amber);}
+  .drivebadge[data-s="err"]{background:#8a2a2a; border-color:#e06a6a;}
   #btnConfig{margin-left:auto;}
   .toolrow{display:flex; flex-direction:row; gap:8px; row-gap:6px; align-items:center; margin-top:8px; flex-wrap:wrap; overflow:visible;}
   .seg{display:flex; background:var(--ink-2); border-radius:11px; padding:3px; gap:3px; flex:none;}
@@ -173,6 +174,23 @@
   /* ---------- Bandeaux ---------- */
   .banner{padding:9px 14px; font-size:.8rem; font-weight:600; display:flex; align-items:center; gap:10px;}
   .banner.warn{background:var(--amber-bg); color:#8a5a12; border-bottom:1px solid #e6d3ad;}
+  .banner.grave{background:var(--red-bg); color:#9a2b2b; border-bottom-color:#efc9c9;}
+  .banner.grave .bbtn{background:var(--red);}
+  /* État de la sauvegarde : trois lignes qui disent où sont les données, en clair. */
+  .sv-ligne{display:flex; gap:10px; align-items:flex-start; padding:9px 10px; border-bottom:1px solid #f0ece2; font-size:.84rem; line-height:1.35;}
+  .sv-ligne:last-child{border-bottom:none;}
+  .sv-ligne .sv-ico{flex:none; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:.74rem; margin-top:1px;}
+  .sv-ligne[data-e="ok"] .sv-ico{background:var(--green);}
+  .sv-ligne[data-e="attente"] .sv-ico{background:var(--amber);}
+  .sv-ligne[data-e="ko"] .sv-ico{background:var(--red);}
+  .sv-ligne[data-e="off"] .sv-ico{background:#9aa4aa;}
+  .sv-ligne b{display:block; font-size:.8rem;}
+  .sv-ligne span.sv-d{color:var(--ink-2); font-size:.78rem;}
+  .sv-copie{display:flex; gap:8px; align-items:center; padding:7px 9px; border-bottom:1px solid #f0ece2; font-size:.78rem;}
+  .sv-copie:last-child{border-bottom:none;}
+  .sv-copie .sv-q{flex:1; min-width:0;}
+  .sv-copie .sv-q b{display:block; font-size:.8rem;}
+  .sv-copie .sv-q small{color:var(--muted);}
   .banner .bbtn{margin-left:auto; background:var(--amber); color:#fff; border-radius:8px; padding:6px 12px; font-weight:800; font-size:.76rem; min-height:34px; flex:none;}
   .conflictbar{background:var(--red-bg); color:#9a2b2b; border-bottom:1px solid #efc9c9; padding:8px 14px; font-size:.78rem; font-weight:600; line-height:1.35;}
   .bavardbar{position:sticky; top:0; z-index:40; background:var(--red); color:#fff; padding:10px 14px; font-size:.9rem; font-weight:600; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
@@ -264,6 +282,8 @@
   @media(min-width:900px){
     main{padding-bottom:18px;}
     .room.photo5{grid-template-columns:1fr 1fr; grid-template-areas:"p4 p4" "p2 p3" "p0 p1";}
+    .room.photo5.avec-horsplan{grid-template-areas:"hp hp" "p4 p4" "p2 p3" "p0 p1";}
+    .room.photo5 .ilot.horsplan{grid-area:hp;}
     .room.photo5 .ilot.g0{grid-area:p0;}.room.photo5 .ilot.g1{grid-area:p1;}.room.photo5 .ilot.g2{grid-area:p2;}
     .room.photo5 .ilot.g3{grid-area:p3;}.room.photo5 .ilot.g4{grid-area:p4;}
     .room:not(.photo5){grid-template-columns:1fr 1fr;}
@@ -306,10 +326,18 @@
   /* Élève présent dans la classe mais sans place enregistrée (ajouté après la constitution du
      plan) : il est MONTRÉ, à part et en pointillé, jamais escamoté. Le compte affiché en tête
      d'îlot doit toujours correspondre à ce que l'on voit. */
-  .ilot .sansplace{grid-column:1/-1; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;
-    color:#8a6d1a; background:var(--amber-bg); border:1px dashed var(--amber); border-radius:8px; padding:3px 8px; text-align:center;}
   .seat.hors-place{border-style:dashed; border-color:var(--amber);}
-  .ilot .sansplace-b{background:#8a6d1a; color:#fff; border-radius:7px; padding:3px 9px; font-weight:800; font-size:.66rem; letter-spacing:0; text-transform:none; margin-left:6px;}
+  /* Zone des élèves sans place : en tête du plan, sur toute la largeur, compacte. */
+  .room .ilot.horsplan{grid-column:1/-1; border:1.5px dashed var(--amber); background:#fffaf0;}
+  .ilot.horsplan h2{background:#8a6d1a;}
+  .ilot.horsplan .hp-aide{margin:0; padding:9px 12px 0; font-size:.78rem; line-height:1.45; color:#5f4a10;}
+  .ilot.horsplan .hp-actions{display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px 0;}
+  .ilot.horsplan .hp-b{background:#fff; border:1.5px solid #c9a24a; color:#5f4a10; border-radius:8px; padding:4px 11px; font-weight:800; font-size:.74rem; min-height:34px;}
+  .ilot.horsplan .hp-b.prim{background:#8a6d1a; border-color:#8a6d1a; color:#fff;}
+  .ilot.horsplan .hp-b.del{border-color:var(--red); color:var(--red);}
+  .ilot.horsplan .hp-b.del.fort{background:var(--red); color:#fff;}
+  .ilot.horsplan .seats{padding-top:10px; grid-auto-rows:auto;}
+  .ilot.horsplan .seat{min-height:calc(66px * var(--zoom,1)); padding-top:calc(24px * var(--zoom,1)); padding-bottom:calc(8px * var(--zoom,1));}
 
   .seat{position:relative; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:11px;
     padding:calc(28px * var(--zoom,1)) 10px calc(22px * var(--zoom,1)); min-height:calc(96px * var(--zoom,1) + var(--etire, 0px)); display:flex; flex-direction:column; gap:3px; touch-action:manipulation; overflow:hidden;
@@ -901,7 +929,7 @@
   .bilan-per select{flex:1;min-width:220px;max-width:340px;border:1.6px solid var(--line);border-radius:9px;
     padding:8px 10px;font:inherit;font-size:.85rem;background:#fff;color:var(--ink);min-height:40px;}
   .bilan-para textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;font-size:.84rem;line-height:1.5;background:#fff;color:var(--ink);resize:vertical;}
-  @media print{ header.top,.scrim,.sheet,.dlg,.toast,.iconbtn,.seg,.slot,.banner,.conflictbar{display:none !important;} body{background:#fff;} main{padding:0;} .seat,.ilot{break-inside:avoid; box-shadow:none;} }
+  @media print{ header.top,.scrim,.sheet,.dlg,.toast,.iconbtn,.seg,.slot,.banner,.conflictbar,.hp-actions,.hp-aide{display:none !important;} body{background:#fff;} main{padding:0;} .seat,.ilot{break-inside:avoid; box-shadow:none;} }
 </style>
 </head>
 <body data-mode="suivi">
@@ -957,6 +985,7 @@
   <hr>
   <button class="iconbtn" id="btnComp">🎯 Compétences de la séance</button>
   <button class="iconbtn" id="btnDashboard" title="Climat des îlots et regard transversal sur toutes les matières">📊 Tableau de bord</button>
+  <button class="iconbtn" id="btnConseil" title="État des lieux de la classe à imprimer pour le conseil de classe et les parents : synthèse, puis une fiche par élève (3 par page)">🏛️ Conseil de classe</button>
   <button class="iconbtn" id="btnExport">📤 Bilans et exports</button>
   <button class="iconbtn" id="btnRefs">📚 Listes et référentiels</button>
   <hr>
@@ -966,6 +995,8 @@
 <div class="banner warn hidden" id="reconnect"><span id="reconnectTxt">⚠️ Session Google expirée - vos saisies restent en local.</span>
   <button class="bbtn" id="btnReconnect">Se reconnecter</button>
   <button class="bbtn" id="btnReconnectCompte" title="Choisir ou changer le compte Google qui reçoit les sauvegardes">Choisir le compte</button></div>
+<div class="banner warn hidden" id="alerteStockage"><span id="alerteStockageTxt"></span>
+  <button class="bbtn" id="alerteStockageExport" title="Télécharger tout de suite un fichier de sauvegarde chiffré">Télécharger une sauvegarde</button></div>
 <div class="conflictbar hidden" id="conflictBar"></div>
 <div class="bavardbar hidden" id="bavardBar"></div>
 <div class="bavardbar hidden" id="appelBar" style="background:#8a6d1a"></div>
@@ -1051,6 +1082,7 @@
         <div class="adm" id="admBackupsWrap" style="display:none"><div class="admscroll" id="admBackups"></div></div>
         <button class="admbtn" id="admPull" style="width:100%;margin-top:8px">⬇︎ Récupérer la sauvegarde Drive (fusion proposée)</button>
         <button class="admbtn" id="admListBackups" style="width:100%;margin-top:8px">🕘 Voir les sauvegardes datées sur Drive</button>
+        <button class="admbtn" id="admEtatSauvegarde" style="width:100%;margin-top:8px">🛟 État de la sauvegarde et copies de sécurité de ce poste</button>
       </div>
 
       <div class="secttl">Importer un fichier</div>
@@ -1066,6 +1098,24 @@
       <textarea id="inPaste" placeholder="GRANGER	Hermione	F&#10;LONDUBAT	Neville	G	PAP"></textarea>
       <div class="actions"><button class="ghost2" id="btnDemo">Classe démo</button><button class="primary" id="btnBuild">Créer / mettre à jour</button></div>
       <button id="btnDeleteClass" class="hidden" style="width:100%;margin-top:12px;padding:11px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:800;border:1.6px solid var(--red);min-height:44px">🗑 Supprimer la classe affichée (élèves et suivi)</button>
+    </div>
+  </div>
+</div>
+
+<!-- État de la sauvegarde et copies de sécurité -->
+<div class="dlg" id="dlgSauvegarde">
+  <div class="panel">
+    <div class="ph">🛟 Où sont mes données ? <button class="x" id="dlgSauvegardeX">✕</button></div>
+    <div class="pc">
+      <div class="adm" id="svEtat"></div>
+      <div class="row2" style="margin-top:10px">
+        <div><button class="admbtn" id="svEnvoyer" style="width:100%">☁︎ Envoyer sur Drive maintenant</button></div>
+        <div><button class="admbtn" id="svExporter" style="width:100%">⬇︎ Télécharger une sauvegarde (fichier)</button></div>
+      </div>
+      <div class="secttl">Copies de sécurité de ce poste</div>
+      <p class="hint" style="margin-top:2px">Prises toutes seules : à la première ouverture de chaque jour, et juste avant toute mise à jour venue de l'autre poste ou restauration. Elles restent sur cet ordinateur. <b>Reprendre ce qui manque</b> ajoute à l'état actuel ce que la copie contient en plus, sans rien retirer. <b>Revenir à cette copie</b> remplace l'état actuel (qui est lui-même copié avant).</p>
+      <div class="adm" id="svCopies"><div class="sv-copie"><span class="hint">Lecture…</span></div></div>
+      <button class="admbtn del" id="svEffacer" style="width:100%;margin-top:8px" title="À utiliser sur un ordinateur partagé : les copies de sécurité contiennent les données des élèves">Effacer les copies de sécurité de ce poste</button>
     </div>
   </div>
 </div>
@@ -1453,6 +1503,10 @@
     <div class="ph">Bilans &amp; exports <button class="x" id="dlgExportX">✕</button></div>
     <div class="pc">
       <p class="hint">Toutes les actions sont horodatées à la seconde.</p>
+      <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:10px">
+        <button class="primary" id="eConseil" style="flex:1;background:#1f5e44">🏛️ Conseil de classe : état des lieux à imprimer</button>
+        <select id="eConseilPer" aria-label="Période du conseil de classe" style="max-width:160px"></select>
+      </div>
       <button class="primary" id="eSeatPrint" style="width:100%;margin-bottom:10px">🪑 Imprimer le plan de classe (scores &amp; infos)</button>
       <button class="primary" id="eBep" style="width:100%;margin-bottom:10px;background:var(--amber)">🧩 Bilan BEP de la classe (pour l'équipe)</button>
       <button class="primary" id="eReport" style="width:100%;margin-bottom:10px">🖨️ Bilan détaillé par élève (PDF)</button>
@@ -3850,15 +3904,139 @@
       || Object.keys(s.dispositifs || {}).some(function (k) { return s.dispositifs[k]; });
   }
   function posOf(cid, eleveId) { var p = plan(cid); return p.pos[eleveId] || { group: 0, order: 0 }; }
+  /* ---------- Où chaque élève est-il RÉELLEMENT assis (disposition en îlots) ? ----------
+     posOf renvoie un défaut (Groupe 1, première place) pour un élève sans place : utile au
+     moteur de placement, trompeur à l'affichage. Ces élèves étaient comptés dans le Groupe 1,
+     qui annonçait « 20 él. » pour 5 élèves assis et s'allongeait démesurément.
+     repartitionIlots dit, pour l'écran, l'impression, le tableau de bord et « asseoir » : qui
+     est dessiné à quelle place, et qui n'a pas de place visible - aucune place enregistrée,
+     îlot qui n'existe plus, place déjà prise par un autre élève, ou place hors de l'îlot. */
+  var CLASSE_PLAUSIBLE_MAX = 36;
+  function groupeReel(cid, eid) {
+    var p = plan(cid), pr = p.pos && p.pos[eid], n = p.groups || 5;
+    if (!pr || typeof pr.group !== "number" || pr.group < 0 || pr.group >= n) return null;
+    return pr.group;
+  }
+  function repartitionIlots(cid) {
+    var p = plan(cid), n = p.groups, eleves = classEleves(cid), pos = p.pos || {};
+    var photo = (n === 5), caps = D.capsFor(n, eleves.length);
+    var parGroupe = [], horsPlan = [], groupes = [], g;
+    for (g = 0; g < n; g++) parGroupe[g] = [];
+    eleves.forEach(function (s) { var gi = groupeReel(cid, s.id); if (gi === null) horsPlan.push(s); else parGroupe[gi].push(s); });
+    for (g = 0; g < n; g++) {
+      var liste = parGroupe[g].slice().sort(function (a, b) { return (+pos[a.id].order || 0) - (+pos[b.id].order || 0); });
+      if (!photo) { groupes[g] = { liste: liste, cap: null, parPlace: null }; continue; }
+      var cap = (g === 4) ? capFondAffichee(liste, pos, caps[4]) : caps[4];
+      var cellules = {};
+      clusterShape(g, cap).cells.forEach(function (c) { cellules[c.o] = 1; });
+      var parPlace = {}, dessines = [];
+      liste.forEach(function (s) {
+        var o = pos[s.id].order;
+        if (cellules[o] && !parPlace[o]) { parPlace[o] = s; dessines.push(s); }
+        else horsPlan.push(s);                     // place prise, ou hors de l'îlot
+      });
+      groupes[g] = { liste: dessines, cap: cap, parPlace: parPlace };
+    }
+    return { groupes: groupes, horsPlan: horsPlan, caps: caps, photo: photo, n: n };
+  }
+  /* « Groupe 3 », ou « sans place » : pour les bilans et les exports. Une salle dessinée garde
+     l'ancien libellé, ses places étant gérées autrement. */
+  function ordreGroupe(cid, eid) { if (customOn(cid)) return posOf(cid, eid).group; var g = groupeReel(cid, eid); return g === null ? 99 : g; }
+  function libGroupe(cid, eid) {
+    if (customOn(cid)) return "Groupe " + (posOf(cid, eid).group + 1);
+    var g = groupeReel(cid, eid);
+    return g === null ? "Sans place" : "Groupe " + (g + 1);
+  }
 
   /* ====================== PERSISTANCE (tampon local + Drive) ====================== */
   var _mem = {};
+  /* Chaque écriture dit si elle a réussi. Le navigateur peut en effet REFUSER d'enregistrer
+     (mémoire pleine, navigation privée, réglage du poste) : l'échec était autrefois avalé en
+     silence, et la saisie n'existait plus qu'à l'écran. */
   var LS = {
     get: function (k) { try { var v = localStorage.getItem(k); return v == null ? (_mem[k] || null) : JSON.parse(v); } catch (e) { return _mem[k] || null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { _mem[k] = v; } },
-    raw: function (k) { try { return localStorage.getItem(k); } catch (e) { return _mem["raw_" + k] || null; } },
-    setRaw: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { _mem["raw_" + k] = v; } }
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { _mem[k] = v; return false; } },
+    raw: function (k) { if (("raw_" + k) in _mem) return _mem["raw_" + k]; try { return localStorage.getItem(k); } catch (e) { return null; } },
+    setRaw: function (k, v) { try { localStorage.setItem(k, v); delete _mem["raw_" + k]; return true; } catch (e) { _mem["raw_" + k] = v; return false; } }
   };
+
+  /* ====================== MÉMOIRE DE SECOURS (IndexedDB) ======================
+     Une seconde mémoire, propre à ce poste et bien plus grande que la première. Elle sert à
+     trois choses : doubler l'état courant (si la mémoire habituelle est pleine ou vidée, rien
+     n'est perdu au rechargement), garder des COPIES DE SÉCURITÉ datées avant chaque opération
+     qui remplace ou fusionne les données, et permettre de revenir à l'une d'elles depuis
+     ⚙︎ Classe. Tout y est rangé sous forme de texte, comme dans la mémoire habituelle. */
+  var Secours = (function () {
+    var NOM = "plan-de-classe", VERSION = 1, base = null, ouverture = null, hs = false;
+    function ouvrir() {
+      if (base) return Promise.resolve(base);
+      if (hs || typeof indexedDB === "undefined" || !indexedDB) { hs = true; return Promise.reject(new Error("mémoire de secours indisponible")); }
+      if (ouverture) return ouverture;
+      ouverture = new Promise(function (ok, ko) {
+        var req;
+        try { req = indexedDB.open(NOM, VERSION); } catch (e) { hs = true; ko(e); return; }
+        req.onupgradeneeded = function () {
+          var db = req.result;
+          ["etat", "copies", "copiesEtat"].forEach(function (m) {
+            if (!db.objectStoreNames.contains(m)) db.createObjectStore(m, { keyPath: "id" });
+          });
+        };
+        req.onsuccess = function () {
+          base = req.result;
+          base.onversionchange = function () { try { base.close(); } catch (e) {} base = null; ouverture = null; };
+          ok(base);
+        };
+        req.onerror = function () { hs = true; ko(req.error || new Error("indexedDB")); };
+        req.onblocked = function () { ko(new Error("indexedDB bloquée")); };
+      });
+      ouverture.catch(function () { ouverture = null; });
+      return ouverture;
+    }
+    /* Une transaction : résolue quand TOUT est réellement écrit, rejetée sinon. */
+    function tx(magasins, mode, fn) {
+      return ouvrir().then(function (db) {
+        return new Promise(function (ok, ko) {
+          var t, res;
+          try { t = db.transaction(magasins, mode); } catch (e) { ko(e); return; }
+          t.oncomplete = function () { ok(res); };
+          t.onerror = function () { ko(t.error || new Error("écriture refusée")); };
+          t.onabort = function () { ko(t.error || new Error("écriture interrompue")); };
+          try { res = fn(t); } catch (e) { try { t.abort(); } catch (e2) {} ko(e); }
+        });
+      });
+    }
+    function lecture(magasin, fn) {
+      return ouvrir().then(function (db) {
+        return new Promise(function (ok, ko) {
+          var req;
+          try { req = fn(db.transaction(magasin, "readonly").objectStore(magasin)); } catch (e) { ko(e); return; }
+          req.onsuccess = function () { ok(req.result); };
+          req.onerror = function () { ko(req.error); };
+        });
+      });
+    }
+    return {
+      disponible: function () { return !hs; },
+      ecrire: function (id, objet) { objet.id = id; return tx(["etat"], "readwrite", function (t) { t.objectStore("etat").put(objet); }); },
+      lire: function (id) { return lecture("etat", function (s) { return s.get(id); }); },
+      ajouterCopie: function (meta, txt) {
+        return tx(["copies", "copiesEtat"], "readwrite", function (t) {
+          t.objectStore("copies").put(meta); t.objectStore("copiesEtat").put({ id: meta.id, txt: txt });
+        });
+      },
+      listerCopies: function () {
+        return lecture("copies", function (s) { return s.getAll(); })
+          .then(function (l) { return (l || []).sort(function (a, b) { return b.id - a.id; }); });
+      },
+      lireCopie: function (id) { return lecture("copiesEtat", function (s) { return s.get(id); }).then(function (c) { return c ? c.txt : null; }); },
+      supprimerCopies: function (ids) {
+        if (!ids.length) return Promise.resolve();
+        return tx(["copies", "copiesEtat"], "readwrite", function (t) {
+          ids.forEach(function (id) { t.objectStore("copies").delete(id); t.objectStore("copiesEtat").delete(id); });
+        });
+      }
+    };
+  })();
   var KEY_STATE = "pdc_state_v3", KEY_DEVICEKEY = "pdc_devicekey";
   /* Horodatage du fichier Drive tel qu'il était lors de la dernière synchronisation RÉUSSIE
      de CE poste. Conservé en local : sans lui, un poste qui redémarre ne sait pas si le Drive
@@ -3875,10 +4053,287 @@
   var KEY_DERNIERENVOI = "pdc_dernierenvoi";
   /* Repère de version : permet de vérifier d'un coup d'œil que deux postes font tourner
      le même programme (⚙︎ Classe, en bas du bloc Drive). */
-  var APP_VERSION = "2026-11-08";
+  var APP_VERSION = "2026-11-12-c";
   var saveTimer = null, dirty = false;
   function marquerNonEnvoye(v) { dirty = !!v; LS.setRaw(KEY_NONENVOYE, v ? "1" : ""); }
   function relireNonEnvoye() { dirty = (LS.raw(KEY_NONENVOYE) === "1"); }
+  /* Le témoin est RELU à chaque décision : un second onglet du même poste a pu saisir
+     entre-temps, et sa saisie ne doit pas être prise pour « rien à envoyer ». */
+  function nonEnvoye() { relireNonEnvoye(); return dirty; }
+
+  /* ====================== ENREGISTREMENT SUR CE POSTE ======================
+     L'état est écrit à chaque geste, avec la date exacte de l'écriture. Trois protections :
+     · l'écriture est VÉRIFIÉE : si le navigateur la refuse, un bandeau le dit aussitôt ;
+     · l'état est doublé dans la mémoire de secours, qui prend le relais au rechargement ;
+     · deux onglets ouverts sur le même poste se tiennent à jour l'un l'autre, au lieu que le
+       dernier qui enregistre écrase le travail de l'autre. */
+  var KEY_REV = "pdc_rev";                               // repère de la dernière écriture, vu par tous les onglets
+  var ONGLET = Math.random().toString(36).slice(2, 8);   // identité de cet onglet
+  var etatMaj = 0, revVu = null, localAvaitUnEtat = false, secoursPret = null;
+  var stockage = { echecLocal: false, echecSecours: false, miroir: null, minuterie: null };
+  /* La date d'écriture voyage dans l'enveloppe enregistrée, pas dans l'état en mémoire : elle ne
+     vient donc jamais fausser l'historique « Annuler » ni la comparaison de deux états. */
+  function enveloppe(txt, maj) { return txt.length > 2 ? '{"_maj":' + maj + "," + txt.slice(1) : '{"_maj":' + maj + "}"; }
+  function lireEtatLocal() {
+    var s = null;
+    try { var brut = localStorage.getItem(KEY_STATE); if (brut) s = JSON.parse(brut); } catch (e) { s = null; }
+    if (!s || !s.eleves) return null;
+    var maj = +s._maj || 0; delete s._maj;
+    return { etat: s, maj: maj };
+  }
+  function ecrireEtatLocal(txt) {
+    if (!state) return false;
+    txt = txt || JSON.stringify(state);
+    /* Un autre onglet a enregistré sans que celui-ci l'ait encore vu : on réunit les deux. */
+    var revStock = LS.raw(KEY_REV);
+    if (revStock && revStock !== revVu) {
+      var autre = lireEtatLocal();
+      if (autre && autre.maj > etatMaj) {
+        try {
+          state = fusionnerEtats(autre.etat, state);
+          txt = JSON.stringify(state); etatSerialise = txt; reinitialiserSuivi();
+          setTimeout(function () { try { renderAll(); } catch (e2) {} rafraichirApresAdoption(); }, 0);
+        } catch (e) { console.error("réunion de deux onglets", e); }
+      }
+    }
+    etatMaj = Math.max(Date.now(), etatMaj + 1);
+    var corps = enveloppe(txt, etatMaj), ok = true;
+    try { localStorage.setItem(KEY_STATE, corps); } catch (e) { ok = false; }
+    if (ok) { revVu = etatMaj + "-" + ONGLET; LS.setRaw(KEY_REV, revVu); }
+    stockage.echecLocal = !ok;
+    planifierMiroir(corps, !ok);
+    majAlerteStockage();
+    return ok;
+  }
+  /* Le double part une seconde et demie après la dernière saisie, ou tout de suite si
+     l'enregistrement habituel vient d'échouer. */
+  function planifierMiroir(corps, urgent) {
+    stockage.miroir = { maj: etatMaj, lsEchec: stockage.echecLocal, txt: corps };
+    clearTimeout(stockage.minuterie);
+    if (urgent) ecrireMiroir(); else stockage.minuterie = setTimeout(ecrireMiroir, 1500);
+  }
+  function ecrireMiroir() {
+    var m = stockage.miroir; clearTimeout(stockage.minuterie);
+    if (!m) return Promise.resolve(true);
+    stockage.miroir = null;
+    return Secours.ecrire("courant", m).then(
+      function () { stockage.echecSecours = false; majAlerteStockage(); return true; },
+      function () { stockage.echecSecours = true; if (!stockage.miroir) stockage.miroir = m; majAlerteStockage(); return false; });
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) ecrireMiroir(); });
+  window.addEventListener("pagehide", function () { ecrireMiroir(); });
+  /* Le bandeau reste affiché tant que l'enregistrement n'est pas redevenu normal. */
+  function majAlerteStockage() {
+    var b = $("alerteStockage"); if (!b) return;
+    var situation = (stockage.echecLocal ? "L" : "") + (stockage.echecSecours ? "S" : "");
+    if (situation !== stockage.affiche) {          // la pastille suit, mais seulement quand la situation change
+      stockage.affiche = situation;
+      try { updateDriveBadge(); } catch (e) { /* jamais bloquant */ }
+    }
+    if (!stockage.echecLocal) { b.classList.add("hidden"); return; }
+    var grave = stockage.echecSecours;
+    b.classList.toggle("grave", grave);
+    $("alerteStockageTxt").textContent = grave
+      ? "⛔ Ce navigateur n'enregistre plus rien sur ce poste : ce que vous saisissez n'existe qu'à l'écran. Ne fermez pas cette page et téléchargez une sauvegarde maintenant."
+      : "⚠️ La mémoire habituelle de ce navigateur est pleine : l'enregistrement normal a échoué. Vos saisies sont gardées dans la mémoire de secours de ce poste" + (driveConfigured() ? " et partent toujours sur Drive." : ".") + " Téléchargez une sauvegarde par précaution.";
+    b.classList.remove("hidden");
+  }
+  /* Au démarrage : la mémoire de secours contient-elle des saisies que la mémoire habituelle n'a
+     pas pu enregistrer, ou des données que celle-ci a perdues ? Si oui, elles reviennent. */
+  function verifierSecours() {
+    secoursPret = Secours.lire("courant").then(function (m) {
+      if (!m || !m.txt) return;
+      var perdu = !localAvaitUnEtat, enRetard = !!m.lsEchec && m.maj > etatMaj;
+      if (!perdu && !enRetard) return;
+      var s; try { s = JSON.parse(m.txt); } catch (e) { return; }
+      if (!s || !s.eleves || !Object.keys(s.classes || {}).length) return;
+      delete s._maj;
+      state = migrate(s); etatMaj = m.maj; localAvaitUnEtat = true;
+      ecrireEtatLocal(); marquerNonEnvoye(true);
+      renderAll(); historiqueRAZ();
+      try { autoSelectClass(); } catch (e) {}
+      flash(perdu ? "Données retrouvées dans la mémoire de secours de ce poste."
+                  : "Saisies récupérées : elles n'avaient pas pu être enregistrées normalement la dernière fois.", 8000);
+      scheduleDriveSave();
+    }).catch(function () { /* mémoire de secours indisponible : on continue sans elle */ });
+    /* Certains navigateurs laissent parfois cette mémoire sans réponse : la synchronisation
+       Drive, qui attend ce contrôle, ne doit jamais rester bloquée derrière elle. */
+    secoursPret = auPlus(secoursPret, 3000);
+    return secoursPret;
+  }
+
+  /* ---------- Deux onglets sur le même poste ----------
+     Le navigateur prévient chaque onglet quand un autre enregistre. L'onglet prévenu reprend
+     alors l'état commun : il n'écrasera plus, à sa prochaine saisie, ce qui vient d'être fait
+     à côté (fenêtre installée + onglet, ou deux onglets restés ouverts). */
+  var ongletMinuterie = null;
+  window.addEventListener("storage", function (ev) {
+    if (ev.key !== KEY_REV && ev.key !== KEY_STATE) return;
+    clearTimeout(ongletMinuterie); ongletMinuterie = setTimeout(adopterAutreOnglet, 60);
+  });
+  function adopterAutreOnglet() {
+    var rev = LS.raw(KEY_REV);
+    if (!rev || rev === revVu) return;
+    var autre = lireEtatLocal();
+    if (!autre || autre.maj <= etatMaj) { revVu = rev; return; }     // jamais de retour en arrière
+    revVu = rev;
+    state = migrate(autre.etat); etatMaj = autre.maj;
+    relireNonEnvoye();
+    renderAll(); historiqueRAZ();
+    rafraichirApresAdoption();
+  }
+  /* Les fenêtres ouvertes doivent montrer l'état repris. L'onglet où l'on est en train d'écrire
+     garde son texte ; un onglet d'arrière-plan, lui, se contente de se remettre à jour. */
+  function rafraichirApresAdoption() {
+    try {
+      if (document.hasFocus()) { reinjecterSaisieEnCours(); }
+      else {
+        var dj = $("dlgJournal");
+        if (dj && dj.classList.contains("open") && curClassId()) ouvrirJournal();
+        var cfg = $("dlgConfig");
+        if (cfg && cfg.classList.contains("open")) renderClassAdmin();
+      }
+      updateDriveBadge();
+    } catch (e) { /* jamais bloquant */ }
+  }
+
+  /* ---------- Copies de sécurité de ce poste ----------
+     Avant toute opération qui remplace ou réunit les données (mise à jour venue de l'autre
+     poste, fusion, restauration), et une fois par jour d'utilisation, l'état est copié dans la
+     mémoire de secours. On peut y revenir depuis ⚙︎ Classe : même une erreur du programme ne
+     fait plus rien disparaître sans recours. */
+  var COPIES_MAX = 20, KEY_COPIEJOUR = "pdc_copiejour";
+  function resumeEtat(s) {
+    var r = { classes: 0, eleves: 0, saisies: 0, journal: 0, rappels: 0 };
+    if (!s) return r;
+    r.classes = Object.keys(s.classes || {}).length; r.eleves = Object.keys(s.eleves || {}).length;
+    Object.keys(s.matieres || {}).forEach(function (mid) {
+      var m = s.matieres[mid] || {};
+      Object.keys(m.eleveData || {}).forEach(function (eid) { r.saisies += ((m.eleveData[eid] || {}).behavior || []).length; });
+      Object.keys(m.plans || {}).forEach(function (cid) {
+        var p = m.plans[cid] || {};
+        r.journal += (p.journal || []).filter(function (e) { return e && String(e.txt || "").trim(); }).length;
+        r.rappels += (p.rappels || []).length;
+      });
+    });
+    return r;
+  }
+  function copieDeSecurite(motif) {
+    if (!state || etatVide()) return Promise.resolve(false);
+    var txt = JSON.stringify(state);
+    var meta = { id: Date.now(), motif: motif, octets: txt.length, resume: resumeEtat(state), version: APP_VERSION };
+    return Secours.ajouterCopie(meta, txt)
+      .then(function () { return Secours.listerCopies(); })
+      .then(function (l) { return Secours.supprimerCopies(l.slice(COPIES_MAX).map(function (c) { return c.id; })); })
+      .then(function () { return true; }, function () { return false; });
+  }
+  function copieDuJour() {
+    var jour = dateLocaleISO();
+    if (LS.raw(KEY_COPIEJOUR) === jour) return;
+    copieDeSecurite("première ouverture du " + jjmm(jour)).then(function (ok) { if (ok) LS.setRaw(KEY_COPIEJOUR, jour); });
+  }
+
+  /* ====================== CE QUI A ÉTÉ SUPPRIMÉ OU CORRIGÉ DOIT LE RESTER ======================
+     Réunir deux postes « sans jamais rien effacer » avait un revers : une annotation supprimée
+     ou corrigée ici revenait telle quelle depuis l'autre poste, et un rappel coché se
+     décochait. À chaque enregistrement on compare donc ce qui existe à ce qui existait :
+     · ce qui a disparu (saisie, séance du journal, rappel, appel) laisse une marque datée, et la
+       fusion ne le ramènera pas ;
+     · ce qui a changé (texte du journal, rappel coché, appel, disposition des places) reçoit
+       la date du changement, et la fusion garde la version la plus récente.
+     Aucun geste n'a besoin d'être prévu à l'avance : la comparaison couvre aussi « Annuler ».
+     Garde-fou : une disparition massive en un seul geste n'est pas propagée à l'autre poste. */
+  var indexSuivi = null, sigsPlans = null;
+  var TOMBES_MAX_PAR_GESTE = 60, TOMBES_DUREE = 400 * 86400000;
+  function construireIndexSuivi(s) {
+    var idx = {};
+    Object.keys(s.matieres || {}).forEach(function (mid) {
+      var m = s.matieres[mid] || {};
+      Object.keys(m.eleveData || {}).forEach(function (eid) {
+        var b = (m.eleveData[eid] && m.eleveData[eid].behavior) || [], pre = "e|" + mid + "|" + eid + "|";
+        for (var i = 0; i < b.length; i++) if (b[i] && b[i].ts) idx[pre + sigEvenement(b[i])] = { ref: b[i], sig: "" };
+      });
+      Object.keys(m.plans || {}).forEach(function (cid) {
+        var p = m.plans[cid] || {}, pre = mid + "|" + cid + "|";
+        (p.journal || []).forEach(function (e) { if (e && e.d) idx["j|" + pre + e.d + "|" + (e.h || "--")] = { ref: e, sig: String(e.txt || "") }; });
+        (p.rappels || []).forEach(function (r) { if (r && r.id) idx["r|" + r.id] = { ref: r, sig: (r.fait ? "1" : "0") + "|" + (r.txt || "") + "|" + (r.eid || "") }; });
+        (p.appels || []).forEach(function (a) { if (a && a.d) idx["a|" + pre + a.d + "|" + (a.h || "--")] = { ref: a, sig: (a.dur || "") + "|" + (a.abs || []).slice().sort().join(",") }; });
+      });
+    });
+    /* Un élève RETIRÉ d'une classe ne doit pas y revenir par l'autre poste : la réunion des
+       listes de classe ramenait autrefois tout élève supprimé d'un côté et pas de l'autre. */
+    Object.keys(s.classes || {}).forEach(function (cid) {
+      var c = s.classes[cid];
+      ((c && c.eleveIds) || []).forEach(function (eid) { idx["m|" + cid + "|" + eid] = { ref: c, sig: "", membre: eid }; });
+    });
+    return idx;
+  }
+  /* La disposition d'une classe : tout ce qui décrit où les élèves sont assis. */
+  var CHAMPS_DISPOSITION = ["groups", "pos", "cpos", "groupesLibres", "salleId", "custom", "compositionCourante", "montrerGroupes", "dernierNbGroupes", "lastConflicts"];
+  function signaturesPlans(s) {
+    var out = {};
+    Object.keys(s.matieres || {}).forEach(function (mid) {
+      var pl = (s.matieres[mid] || {}).plans || {};
+      Object.keys(pl).forEach(function (cid) {
+        var p = pl[cid] || {};
+        out[mid + "|" + cid] = { ref: p, sig: JSON.stringify([p.groups, p.pos, p.cpos, p.groupesLibres, p.salleId, p.custom, p.compositionCourante, p.montrerGroupes]) };
+      });
+    });
+    return out;
+  }
+  function reinitialiserSuivi() {
+    indexSuivi = state ? construireIndexSuivi(state) : null;
+    sigsPlans = null;
+    if (state) { var sp = signaturesPlans(state); sigsPlans = {}; Object.keys(sp).forEach(function (k) { sigsPlans[k] = sp[k].sig; }); }
+  }
+  /* Renvoie true si l'état vient d'être complété (marque de suppression ou date posée). */
+  function suivreModifications() {
+    if (!state) return false;
+    var change = false, maintenant = Date.now(), k;
+    var nouveau = construireIndexSuivi(state);
+    if (indexSuivi) {
+      var tombes = state.suppr || {}, disparues = [], retraits = [];
+      for (k in indexSuivi) if (!nouveau[k]) {
+        if (k.indexOf("m|") === 0) {
+          /* Classe supprimée en entier : comportement d'avant (la fusion peut la ramener) ;
+             élève retiré d'une classe qui existe toujours : on s'en souvient. */
+          if (state.classes && state.classes[k.split("|")[1]]) retraits.push(k);
+        } else disparues.push(k);
+      }
+      if (disparues.length && disparues.length <= TOMBES_MAX_PAR_GESTE) {
+        disparues.forEach(function (c) { tombes[c] = maintenant; });
+        state.suppr = tombes; change = true;
+      }
+      if (retraits.length && retraits.length <= TOMBES_MAX_PAR_GESTE) {
+        retraits.forEach(function (c) { tombes[c] = maintenant; });
+        state.suppr = tombes; change = true;
+      }
+      for (k in nouveau) {
+        var avant = indexSuivi[k], n = nouveau[k];
+        /* Ce qui REVIENT (« Annuler » une suppression, séance réécrite, élève réinscrit) porte une
+           date plus récente que sa marque : la fusion le gardera, sur ce poste comme sur l'autre. */
+        if (!avant) {
+          if (tombes[k]) {
+            if (n.membre) { n.ref.reinscrits = n.ref.reinscrits || {}; n.ref.reinscrits[n.membre] = maintenant; }
+            else n.ref.maj = maintenant;
+            delete tombes[k]; change = true;
+          }
+        }
+        else if (avant.sig !== n.sig) { n.ref.maj = maintenant; change = true; }
+      }
+      if (change && state.suppr) {
+        for (k in state.suppr) if (maintenant - state.suppr[k] > TOMBES_DUREE) delete state.suppr[k];
+      }
+    }
+    indexSuivi = nouveau;
+    var sp = signaturesPlans(state), sigs = {};
+    for (k in sp) {
+      if (sigsPlans && sigsPlans[k] !== sp[k].sig) { sp[k].ref.majPos = maintenant; change = true; }
+      sigs[k] = sp[k].sig;
+    }
+    sigsPlans = sigs;
+    return change;
+  }
 
   /* ====================== HISTORIQUE - ANNULER / RÉTABLIR ======================
      Chaque appel à save() compare l'état courant au dernier état enregistré. S'ils
@@ -3914,12 +4369,19 @@
   function historiqueRAZ() {   // après un chargement Drive ou un import : le passé n'a plus de sens
     histPasse = []; histFutur = [];
     etatSerialise = state ? JSON.stringify(state) : null;
+    reinitialiserSuivi();        // le nouvel état devient la référence des suppressions et corrections
     majBoutonsHistorique();
   }
   function appliquerEtat(txt) {
+    /* Les marques de suppression sont un savoir qui ne se perd pas en revenant en arrière :
+       l'autre poste les a peut-être déjà reçues. On les garde, puis la comparaison habituelle
+       date ce que « Annuler » ou « Rétablir » vient de faire revenir ou disparaître. */
+    var marques = state && state.suppr;
     state = migrate(JSON.parse(txt));
-    etatSerialise = txt;
-    LS.set(KEY_STATE, state); marquerNonEnvoye(true); scheduleDriveSave();
+    if (marques) state.suppr = Object.assign({}, state.suppr || {}, marques);
+    suivreModifications();
+    etatSerialise = JSON.stringify(state);
+    ecrireEtatLocal(etatSerialise); marquerNonEnvoye(true); scheduleDriveSave();
     renderAll();
   }
   function annuler() {
@@ -3943,19 +4405,29 @@
 
   function save() {
     if (!state) return;
-    var courant = JSON.stringify(state);
-    if (etatSerialise === null) { etatSerialise = courant; }
+    var courant = JSON.stringify(state), change = true;
+    if (etatSerialise === null) { etatSerialise = courant; reinitialiserSuivi(); }
     else if (courant !== etatSerialise) {
+      if (suivreModifications()) courant = JSON.stringify(state);   // marque de suppression ou date posée
       histPasse.push({ etat: etatSerialise, label: libelleAction || "Modification" });
       elaguerHistorique(histPasse);
       histFutur = [];                                  // une nouvelle action ferme la branche rétablie
       etatSerialise = courant;
-    }
+    } else change = false;
     libelleAction = null;
-    LS.set(KEY_STATE, state); marquerNonEnvoye(true); scheduleDriveSave();
+    /* Rien n'a changé : inutile de réécrire, et surtout de déclarer « du travail à envoyer ».
+       Un poste qui n'a fait qu'ouvrir et refermer une fenêtre ne doit pas passer pour un poste
+       qui a saisi. (Si l'écriture précédente a échoué, on retente quand même.) */
+    if (change || stockage.echecLocal) ecrireEtatLocal(courant);
+    if (change) marquerNonEnvoye(true);
+    if (nonEnvoye()) scheduleDriveSave();
     majBoutonsHistorique();
   }
-  function loadLocal() { var s = LS.get(KEY_STATE); if (s && s.eleves) state = migrate(s); relireNonEnvoye(); }
+  function loadLocal() {
+    var l = lireEtatLocal();
+    if (l) { state = migrate(l.etat); etatMaj = l.maj; localAvaitUnEtat = true; }
+    relireNonEnvoye(); revVu = LS.raw(KEY_REV);
+  }
   /* Les anciennes classes de démonstration portaient des noms d'élèves français très courants.
      On les réécrit avec les personnages de fiction, en gardant les identifiants : le plan,
      le suivi et l'historique restent intacts, seul l'affichage change. */
@@ -4030,10 +4502,103 @@
     (a || []).concat(b || []).forEach(function (ev) {
       if (!ev || !ev.ts) return;
       var k = sigEvenement(ev);
-      if (vus[k]) return;
-      vus[k] = 1; out.push(ev);
+      if (vus[k]) {                                     // même saisie des deux côtés : la mieux datée
+        if ((ev.maj || 0) > (vus[k].maj || 0)) { out[out.indexOf(vus[k])] = ev; vus[k] = ev; }
+        return;
+      }
+      vus[k] = ev; out.push(ev);
     });
     return out.sort(function (x, y) { return x.ts - y.ts; });
+  }
+  /* ---------- Journal de séance : une séance = un jour + une heure ----------
+     Écrite d'un seul côté, la séance est gardée. Écrite des deux côtés avec le même texte, elle
+     n'apparaît qu'une fois. Avec deux textes différents : si l'un prolonge ou retouche l'autre,
+     on garde le plus récent ; si ce sont deux textes sans rapport, on garde LES DEUX, l'un sous
+     l'autre - jamais on ne choisit à la place du professeur lequel jeter. */
+  function dateSeance(e) { return e.maj || e.ts || 0; }
+  function textesParents(x, y) {
+    if (!x || !y) return true;
+    if (x.indexOf(y) >= 0 || y.indexOf(x) >= 0) return true;
+    var n = Math.min(x.length, y.length), i = 0, j = 0;
+    while (i < n && x.charCodeAt(i) === y.charCodeAt(i)) i++;
+    while (j < n - i && x.charCodeAt(x.length - 1 - j) === y.charCodeAt(y.length - 1 - j)) j++;
+    return (i + j) >= 0.6 * n;                        // début et fin communs : une retouche, pas un autre texte
+  }
+  function fusionnerJournal(a, b) {
+    var idx = {};
+    (a || []).concat(b || []).forEach(function (e) {
+      if (!e || !e.d) return;
+      var k = e.d + "_" + (e.h || "--"), v = idx[k];
+      if (!v) { idx[k] = Object.assign({}, e); return; }
+      var tv = String(v.txt || "").trim(), te = String(e.txt || "").trim();
+      if (tv === te) { if (dateSeance(e) > dateSeance(v)) idx[k] = Object.assign({}, e); return; }
+      var recent = dateSeance(e) >= dateSeance(v) ? e : v, ancien = recent === e ? v : e;
+      if (textesParents(tv, te)) { idx[k] = Object.assign({}, recent); return; }
+      idx[k] = Object.assign({}, recent, { txt: String(ancien.txt || "").trim() + "\n" + String(recent.txt || "").trim() });
+    });
+    return Object.keys(idx).sort().map(function (k) { return idx[k]; });
+  }
+  /* ---------- Rappels : identifiés un par un ; l'état coché suit le geste le plus récent ---------- */
+  function fusionnerRappels(a, b) {
+    var idx = {}, ordre = [];
+    (a || []).concat(b || []).forEach(function (r) {
+      if (!r || !r.id) return;
+      var v = idx[r.id];
+      if (!v) { idx[r.id] = Object.assign({}, r); ordre.push(r.id); return; }
+      var dv = v.maj || 0, dr = r.maj || 0;
+      if (dr > dv) idx[r.id] = Object.assign({}, v, r);                     // geste le plus récent
+      else if (dr === dv && !v.fait && r.fait) idx[r.id] = Object.assign({}, v, { fait: r.fait });   // sans date : « fait » l'emporte
+    });
+    return ordre.map(function (id) { return idx[id]; }).sort(function (x, y) { return (x.cree || 0) - (y.cree || 0); });
+  }
+  /* Listes d'objets identifiés (compositions de groupes enregistrées) : on réunit, sans doublon. */
+  function fusionnerParId(a, b) {
+    var vus = {}, out = [];
+    (a || []).concat(b || []).forEach(function (x) {
+      if (!x) return;
+      var k = x.id || x.nom || JSON.stringify(x);
+      if (vus[k]) return;
+      vus[k] = 1; out.push(x);
+    });
+    return out;
+  }
+  /* Applique à un état les marques de suppression : ce qui a été supprimé ou corrigé sur un
+     poste ne revient pas par l'autre, sauf s'il a été réécrit APRÈS la suppression. */
+  function appliquerMarques(s) {
+    var marques = s.suppr || {};
+    if (!Object.keys(marques).length) return 0;
+    var retires = 0;
+    Object.keys(s.classes || {}).forEach(function (cid) {
+      var c = s.classes[cid]; if (!c || !c.eleveIds) return;
+      var avant = c.eleveIds.length, rein = c.reinscrits || {};
+      c.eleveIds = c.eleveIds.filter(function (eid) { var t = marques["m|" + cid + "|" + eid]; return !(t && t >= (rein[eid] || 0)); });
+      retires += avant - c.eleveIds.length;
+    });
+    Object.keys(s.matieres || {}).forEach(function (mid) {
+      var m = s.matieres[mid] || {};
+      Object.keys(m.eleveData || {}).forEach(function (eid) {
+        var ed = m.eleveData[eid]; if (!ed || !ed.behavior || !ed.behavior.length) return;
+        var pre = "e|" + mid + "|" + eid + "|", avant = ed.behavior.length;
+        ed.behavior = ed.behavior.filter(function (ev) {
+          var t = marques[pre + sigEvenement(ev)];
+          return !(t && t >= (ev.maj || 0));
+        });
+        if (ed.behavior.length !== avant) { retires += avant - ed.behavior.length; recalculerCompteurs(ed); }
+      });
+      Object.keys(m.plans || {}).forEach(function (cid) {
+        var p = m.plans[cid] || {}, pre = mid + "|" + cid + "|";
+        function garder(liste, cle, date) {
+          if (!liste || !liste.length) return liste;
+          var out = liste.filter(function (x) { var t = marques[cle(x)]; return !(t && t >= date(x)); });
+          retires += liste.length - out.length;
+          return out;
+        }
+        if (p.journal) p.journal = garder(p.journal, function (e) { return "j|" + pre + e.d + "|" + (e.h || "--"); }, dateSeance);
+        if (p.rappels) p.rappels = garder(p.rappels, function (r) { return "r|" + r.id; }, function (r) { return r.maj || r.cree || 0; });
+        if (p.appels) p.appels = garder(p.appels, function (x) { return "a|" + pre + x.d + "|" + (x.h || "--"); }, function (x) { return x.maj || 0; });
+      });
+    });
+    return retires;
   }
   /* Les tallies se déduisent des saisies : on les reconstruit plutôt que de les additionner. */
   function recalculerCompteurs(ed) {
@@ -4059,7 +4624,9 @@
   }
   function fusionnerDonneesEleve(a, b) {
     if (!a) return b; if (!b) return a;
-    var r = {};
+    /* On part des deux fiches : un champ que la fusion ne connaît pas encore n'est jamais
+       abandonné en route (c'est ce défaut qui faisait disparaître le journal côté plans). */
+    var r = Object.assign({}, b, a);
     r.behavior = fusionnerListeEvenements(a.behavior, b.behavior);
     r.comp = Object.assign({}, a.comp || {}, b.comp || {});
     r.compTouched = Object.assign({}, a.compTouched || {}, b.compTouched || {});
@@ -4077,6 +4644,7 @@
       texte: (txtA && txtB && txtA !== txtB) ? (txtA + "\n" + txtB) : (txtA || txtB)
     };
     r.lastLeconTs = Math.max(a.lastLeconTs || 0, b.lastLeconTs || 0) || undefined;
+    r.lastOralTs = Math.max(a.lastOralTs || 0, b.lastOralTs || 0) || undefined;
     recalculerCompteurs(r);
     return r;
   }
@@ -4103,7 +4671,11 @@
       if (!ap || !ap.d) return;
       var k = ap.d + "_" + (ap.h || "--"), e = idx[k];
       if (!e) { idx[k] = Object.assign({}, ap, { abs: (ap.abs || []).slice() }); return; }
-      e.abs = unionListe(e.abs, ap.abs);
+      /* Un appel corrigé (un absent décoché) porte la date de la correction : le plus récent
+         fait foi. Sans date des deux côtés, on réunit les absents comme avant. */
+      var de = e.maj || 0, da = ap.maj || 0;
+      if (da > de) idx[k] = Object.assign({}, e, ap, { abs: (ap.abs || []).slice() });
+      else if (da === de) e.abs = unionListe(e.abs, ap.abs);
     });
     return Object.keys(idx).sort().map(function (k) { return idx[k]; });
   }
@@ -4135,9 +4707,23 @@
     return r;
   }
   /* base = l'état de CE poste, apport = celui que l'on rapatrie. */
-  function fusionnerEtats(base, apport) {
+  function fusionnerEtats(base, apport, recuperation) {
     base = migrate(JSON.parse(JSON.stringify(base)));
     apport = migrate(JSON.parse(JSON.stringify(apport)));
+    /* Reprise d'une copie de sécurité ou d'une sauvegarde datée : on veut retrouver TOUT ce
+       qu'elle contient, y compris ce qui a été supprimé depuis (c'est souvent pour cela qu'on
+       y revient). Ces éléments perdent leur marque de suppression et reçoivent la date du
+       jour : ils resteront, ici comme sur l'autre poste. */
+    if (recuperation) {
+      var marquesBase = base.suppr || {}, repris = construireIndexSuivi(apport), ceJour = Date.now();
+      Object.keys(repris).forEach(function (k) {
+        if (!marquesBase[k]) return;
+        delete marquesBase[k];
+        var x = repris[k];
+        if (x.membre) { x.ref.reinscrits = x.ref.reinscrits || {}; x.ref.reinscrits[x.membre] = ceJour; } else x.ref.maj = ceJour;
+      });
+      apport.suppr = {};
+    }
     var r = JSON.parse(JSON.stringify(base));
     r.refs = fusionnerRefs(base.refs, apport.refs);
 
@@ -4157,13 +4743,18 @@
     Object.keys(apport.classes || {}).forEach(function (cid) {
       var ca = base.classes[cid], cb = apport.classes[cid];
       if (!ca) { r.classes[cid] = cb; return; }
+      var rein = Object.assign({}, ca.reinscrits || {});
+      Object.keys(cb.reinscrits || {}).forEach(function (e) { rein[e] = Math.max(rein[e] || 0, cb.reinscrits[e]); });
       r.classes[cid] = Object.assign({}, ca, cb, { eleveIds: unionListe(ca.eleveIds, cb.eleveIds) });
+      if (Object.keys(rein).length) r.classes[cid].reinscrits = rein; else delete r.classes[cid].reinscrits;
     });
 
     Object.keys(apport.matieres || {}).forEach(function (mid) {
       var ma = base.matieres[mid], mb = apport.matieres[mid];
       if (!ma) { r.matieres[mid] = mb; return; }
       var mr = r.matieres[mid];
+      /* Tout champ que seul l'autre poste connaît est repris tel quel : rien n'est abandonné. */
+      Object.keys(mb).forEach(function (k) { if (mr[k] === undefined) mr[k] = JSON.parse(JSON.stringify(mb[k])); });
       /* La salle est portée par la MATIÈRE. On accepte celle de l'autre poste si ce poste-ci
          n'a rien décidé, mais on ne réimporte JAMAIS une exception posée classe par classe :
          un poste resté sur une ancienne version la replaquait à chaque synchronisation, et la
@@ -4180,15 +4771,73 @@
       Object.keys(mb.eleveData || {}).forEach(function (eid) {
         mr.eleveData[eid] = fusionnerDonneesEleve((ma.eleveData || {})[eid], mb.eleveData[eid]);
       });
+      /* Avancement dans la progression : on ne recule jamais, on garde le plus avancé. */
+      if ((mb.courseIndex || 0) > (mr.courseIndex || 0)) mr.courseIndex = mb.courseIndex;
+      if (mb.coursParClasse) {
+        mr.coursParClasse = Object.assign({}, mr.coursParClasse || {});
+        Object.keys(mb.coursParClasse).forEach(function (cid) {
+          var va = mr.coursParClasse[cid], vb = mb.coursParClasse[cid];
+          mr.coursParClasse[cid] = (va == null) ? vb : Math.max(va, vb);
+        });
+      }
+      if (mb.coursDeSeance) {
+        mr.coursDeSeance = Object.assign({}, mr.coursDeSeance || {});
+        Object.keys(mb.coursDeSeance).forEach(function (cid) {
+          mr.coursDeSeance[cid] = Object.assign({}, mb.coursDeSeance[cid] || {}, mr.coursDeSeance[cid] || {});
+        });
+      }
       Object.keys(mb.plans || {}).forEach(function (cid) {
         var pa = (ma.plans || {})[cid], pb = mb.plans[cid];
         if (!pa) { mr.plans[cid] = pb; return; }
-        // le plan de salle reste celui de ce poste ; seuls les appels, eux cumulatifs, se réunissent
-        mr.plans[cid] = Object.assign({}, pa, { appels: fusionnerAppels(pa.appels, pb.appels) });
-        if (!pa.custom && pb.custom) mr.plans[cid].custom = pb.custom;
-        if (!(pa.groupesLibres || []).length && (pb.groupesLibres || []).length) mr.plans[cid].groupesLibres = pb.groupesLibres;
+        /* On part des DEUX plans : un champ connu d'un seul poste n'est plus jamais abandonné.
+           (C'est ainsi que le journal et les rappels de l'autre poste étaient perdus à chaque
+           fusion : seuls les appels étaient repris.) */
+        var pr = Object.assign({}, pb, pa);
+        /* La disposition des places forme un tout : on prend celle qui a été modifiée en
+           dernier. Sans date d'un côté comme de l'autre, celle de ce poste reste, comme avant. */
+        var source = ((pb.majPos || 0) > (pa.majPos || 0)) ? pb : pa;
+        CHAMPS_DISPOSITION.forEach(function (c) { if (source[c] !== undefined) pr[c] = source[c]; else delete pr[c]; });
+        if (source.majPos !== undefined) pr.majPos = source.majPos; else delete pr.majPos;
+        if (source === pa) {
+          if (!pa.custom && pb.custom) pr.custom = pb.custom;
+          if (!(pa.groupesLibres || []).length && (pb.groupesLibres || []).length) pr.groupesLibres = pb.groupesLibres;
+        }
+        /* Un élève inscrit sur l'autre poste arrivait ici SANS place : la disposition retenue ne le
+           connaissait pas. Il reprend la place qu'il avait là-bas si elle est libre ici ; sinon il
+           reste à asseoir (zone « sans place » du plan). Personne d'autre ne bouge. */
+        var autre = (source === pa) ? pb : pa, membres = ((r.classes[cid] || {}).eleveIds) || [];
+        if (autre.pos && membres.length) {
+          pr.pos = Object.assign({}, pr.pos || {});
+          var prises = {};
+          membres.forEach(function (e) { var x = pr.pos[e]; if (x) prises[x.group + "#" + x.order] = 1; });
+          membres.forEach(function (e) {
+            var x = autre.pos[e]; if (pr.pos[e] || !x || prises[x.group + "#" + x.order]) return;
+            pr.pos[e] = { group: x.group, order: x.order }; prises[x.group + "#" + x.order] = 1;
+          });
+        }
+        if (autre.cpos && membres.length) {
+          pr.cpos = Object.assign({}, pr.cpos || {});
+          var sieges = {};
+          membres.forEach(function (e) { var x = pr.cpos[e]; if (x) sieges[x.t + "#" + x.s] = 1; });
+          membres.forEach(function (e) {
+            var x = autre.cpos[e]; if (pr.cpos[e] || !x || sieges[x.t + "#" + x.s]) return;
+            pr.cpos[e] = { t: x.t, s: x.s }; sieges[x.t + "#" + x.s] = 1;
+          });
+        }
+        /* Ce qui s'accumule se réunit : appels, journal de séance, rappels, compositions de groupes. */
+        pr.appels = fusionnerAppels(pa.appels, pb.appels);
+        if (pa.journal || pb.journal) pr.journal = fusionnerJournal(pa.journal, pb.journal);
+        if (pa.rappels || pb.rappels) pr.rappels = fusionnerRappels(pa.rappels, pb.rappels);
+        if (pa.configsGroupes || pb.configsGroupes) pr.configsGroupes = fusionnerParId(pa.configsGroupes, pb.configsGroupes);
+        mr.plans[cid] = pr;
       });
     });
+    Object.keys(apport).forEach(function (k) { if (r[k] === undefined && k !== "_maj") r[k] = apport[k]; });
+    /* Marques de suppression des deux postes réunies (la plus récente pour chaque élément),
+       puis appliquées : rien de ce qui a été supprimé ou corrigé ne revient. */
+    var marques = Object.assign({}, base.suppr || {});
+    Object.keys(apport.suppr || {}).forEach(function (k) { marques[k] = Math.max(marques[k] || 0, apport.suppr[k]); });
+    if (Object.keys(marques).length) { r.suppr = marques; appliquerMarques(r); }
     return r;
   }
   /* Ce que la fusion vient d'apporter, pour pouvoir le dire à l'enseignant. */
@@ -4201,28 +4850,54 @@
       });
       return n;
     }
+    var ra = resumeEtat(avant), rb = resumeEtat(apres);
     return {
       eleves: Object.keys(apres.eleves || {}).length - Object.keys(avant.eleves || {}).length,
       classes: Object.keys(apres.classes || {}).length - Object.keys(avant.classes || {}).length,
-      saisies: compteSaisies(apres) - compteSaisies(avant)
+      saisies: compteSaisies(apres) - compteSaisies(avant),
+      journal: rb.journal - ra.journal,
+      rappels: rb.rappels - ra.rappels
     };
   }
-  function appliquerFusion(apport, origine) {
+  function pluriel(n, mot, fem) { return n + " " + mot + (n > 1 ? "s" : "") + " récupéré" + (fem ? "e" : "") + (n > 1 ? "s" : ""); }
+  function texteBilanFusion(bilan, origine) {
+    var recu = [];
+    if (bilan.saisies > 0) recu.push(pluriel(bilan.saisies, "saisie", true));
+    if (bilan.journal > 0) recu.push(pluriel(bilan.journal, "séance", true) + " du journal");
+    if (bilan.rappels > 0) recu.push(pluriel(bilan.rappels, "rappel"));
+    if (bilan.eleves > 0) recu.push(bilan.eleves + " élève" + (bilan.eleves > 1 ? "s" : "") + " ajouté" + (bilan.eleves > 1 ? "s" : ""));
+    if (bilan.classes > 0) recu.push(bilan.classes + " classe" + (bilan.classes > 1 ? "s" : "") + " ajoutée" + (bilan.classes > 1 ? "s" : ""));
+    return "Réunion faite" + (origine ? " (" + origine + ")" : "") + " : "
+      + (recu.length ? recu.join(", ") : "rien de nouveau à reprendre") + ". Une copie de sécurité a été gardée.";
+  }
+  /* Remplacement VOLONTAIRE de tout l'état : restauration d'une sauvegarde, d'un fichier ou
+     d'une copie de sécurité. L'état remplacé est d'abord copié. Si l'on revient ainsi en
+     arrière alors que le poste contenait des données, le prochain envoi IMPOSE cette version
+     au Drive, après avoir mis de côté celle qui s'y trouve : c'est le seul cas où l'on ne
+     réunit pas, parce que revenir en arrière est précisément ce qui est demandé. */
+  var KEY_IMPOSER = "pdc_imposer";
+  function remplacerEtat(data, motif, imposer) {
+    copieDeSecurite("avant " + motif);
+    state = migrate(data);
+    ecrireEtatLocal(); marquerNonEnvoye(true);
+    if (imposer) LS.setRaw(KEY_IMPOSER, "1");
+    renderAll(); historiqueRAZ();
+    scheduleDriveSave();
+  }
+  function appliquerFusion(apport, origine, recuperation) {
     var avant = state;
-    var fusionne = fusionnerEtats(state, apport);
+    copieDeSecurite("avant réunion avec " + (origine || "une autre version"));
+    var fusionne = fusionnerEtats(state, apport, recuperation);
     var bilan = resumerFusion(avant, fusionne);
     state = fusionne;
-    LS.set(KEY_STATE, state); marquerNonEnvoye(true);
+    ecrireEtatLocal(); marquerNonEnvoye(true);
     renderAll(); historiqueRAZ();
     /* On ne referme plus les fenêtres ouvertes : le journal en cours d'écriture se retrouvait
        fermé, et son texte perdu. Le texte affiché est réinjecté dans l'état fusionné. */
     reinjecterSaisieEnCours();
-    var txt = "Fusion faite" + (origine ? " (" + origine + ")" : "") + " : "
-      + (bilan.saisies > 0 ? bilan.saisies + " saisie" + (bilan.saisies > 1 ? "s" : "") + " récupérée" + (bilan.saisies > 1 ? "s" : "") : "aucune saisie nouvelle")
-      + (bilan.eleves > 0 ? ", " + bilan.eleves + " élève" + (bilan.eleves > 1 ? "s" : "") + " ajouté" + (bilan.eleves > 1 ? "s" : "") : "")
-      + (bilan.classes > 0 ? ", " + bilan.classes + " classe" + (bilan.classes > 1 ? "s" : "") + " ajoutée" + (bilan.classes > 1 ? "s" : "") : "")
-      + ". Rien n'a été supprimé.";
-    flash(txt, 7000);
+    var exclus = 0;
+    try { exclus = exclureNomsColles(true); } catch (e) { console.error("exclusion", e); }
+    flash(texteBilanFusion(bilan, origine) + (exclus ? " " + exclus + " élève" + (exclus > 1 ? "s" : "") + " exclu" + (exclus > 1 ? "s" : "") + " : nom et prénom dans le même champ." : ""), 7000);
     scheduleDriveSave();
     return bilan;
   }
@@ -4348,6 +5023,7 @@
         if (resp && resp.access_token) {
           drive.token = resp.access_token; drive.expiresAt = Date.now() + (resp.expires_in || 3600) * 1000;
           dernierEchecJeton = "";
+          drive.message = null;                 // l'ancien message (« Reconnexion requise »…) n'a plus cours
           hideReconnectBanner(); updateDriveBadge(); lireCompteDrive();
           driveSyncAfterConnect(); startDriveTimer(); planifierRenouvellement();
         }
@@ -4386,53 +5062,112 @@
     catch (e) { drive.tokenClient.requestAccessToken({ prompt: "consent" }); }
   }
   async function driveHeaders() { return { Authorization: "Bearer " + drive.token }; }
+  /* Une réponse de Drive qui n'est pas un succès est une ERREUR, à traiter comme telle. La
+     prendre pour « rien trouvé » créait un second fichier de sauvegarde ; la prendre pour
+     « envoyé » annonçait une sauvegarde qui n'avait pas eu lieu, et effaçait le témoin
+     « saisies à envoyer » : le lendemain, la version de l'autre poste remplaçait ce travail. */
+  function erreurDrive(statut, quoi) { var e = new Error(quoi + " (réponse " + statut + ")"); e.statut = statut; return e; }
+  function auPlus(promesse, ms) {
+    return Promise.race([promesse, new Promise(function (ok) { setTimeout(function () { ok(false); }, ms); })]);
+  }
   async function driveFindFile() {
     if (drive.fileId) return drive.fileId;
-    var r = await fetch("https://www.googleapis.com/drive/v3/files?spaces=drive&q=" + encodeURIComponent("name='" + DRIVE_FILENAME + "' and trashed=false") + "&fields=files(id,name)", { headers: await driveHeaders() });
-    if (r.status === 401) { onTokenExpired(); return null; }
-    var j = await r.json(); if (j.files && j.files.length) drive.fileId = j.files[0].id;
+    var r = await fetch("https://www.googleapis.com/drive/v3/files?spaces=drive&q=" + encodeURIComponent("name='" + DRIVE_FILENAME + "' and trashed=false") + "&orderBy=" + encodeURIComponent("modifiedTime desc") + "&fields=files(id,name,modifiedTime)", { headers: await driveHeaders() });
+    if (r.status === 401) { onTokenExpired(); throw erreurDrive(401, "session Google expirée"); }
+    if (!r.ok) throw erreurDrive(r.status, "recherche de la sauvegarde");
+    var j = await r.json(), fichiers = j.files || [];
+    /* Plusieurs fichiers du même nom : le plus récemment modifié fait foi, pour que les deux
+       postes choisissent toujours le même ; les autres sont réunis puis mis de côté. */
+    if (fichiers.length) drive.fileId = fichiers[0].id;
+    drive.doublons = fichiers.slice(1).map(function (f) { return f.id; });
     return drive.fileId;
   }
   function etatVide() { return !state || !state.classes || Object.keys(state.classes).length === 0; }
   var ecrasementAutorise = false;
+  var envoi = { enCours: false, redemander: false, essais: 0, minuterie: null };
+  var dernierEchecDrive = "";
+  /* Un échec se dit, se retient, et se rattrape tout seul : 15 s, 30 s, 1 min, 2 min, puis
+     toutes les 3 minutes. Le témoin « saisies à envoyer » n'est jamais effacé par un échec. */
+  function echecDrive(e) {
+    var st = e && e.statut;
+    dernierEchecDrive = st === 403 ? "Google Drive a refusé l'accès (droits retirés ou espace Drive plein)"
+      : st === 429 ? "Google Drive demande de patienter"
+      : st >= 500 ? "Google Drive est momentanément indisponible"
+      : st ? "Google Drive a répondu par une erreur (" + st + ")"
+      : (navigator.onLine === false ? "pas de connexion Internet" : "Google Drive est injoignable");
+    envoi.essais++;
+    updateDriveBadge(nonEnvoye() ? "Envoi échoué" : "Drive injoignable");
+    clearTimeout(envoi.minuterie);
+    var delai = Math.min(180000, 15000 * Math.pow(2, envoi.essais - 1));
+    envoi.minuterie = setTimeout(function () { driveSync("nouvel essai"); }, delai);
+  }
+  function envoyerFichier(id, body) {
+    var meta = { name: DRIVE_FILENAME, mimeType: "application/json" }, boundary = "pdc" + Date.now();
+    var multipart = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(meta) +
+      "\r\n--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" + body + "\r\n--" + boundary + "--";
+    /* On demande l'heure de modification DANS la réponse d'envoi : relue juste après dans une
+       requête séparée, Drive renvoyait parfois encore l'ancienne, et le poste croyait alors
+       qu'un autre ordinateur venait d'écrire. */
+    var url = id ? ("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=multipart&fields=id,modifiedTime") : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime";
+    return fetch(url, { method: id ? "PATCH" : "POST", headers: { Authorization: "Bearer " + drive.token, "Content-Type": "multipart/related; boundary=" + boundary }, body: multipart });
+  }
+  /* Renvoie true si, et seulement si, Drive a CONFIRMÉ avoir reçu la sauvegarde. */
   async function driveSave(forcer) {
-    if (!tokenValid()) { onTokenExpired(); return; }
-    /* Une question de synchronisation attend déjà : inutile d'interroger Drive à chaque frappe.
-       Tout reste enregistré sur le poste, l'envoi reprendra une fois la question tranchée. */
-    if (!forcer && conflitEnAttente) { updateDriveBadge("Synchro en attente"); return; }
-    /* Garde-fou principal : si le fichier Drive a bougé depuis la dernière synchronisation
-       de ce poste, c'est qu'un autre ordinateur a travaillé. On n'écrase jamais à l'aveugle. */
-    if (!forcer && !ecrasementAutorise) {
-      var distantAvant = await driveModifiedTime();
-      if (distantAChange(distantAvant)) { await resoudreConflit(distantAvant); return; }
-    }
-    // Sécurité : une application vide ne doit jamais écraser une sauvegarde existante.
-    if (etatVide() && !ecrasementAutorise) {
-      var idExistant = await driveFindFile();
-      if (idExistant) {
-        updateDriveBadge("Protégé");
-        flash("Sauvegarde suspendue : l'application est vide alors qu'une sauvegarde existe sur Drive. Utilisez ⚙︎ Classe → Récupérer la sauvegarde Drive.", 7000);
-        return;
-      }
-    }
+    if (!tokenValid()) { onTokenExpired(); return false; }
+    if (envoi.enCours) { envoi.redemander = true; return false; }        // un seul envoi à la fois
+    /* Une mise à jour de l'autre poste attend la fin d'une saisie : inutile d'interroger Drive à
+       chaque frappe. Tout reste enregistré sur le poste, l'envoi reprendra juste après. */
+    if (!forcer && conflitEnAttente) { updateDriveBadge("Synchro en attente"); return false; }
+    envoi.enCours = true;
+    var reussi = false;
     try {
+      await (secoursPret || Promise.resolve());
+      /* Garde-fou principal : si le fichier Drive a bougé depuis la dernière synchronisation
+         de ce poste, c'est qu'un autre ordinateur a travaillé. On n'écrase jamais à l'aveugle -
+         et si l'on ne parvient pas à lire sa date, on n'envoie pas : on réessaiera. */
+      if (!forcer && !ecrasementAutorise) {
+        var distantAvant = await driveModifiedTime();
+        if (distantAChange(distantAvant)) { envoi.enCours = false; await resoudreConflit(distantAvant); return false; }
+      }
+      // Sécurité : une application vide ne doit jamais écraser une sauvegarde existante.
+      if (etatVide() && !ecrasementAutorise) {
+        var idExistant = await driveFindFile();
+        if (idExistant) {
+          updateDriveBadge("Protégé");
+          flash("Sauvegarde suspendue : l'application est vide alors qu'une sauvegarde existe sur Drive. Utilisez ⚙︎ Classe → Récupérer la sauvegarde Drive.", 7000);
+          return false;
+        }
+      }
       await ensureDeviceKey();
+      var majEnvoyee = etatMaj;                          // ce qui part est l'état de CET instant
       var blob = await D.encryptJSON(state, deviceKeyRaw), body = JSON.stringify(blob);
-      var id = await driveFindFile(), meta = { name: DRIVE_FILENAME, mimeType: "application/json" }, boundary = "pdc" + Date.now();
-      var multipart = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(meta) +
-        "\r\n--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" + body + "\r\n--" + boundary + "--";
-      /* On demande l'heure de modification DANS la réponse d'envoi : relue juste après dans une
-         requête séparée, Drive renvoyait parfois encore l'ancienne, et le poste croyait alors
-         qu'un autre ordinateur venait d'écrire - d'où une question de fusion en boucle. */
-      var url = id ? ("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=multipart&fields=id,modifiedTime") : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime";
-      var r = await fetch(url, { method: id ? "PATCH" : "POST", headers: { Authorization: "Bearer " + drive.token, "Content-Type": "multipart/related; boundary=" + boundary }, body: multipart });
-      if (r.status === 401) { onTokenExpired(); return; }
-      var j = await r.json(); if (j.id) drive.fileId = j.id;
+      var id = await driveFindFile();
+      var r = await envoyerFichier(id, body);
+      if (r.status === 404 && id) {                      // le fichier a disparu de Drive : on le retrouve ou on le recrée
+        drive.fileId = null; id = await driveFindFile(); r = await envoyerFichier(id, body);
+      }
+      if (r.status === 401) { onTokenExpired(); return false; }
+      if (!r.ok) throw erreurDrive(r.status, "envoi de la sauvegarde");
+      var j = await r.json();
+      if (!j || !j.id) throw erreurDrive(r.status, "réponse d'envoi incomplète");
+      drive.fileId = j.id;
       memoriserRemoteModif(j.modifiedTime || await driveModifiedTime());
-      marquerNonEnvoye(false); LS.setRaw(KEY_DERNIERENVOI, String(Date.now()));
-      updateDriveBadge("Sauvegardé " + heureCourte());
+      LS.setRaw(KEY_DERNIERENVOI, String(Date.now()));
+      envoi.essais = 0; dernierEchecDrive = ""; clearTimeout(envoi.minuterie);
+      LS.setRaw(KEY_IMPOSER, "");
+      reussi = true;
+      /* Une saisie faite PENDANT l'envoi n'est pas dans ce qui vient de partir : le témoin
+         reste levé et un nouvel envoi suit. */
+      if (etatMaj === majEnvoyee) { marquerNonEnvoye(false); updateDriveBadge("Sauvegardé " + heureCourte()); }
+      else { envoi.redemander = true; updateDriveBadge("Envoi…"); }
       driveBackupRotate();
-    } catch (e) { updateDriveBadge("Erreur réseau"); }
+    } catch (e) {
+      if (!(e && e.statut === 401)) echecDrive(e);
+    } finally {
+      envoi.enCours = false;
+      if (envoi.redemander) { envoi.redemander = false; scheduleDriveSave(); }
+    }
+    return reussi;
   }
   /* Copie le fichier Drive actuel sous un nom daté AVANT de l'écraser : même si l'enseignant
      choisit d'imposer sa version, l'autre n'est jamais perdue. */
@@ -4475,115 +5210,178 @@
     if (typeof roomEdit !== "undefined" && roomEdit) return true;   // salle en cours de dessin
     return false;
   }
-  /* Rappel discret, une seule fois : la question viendra quand l'écran sera libre. */
+  /* Rappel discret, une seule fois : la mise à jour sera reprise quand l'écran sera libre. */
   function signalerAttenteConflit() {
     updateDriveBadge("Synchro en attente");
     if (attenteSignalee) return;
     attenteSignalee = true;
-    flash("Une mise à jour venue de l'autre poste vous attend. La question sera posée quand vous aurez fini d'écrire - rien n'est perdu.", 5000);
+    flash("Une mise à jour venue de l'autre poste vous attend. Elle sera reprise dès que vous aurez fini d'écrire - rien n'est perdu.", 5000);
   }
-  /* Les deux postes ont travaillé. On ne fait plus choisir entre « perdre ici » et « perdre
-     là-bas » : la fusion réunit les deux et reste le choix par défaut. */
-  async function resoudreConflit(distantActuel) {
-    if (conflitOuvert) return;                                  // une seule question à la fois
-    if (utilisateurOccupe()) { conflitEnAttente = distantActuel; signalerAttenteConflit(); return; }
-    /* Une question vient d'être posée : on n'en repose aucune avant trois minutes, quoi qu'il
-       arrive côté Drive (fusion impossible, phrase de récupération manquante, autre poste qui
-       enregistre en continu…). Au pire l'envoi attend ; rien n'est perdu sur le poste. */
-    if (conflitReponduA && (Date.now() - conflitReponduA) < DELAI_REPONSE) {
+  /* Les deux postes ont travaillé. On ne demande plus rien : la règle est de RÉUNIR les deux,
+     jamais d'en remplacer un par l'autre. Une question modale n'apportait que des risques -
+     celui de couper une saisie, et celui de répondre « garder l'autre version » par mégarde.
+     Une copie de sécurité est prise avant chaque réunion (⚙︎ Classe → Copies de sécurité). */
+  var reunionRefuseeA = 0;
+  async function resoudreConflit(distantActuel, sansAttendre) {
+    if (conflitOuvert) return;                                  // une seule réunion à la fois
+    if (!sansAttendre && utilisateurOccupe()) { conflitEnAttente = distantActuel; signalerAttenteConflit(); return; }
+    /* La sauvegarde Drive n'a pas pu être lue (phrase de récupération refusée…) : on ne
+       redemande rien avant trois minutes. L'envoi attend ; rien n'est perdu sur le poste. */
+    if (!sansAttendre && reunionRefuseeA && (Date.now() - reunionRefuseeA) < DELAI_REPONSE) {
       conflitEnAttente = distantActuel; updateDriveBadge("Synchro en attente"); return;
     }
     conflitOuvert = true;
-    conflitReponduA = Date.now();          // la fenêtre de silence court dès la question posée
-    try { await poserQuestionConflit(distantActuel); }
+    try { await reunirAvecDrive(distantActuel); }
+    catch (e) { if (!(e && e.statut === 401)) echecDrive(e); }
     finally {
       conflitOuvert = false; conflitEnAttente = null; attenteSignalee = false;
       conflitReponduPour = distantActuel; conflitReponduA = Date.now();
     }
   }
-  async function poserQuestionConflit(distantActuel) {
-    updateDriveBadge("Conflit");
-    var fusionner = confirm(
-      "Il y a du travail des deux côtés : la sauvegarde Google Drive a changé depuis la dernière\n" +
-      "synchronisation de ce poste, et ce poste contient des saisies non envoyées.\n\n" +
-      "OK  : FUSIONNER les deux (recommandé) - rien n'est perdu, rien n'est compté deux fois.\n" +
-      "Annuler : choisir l'une des deux versions.");
-    if (fusionner) {
-      var distantData = await driveRecupererDonnees();
-      if (!distantData) return;
+  async function reunirAvecDrive(distantActuel) {
+    /* Retour en arrière demandé par le professeur (restauration avec remplacement) : la version
+       du Drive est mise de côté sous un nom daté, puis celle de ce poste la remplace. */
+    if (LS.raw(KEY_IMPOSER) === "1") {
+      var archive = await archiverDistantAvantEcrasement();
       memoriserRemoteModif(distantActuel);
-      appliquerFusion(distantData, "Google Drive");
       ecrasementAutorise = true;
-      try { await driveSave(true); } finally { ecrasementAutorise = false; }
+      try { if (await driveSave(true)) flash(archive ? ("Version restaurée envoyée. L'ancienne version du Drive est gardée sous « " + archive + " ».") : "Version restaurée envoyée sur Drive.", 7000); }
+      finally { ecrasementAutorise = false; }
       return;
     }
-    var garder = confirm(
-      "OK  : garder la version du Drive (ce qui a été saisi sur ce poste et jamais envoyé sera perdu).\n" +
-      "Annuler : imposer la version de CE poste - une copie datée de la version Drive sera\n" +
-      "conservée avant remplacement, rien ne sera perdu côté Drive.");
-    if (garder) { memoriserRemoteModif(distantActuel); await driveLoad(); return; }
-    var archive = await archiverDistantAvantEcrasement();
+    updateDriveBadge("Réunion des deux postes…");
+    var distantData = await driveRecupererDonnees();
+    if (!distantData) { reunionRefuseeA = Date.now(); return; }
+    reunionRefuseeA = 0;
     memoriserRemoteModif(distantActuel);
+    appliquerFusion(distantData, "Google Drive");
     ecrasementAutorise = true;
     try { await driveSave(true); } finally { ecrasementAutorise = false; }
-    flash(archive ? ("Version Drive conservée sous « " + archive + " »") : "Version de ce poste envoyée", 6000);
   }
-  /* Dès que l'écran est libre, on traite ce qui attendait : une simple mise à jour venue de
-     l'autre poste se charge sans rien demander ; seule une vraie divergence pose une question. */
+  /* Dès que l'écran est libre, on traite ce qui attendait : mise à jour ou réunion. */
   function surveillerConflitEnAttente() {
-    if (!conflitEnAttente || conflitOuvert || utilisateurOccupe()) return;
-    var t = conflitEnAttente;
+    if (!conflitEnAttente || conflitOuvert || drive.enCours || envoi.enCours || utilisateurOccupe()) return;
     conflitEnAttente = null;
-    if (!dirty) { driveSync("attente"); return; }
-    resoudreConflit(t);
+    driveSync("attente");
   }
-  /* Lit et déchiffre le fichier Drive SANS toucher à l'état courant. */
+  /* Lit et déchiffre le fichier Drive SANS toucher à l'état courant. Renvoie null si le fichier
+     n'existe pas ou si l'utilisateur renonce à donner sa phrase ; lève une erreur si Drive
+     répond mal - « illisible pour l'instant » n'est pas « vide ». */
   async function driveRecupererDonnees() {
     if (!tokenValid()) { onTokenExpired(); return null; }
     var id = await driveFindFile(); if (!id) return null;
     var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?alt=media", { headers: await driveHeaders() });
     if (r.status === 401) { onTokenExpired(); return null; }
-    var blob = await r.json();
+    if (r.status === 404) { drive.fileId = null; throw erreurDrive(404, "la sauvegarde a disparu de Drive"); }
+    if (!r.ok) throw erreurDrive(r.status, "lecture de la sauvegarde");
+    var blob;
+    try { blob = await r.json(); } catch (e) { throw erreurDrive(r.status, "sauvegarde illisible"); }
     var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde Drive");
     if (!data) { updateDriveBadge("Phrase requise"); return null; }
     return migrate(data);
   }
-  async function driveLoad() {
+  /* Remplace l'état de ce poste par celui du Drive - uniquement quand ce poste n'a rien à
+     envoyer. `distant` est la date du fichier lue AVANT de le télécharger : si le fichier
+     change pendant la lecture, la prochaine synchronisation le verra, au lieu de le manquer. */
+  async function driveLoad(distant, message) {
+    if (!distant) distant = await driveModifiedTime();
     var data = await driveRecupererDonnees();
-    if (!data) return;
-    try { state = data; LS.set(KEY_STATE, state);
-      memoriserRemoteModif(await driveModifiedTime()); marquerNonEnvoye(false);
-      renderAll(); historiqueRAZ(); updateDriveBadge("À jour " + heureCourte()); flash("Données chargées depuis Drive"); }
-    catch (e) { flash("Drive : sauvegarde illisible."); }
+    if (!data) return false;
+    /* Une saisie a pu être faite ici pendant le téléchargement : on réunit, on ne remplace plus. */
+    if (nonEnvoye() && !etatVide()) {
+      memoriserRemoteModif(distant); appliquerFusion(data, "Google Drive");
+      return true;
+    }
+    await auPlus(copieDeSecurite("avant mise à jour depuis Google Drive"), 1500);
+    state = data; ecrireEtatLocal();
+    memoriserRemoteModif(distant); marquerNonEnvoye(false);
+    renderAll(); historiqueRAZ(); rafraichirApresAdoption();
+    envoi.essais = 0; dernierEchecDrive = "";
+    updateDriveBadge("À jour " + heureCourte());
+    flash(message || "Données chargées depuis Drive", 2600);
+    try { exclureNomsColles(); } catch (e) { console.error("exclusion", e); }
+    return true;
   }
   /* Rapatriement volontaire depuis ⚙︎ Classe : fusion par défaut, remplacement sur demande. */
   async function driveRapatrier() {
-    var data = await driveRecupererDonnees();
-    if (!data) return;
-    if (etatVide()) { state = data; LS.set(KEY_STATE, state); memoriserRemoteModif(await driveModifiedTime());
-      marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données chargées depuis Drive"); return; }
-    if (confirm("OK : FUSIONNER la sauvegarde Drive avec ce poste (recommandé) - rien n'est perdu.\n\n"
-      + "Annuler : REMPLACER le contenu de ce poste par celui du Drive.")) {
-      memoriserRemoteModif(await driveModifiedTime());
-      appliquerFusion(data, "Google Drive");
-      return;
+    try {
+      var distant = await driveModifiedTime();
+      var data = await driveRecupererDonnees();
+      if (!data) { if (!distant) flash("Aucune sauvegarde sur Drive pour l'instant.", 3500); return; }
+      if (etatVide()) {
+        state = data; ecrireEtatLocal(); memoriserRemoteModif(distant);
+        marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données chargées depuis Drive"); return;
+      }
+      if (confirm("OK : RÉUNIR la sauvegarde Drive avec ce poste (recommandé) - rien n'est perdu.\n\n"
+        + "Annuler : REMPLACER le contenu de ce poste par celui du Drive.")) {
+        memoriserRemoteModif(distant);
+        appliquerFusion(data, "Google Drive");
+        return;
+      }
+      if (!confirm("Remplacer les données de ce poste par celles du Drive ?\nCe qui a été saisi ici sans être envoyé sera retiré de ce poste (une copie de sécurité est gardée).")) return;
+      await auPlus(copieDeSecurite("avant remplacement par la sauvegarde Drive"), 1500);
+      state = data; ecrireEtatLocal(); memoriserRemoteModif(distant);
+      marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données du Drive restaurées sur ce poste");
+    } catch (e) {
+      if (!(e && e.statut === 401)) { echecDrive(e); flash("Lecture de Drive impossible : " + dernierEchecDrive + ". Rien n'a été modifié.", 6000); }
     }
-    if (!confirm("Remplacer les données de ce poste par celles du Drive ?\nCe qui a été saisi ici sans être envoyé sera perdu.")) return;
-    state = data; LS.set(KEY_STATE, state); memoriserRemoteModif(await driveModifiedTime());
-    marquerNonEnvoye(false); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Données du Drive restaurées sur ce poste");
+  }
+  /* « Sauvegarder maintenant » passe par les mêmes garde-fous que l'envoi automatique : si
+     l'autre poste a travaillé entre-temps, on réunit au lieu d'écraser sa version. Et le
+     message dit ce qui s'est réellement passé, pas ce qu'on espérait. */
+  async function envoyerMaintenant() {
+    if (!driveConfigured()) { flash("Enregistrez d'abord votre identifiant client Google"); return false; }
+    if (!tokenValid()) { driveConnect(true); return false; }
+    var reussi = false;
+    if (etatVide()) {
+      if (!confirm("L'application est vide sur ce poste.\nEnvoyer quand même ? Cela écrasera la sauvegarde Drive.")) return false;
+      ecrasementAutorise = true;
+      try { reussi = await driveSave(true); } finally { ecrasementAutorise = false; }
+    } else {
+      marquerNonEnvoye(true);                  // on veut un envoi, même si rien n'a changé depuis le dernier
+      conflitEnAttente = null;
+      await driveSync("manuel");
+      reussi = !nonEnvoye();
+    }
+    if (reussi) { await driveBackupRotate(true); flash("Sauvegarde envoyée sur Drive le " + horodatageLisible(new Date(), true), 5000); }
+    else flash("L'envoi n'a pas abouti" + (dernierEchecDrive ? " : " + dernierEchecDrive : "") + ". Vos saisies restent enregistrées sur ce poste ; un nouvel essai se fera tout seul.", 7000);
+    return reussi;
   }
   async function driveSyncAfterConnect() {
-    var id = await driveFindFile();
-    if (!id) { await driveSave(); return; }             // rien sur Drive : on dépose
-    var distant = await driveModifiedTime();
-    if (etatVide()) { memoriserRemoteModif(distant); await driveLoad(); return; }
-    if (distantAChange(distant)) {
-      // le Drive a bougé depuis notre dernière synchro (ou nous ne l'avons jamais synchronisé) :
-      // on récupère, et on ne demande que si du travail non envoyé existe ici.
-      if (dirty) { await resoudreConflit(distant); return; }
-      memoriserRemoteModif(distant); await driveLoad(); return;
+    try {
+      await (secoursPret || Promise.resolve());
+      var id = await driveFindFile();
+      if (!id) { await driveSave(); return; }             // rien sur Drive : on dépose
+      await driveSync("connexion");
+      await reunirDoublons();
+    } catch (e) { if (!(e && e.statut === 401)) echecDrive(e); }
+  }
+  /* Plusieurs fichiers de sauvegarde du même nom sur Drive (une ancienne panne de recherche en
+     créait un second) : les deux postes pouvaient alors écrire chacun dans le sien sans jamais
+     se voir. On réunit le contenu des fichiers en trop, puis on les renomme pour qu'ils ne
+     soient plus jamais pris pour la sauvegarde. Rien n'est supprimé de Drive. */
+  async function reunirDoublons() {
+    var ids = (drive.doublons || []).slice();
+    if (!ids.length || !tokenValid() || utilisateurOccupe()) return;   // jamais pendant une saisie : ce sera à la prochaine connexion
+    drive.doublons = [];
+    var reunis = 0, illisibles = 0;
+    for (var i = 0; i < ids.length; i++) {
+      try {
+        var r = await fetch("https://www.googleapis.com/drive/v3/files/" + ids[i] + "?alt=media", { headers: await driveHeaders() });
+        if (!r.ok) continue;
+        var blob = await r.json(), data = null;
+        await ensureDeviceKey();
+        try { data = await D.decryptJSON(blob, deviceKeyRaw); } catch (e) { data = null; }
+        if (!data) { illisibles++; continue; }
+        appliquerFusion(migrate(data), "second fichier trouvé sur Drive");
+        await fetch("https://www.googleapis.com/drive/v3/files/" + ids[i], {
+          method: "PATCH", headers: { Authorization: "Bearer " + drive.token, "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "plan-de-classe-doublon-" + horodatageFichier(new Date()) + "-" + (i + 1) + ".pdc.json" }) });
+        reunis++;
+      } catch (e) { /* on réessaiera à la prochaine connexion */ }
     }
-    if (dirty) await driveSave(); else { memoriserRemoteModif(distant); updateDriveBadge("À jour " + heureCourte()); }
+    if (reunis) flash("Drive contenait " + (reunis + 1) + " fichiers de sauvegarde : leur contenu a été réuni dans un seul. Rien n'a été supprimé.", 9000);
+    else if (illisibles) flash("Un second fichier de sauvegarde existe sur Drive, illisible avec la clé de ce poste. Vérifiez la phrase de récupération de l'autre poste.", 9000);
   }
   function heureCourte() { var d = new Date(); return deuxChiffres(d.getHours()) + ":" + deuxChiffres(d.getMinutes()) + ":" + deuxChiffres(d.getSeconds()); }
   /* Heure exacte du dernier envoi réussi, en clair, pour l'infobulle et le bloc Sauvegarde. */
@@ -4592,38 +5390,46 @@
     if (!t) return "Aucun envoi vers Drive depuis ce poste.";
     return "Dernier envoi vers Drive : " + horodatageLisible(new Date(+t), true) + ".";
   }
+  /* Date de modification du fichier Drive. null signifie : il n'y a PAS de fichier. Toute autre
+     difficulté (réseau, erreur de Drive) lève une erreur : « je ne sais pas » ne doit jamais
+     être pris pour « rien n'a changé », sinon on écrase à l'aveugle le travail de l'autre poste. */
   async function driveModifiedTime() {
-    var id = await driveFindFile(); if (!id) return null;
-    try {
-      var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?fields=modifiedTime", { headers: await driveHeaders() });
-      if (!r.ok) return null;
-      var j = await r.json(); return j.modifiedTime || null;
-    } catch (e) { return null; }
+    for (var essai = 0; essai < 2; essai++) {
+      var id = await driveFindFile(); if (!id) return null;
+      var r = await fetch("https://www.googleapis.com/drive/v3/files/" + id + "?fields=modifiedTime,trashed", { headers: await driveHeaders() });
+      if (r.status === 401) { onTokenExpired(); throw erreurDrive(401, "session Google expirée"); }
+      if (r.status === 404) { drive.fileId = null; continue; }      // fichier supprimé : on cherche de nouveau
+      if (!r.ok) throw erreurDrive(r.status, "lecture de la date de la sauvegarde");
+      var j = await r.json();
+      if (j && j.trashed) { drive.fileId = null; continue; }         // mis à la corbeille : il ne compte plus
+      if (!j || !j.modifiedTime) throw erreurDrive(r.status, "date de la sauvegarde illisible");
+      return j.modifiedTime;
+    }
+    return null;
   }
-  /* Toutes les 3 minutes : on pousse ce qui a changé ici, et on récupère ce qui a changé
-     ailleurs - c'est ce second sens qui garde à jour les sessions ouvertes sur deux postes. */
+  /* Toutes les 3 minutes, à chaque retour sur la page et après chaque connexion : on pousse ce
+     qui a changé ici, et on récupère ce qui a changé ailleurs. */
   async function driveSync(raison) {
     if (!driveConfigured() || drive.enCours) return;
     if (!tokenValid()) { renouvellerJeton(); return; }
     drive.enCours = true;
     try {
+      await (secoursPret || Promise.resolve());
       var distant = await driveModifiedTime();
-      var plusRecentAilleurs = distantAChange(distant);
-      if (!distant) { if (dirty) await driveSave(); }
-      else if (plusRecentAilleurs && !dirty) {
+      var plusRecentAilleurs = distantAChange(distant), aEnvoyer = nonEnvoye(), vide = etatVide();
+      var demande = (raison === "manuel");               // demandé par le professeur : on n'attend pas
+      if (!distant) { if (!vide) await driveSave(); }                // plus de fichier sur Drive : on le redépose
+      else if (plusRecentAilleurs && (vide || !aEnvoyer)) {
         // remplacer l'état sous une fenêtre ouverte reviendrait à effacer ce qui est en train
         // d'être écrit : on attend la fin de la saisie, la mise à jour n'est pas perdue
-        if (utilisateurOccupe()) { conflitEnAttente = distant; signalerAttenteConflit(); }
-        else {
-          memoriserRemoteModif(distant); await driveLoad();
-          flash("Mise à jour reçue d'un autre poste", 2600);
-        }
-      } else if (plusRecentAilleurs && dirty) {
-        await resoudreConflit(distant);          // travail des deux côtés : arbitrage explicite
-      } else if (dirty) await driveSave();
-      else updateDriveBadge("À jour " + heureCourte());
-    } catch (e) { updateDriveBadge("Hors ligne"); }
-    drive.enCours = false;
+        if (!vide && !demande && utilisateurOccupe()) { conflitEnAttente = distant; signalerAttenteConflit(); }
+        else await driveLoad(distant, vide ? "Données chargées depuis Drive" : "Mise à jour reçue de l'autre poste");
+      } else if (plusRecentAilleurs) {
+        await resoudreConflit(distant, demande); // travail des deux côtés : on réunit
+      } else if (aEnvoyer) await driveSave();
+      else { envoi.essais = 0; dernierEchecDrive = ""; updateDriveBadge("À jour " + heureCourte()); }
+    } catch (e) { if (!(e && e.statut === 401)) echecDrive(e); }
+    finally { drive.enCours = false; }
   }
   function startDriveTimer() {
     if (drive.timer) clearInterval(drive.timer);
@@ -4681,23 +5487,107 @@
      « Connecter » que l'on pouvait prendre pour un détail. */
   function updateDriveBadge(msg) {
     var el = $("driveBadge"); if (!el) return;
-    if (!driveConfigured()) { el.textContent = "☁︎ Local"; el.title = "Google Drive non configuré - sauvegarde locale active"; el.dataset.s = "off"; }
-    else if (tokenValid()) {
-      el.textContent = "☁︎ " + (msg || "Drive");
-      el.title = (dirty ? "Envoi en attente vers Google Drive. " : "Synchronisé avec Google Drive. ") + dernierEnvoiTexte();
-      el.dataset.s = "on";
+    var aEnvoyer = nonEnvoye();
+    if (msg) drive.message = msg;
+    if (!driveConfigured()) {
+      el.textContent = stockage.echecLocal ? "⚠︎ Mémoire pleine" : "☁︎ Local";
+      el.title = "Vos saisies sont enregistrées sur ce poste uniquement : Google Drive n'est pas configuré. Cliquez pour voir l'état de la sauvegarde et les copies de sécurité.";
+      el.dataset.s = stockage.echecLocal ? "err" : "off";
     }
-    else if (dirty) {
+    else if (tokenValid()) {
+      var texte = drive.message || (aEnvoyer ? "Envoi en attente" : "Drive");
+      var echec = /échoué|injoignable/i.test(texte);
+      var attente = /attente|Envoi…|Réunion|Phrase|Protégé|Reconnexion/i.test(texte);
+      el.textContent = (echec ? "⚠︎ " : "☁︎ ") + texte;
+      el.title = (echec ? "Dernier essai : " + (dernierEchecDrive || "échec") + ". Vos saisies restent enregistrées sur ce poste et un nouvel essai se fait tout seul. "
+        : aEnvoyer ? "Des saisies de ce poste attendent d'être envoyées sur Google Drive. " : "Ce poste et Google Drive sont à jour. ")
+        + dernierEnvoiTexte() + " Cliquez pour le détail.";
+      el.dataset.s = echec ? "err" : (attente ? "warn" : "on");
+    }
+    else if (aEnvoyer) {
       el.textContent = "⚠︎ Non envoyé";
       el.title = "Des saisies faites sur ce poste n'ont jamais été envoyées sur Drive. Cliquez pour vous connecter. " + dernierEnvoiTexte();
       el.dataset.s = "warn";
     }
-    else { el.textContent = "☁︎ Connecter"; el.dataset.s = "warn"; }
-    var b = $("reconnect");
-    if (b && dirty && !tokenValid() && driveConfigured()) {
-      b.firstChild.nodeValue = "⚠️ Des saisies de ce poste n'ont pas encore été envoyées sur Drive. ";
+    else { el.textContent = "☁︎ Connecter"; el.title = "Cliquez pour connecter ce poste à Google Drive."; el.dataset.s = "warn"; }
+    var b = $("reconnect"), t = $("reconnectTxt");
+    if (b && t && aEnvoyer && !tokenValid() && driveConfigured() && b.classList.contains("hidden")) {
+      t.textContent = "⚠️ Des saisies de ce poste n'ont pas encore été envoyées sur Drive. Elles restent enregistrées ici.";
       b.classList.remove("hidden");
     }
+    try { majPanneauSauvegarde(); } catch (e) { /* jamais bloquant */ }
+  }
+
+  /* ====================== OÙ SONT MES DONNÉES ? ======================
+     Une fenêtre, trois lignes : ce poste, la mémoire de secours, Google Drive. Chacune dit en
+     une phrase si tout va bien et, sinon, ce qu'il y a à faire. En dessous, les copies de
+     sécurité de ce poste, que l'on peut reprendre d'un clic. */
+  function majPanneauSauvegarde() {
+    var box = $("svEtat"), dlg = $("dlgSauvegarde");
+    if (!box || !dlg || !dlg.classList.contains("open")) return;
+    var html = "";
+    function ligne(etat, titre, detail) {
+      html += '<div class="sv-ligne" data-e="' + etat + '"><span class="sv-ico">' + ({ ok: "✓", attente: "…", ko: "!", off: "-" })[etat]
+        + "</span><div><b>" + esc(titre) + '</b><span class="sv-d">' + esc(detail) + "</span></div></div>";
+    }
+    if (stockage.echecLocal && stockage.echecSecours) ligne("ko", "Sur ce poste : rien ne s'enregistre",
+      "Le navigateur refuse toute écriture. Ne fermez pas cette page et téléchargez une sauvegarde tout de suite.");
+    else if (stockage.echecLocal) ligne("attente", "Sur ce poste : enregistré dans la mémoire de secours",
+      "La mémoire habituelle du navigateur est pleine. Rien n'est perdu, mais téléchargez une sauvegarde par précaution.");
+    else ligne("ok", "Sur ce poste : enregistré",
+      "Chaque geste est enregistré aussitôt" + (etatMaj ? " - dernière écriture le " + horodatageLisible(new Date(etatMaj), true) + "." : "."));
+    if (Secours.disponible() && !stockage.echecSecours) ligne("ok", "Mémoire de secours : active",
+      "Elle double l'enregistrement de ce poste et garde les copies de sécurité ci-dessous.");
+    else ligne("off", "Mémoire de secours : indisponible sur ce navigateur",
+      "L'enregistrement normal fonctionne, mais sans double ni copies de sécurité (navigation privée ?).");
+    var aEnvoyer = nonEnvoye();
+    if (!driveConfigured()) ligne("off", "Google Drive : non configuré",
+      "Les données restent sur cet appareil. Pour les retrouver sur un autre poste : ⚙︎ Classe → Sauvegarde Google Drive, ou un fichier de sauvegarde.");
+    else if (!tokenValid()) ligne(aEnvoyer ? "ko" : "attente", "Google Drive : non connecté",
+      (aEnvoyer ? "Des saisies de ce poste n'ont pas encore été envoyées. " : "") + "Utilisez « Envoyer sur Drive maintenant » pour vous connecter. " + dernierEnvoiTexte());
+    else if (dernierEchecDrive) ligne("ko", "Google Drive : dernier essai en échec",
+      dernierEchecDrive.charAt(0).toUpperCase() + dernierEchecDrive.slice(1) + ". Vos saisies restent sur ce poste ; un nouvel essai se fait tout seul. " + dernierEnvoiTexte());
+    else if (aEnvoyer) ligne("attente", "Google Drive : envoi en attente",
+      "Des saisies de ce poste partent dans quelques instants. " + dernierEnvoiTexte());
+    else ligne("ok", "Google Drive : à jour",
+      dernierEnvoiTexte() + (compteDrive() ? " Compte : " + compteDrive() + "." : ""));
+    box.innerHTML = html;
+  }
+  function ouvrirPanneauSauvegarde() {
+    closeAllDialogs();
+    $("dlgSauvegarde").classList.add("open");
+    majPanneauSauvegarde(); renderCopies();
+  }
+  function renderCopies() {
+    var box = $("svCopies"); if (!box) return;
+    Secours.listerCopies().then(function (l) {
+      if (!l.length) { box.innerHTML = '<div class="sv-copie"><span class="hint">Aucune copie pour l\'instant : la première sera prise à la prochaine ouverture du programme.</span></div>'; return; }
+      box.innerHTML = l.map(function (c) {
+        var r = c.resume || {};
+        return '<div class="sv-copie"><div class="sv-q"><b>' + esc(horodatageLisible(new Date(c.id), true)) + "</b><small>"
+          + esc(c.motif || "copie") + " · " + (r.classes || 0) + " classe" + ((r.classes || 0) > 1 ? "s" : "") + ", "
+          + (r.saisies || 0) + " saisie" + ((r.saisies || 0) > 1 ? "s" : "") + ", "
+          + (r.journal || 0) + " séance" + ((r.journal || 0) > 1 ? "s" : "") + " de journal</small></div>"
+          + '<button class="admbtn" data-svf="' + c.id + '" title="Ajoute à l\'état actuel ce que cette copie contient en plus, sans rien retirer">Reprendre ce qui manque</button>'
+          + '<button class="admbtn" data-svr="' + c.id + '" title="Remplace l\'état actuel par cette copie (l\'état actuel est copié avant)">Revenir à cette copie</button></div>';
+      }).join("");
+      box.querySelectorAll("[data-svf]").forEach(function (b) { b.addEventListener("click", function () { reprendreCopie(+b.dataset.svf, false); }); });
+      box.querySelectorAll("[data-svr]").forEach(function (b) { b.addEventListener("click", function () { reprendreCopie(+b.dataset.svr, true); }); });
+    }, function () {
+      box.innerHTML = '<div class="sv-copie"><span class="hint">Copies de sécurité indisponibles sur ce navigateur.</span></div>';
+    });
+  }
+  function reprendreCopie(id, remplacer) {
+    Secours.lireCopie(id).then(function (txt) {
+      if (!txt) { flash("Copie introuvable", 3000); return; }
+      var data = JSON.parse(txt), quand = horodatageLisible(new Date(id), true);
+      if (remplacer) {
+        if (!confirm("Revenir à la copie du " + quand + " ?\n\nL'état actuel de ce poste sera remplacé par cette copie. Il est lui-même copié juste avant : vous pourrez y revenir.")) return;
+        remplacerEtat(data, "retour à la copie du " + quand, true);
+        flash("Copie du " + quand + " restaurée", 4000);
+      } else appliquerFusion(migrate(data), "copie du " + quand, true);
+      setTimeout(function () { renderCopies(); majPanneauSauvegarde(); }, 400);
+    }).catch(function () { flash("Lecture de la copie impossible", 4000); });
   }
 
   /* ====================== IMPORT MULTI-CLASSES ====================== */
@@ -4898,8 +5788,9 @@
   }
   function openAvecQui(s) {
     var cid = curClassId(); if (!cid) return;
-    var mygroup = posOf(cid, s.id).group;
-    var camarades = classEleves(cid).filter(function (o) { return o.id !== s.id && posOf(cid, o.id).group === mygroup; });
+    var dessinee = customOn(cid), mygroup = dessinee ? posOf(cid, s.id).group : groupeReel(cid, s.id);
+    if (mygroup === null) return;                     // élève sans place : pas de voisins d'îlot à proposer
+    var camarades = classEleves(cid).filter(function (o) { return o.id !== s.id && (dessinee ? posOf(cid, o.id).group : groupeReel(cid, o.id)) === mygroup; });
     if (!camarades.length) return; // seul dans son groupe : rien à proposer
     var box = $("avecQuiList");
     box.innerHTML = camarades.map(function (o) { return '<button class="avecqbtn" data-id="' + o.id + '">' + esc(o.nom + " " + o.prenom) + "</button>"; }).join("");
@@ -6591,8 +7482,8 @@
   function renderDashIlots() {
     var cid = curClassId(); if (!cid) return;
     var p = plan(cid), n = p.groups, eleves = classEleves(cid);
-    var groups = [];
-    for (var g = 0; g < n; g++) groups[g] = eleves.filter(function (s) { return posOf(cid, s.id).group === g; });
+    var groups = customOn(cid) ? (function () { var gr = []; for (var g = 0; g < n; g++) gr[g] = eleves.filter(function (s) { return posOf(cid, s.id).group === g; }); return gr; })()
+                               : repartitionIlots(cid).groupes.map(function (x) { return x.liste; });
     var analysis = D.groupAnalysis(groups, function (id) { return eData(id).behavior; }, Date.now());
     var photo = (n === 5);
     var html = "";
@@ -7133,18 +8024,19 @@
     var room = $("room"); room.innerHTML = "";
     if (salleDe(cid) && (customOn(cid) || roomEdit)) { renderCustomRoom(cid); requestAnimationFrame(function(){ ajusterColonnes(); fitNames(); fitRoom(); }); return; }
     var photo = (n === 5), caps = D.capsFor(n, eleves.length);
-    var posEnr = plan(cid).pos || {};   // places RÉELLEMENT enregistrées (posOf, lui, invente un défaut)
+    var rep = repartitionIlots(cid);
     // analyse par groupe (climat + profils) - lecture seule, pour le résumé sur le plan
-    var groupsForAnalysis = [];
-    for (var ga = 0; ga < n; ga++) groupsForAnalysis[ga] = eleves.filter(function (s) { return posOf(cid, s.id).group === ga; });
+    var groupsForAnalysis = rep.groupes.map(function (x) { return x.liste; });
     var analysis = D.groupAnalysis(groupsForAnalysis, function (id) { return eData(id).behavior; }, Date.now());
-    room.className = "room" + (photo ? " photo5" : "");
+    room.className = "room" + (photo ? " photo5" : "") + (rep.horsPlan.length ? " avec-horsplan" : "");
+    /* Élèves de la liste sans place : une zone à part, en tête du plan, jamais dans un îlot. */
+    if (rep.horsPlan.length) room.appendChild(zoneHorsPlan(cid, rep, eleves));
     // Ordre de rendu visuel STABLE (identique portrait/paysage) : fond en haut, bureau en bas.
     // En paysage le placement vient des grid-areas (par classe) ; en portrait (une colonne) cet ordre
     // reproduit la même disposition. Plus d'inversion des groupes au changement d'orientation.
     var renderOrder = photo ? [4, 2, 3, 0, 1] : (function () { var a = []; for (var z = n - 1; z >= 0; z--) a.push(z); return a; })();
     renderOrder.forEach(function (gi) {
-      var list = eleves.filter(function (s) { return posOf(cid, s.id).group === gi; }).sort(function (a, b) { return posOf(cid, a.id).order - posOf(cid, b.id).order; });
+      var list = rep.groupes[gi].liste;            // les élèves réellement assis dans cet îlot
       var f = list.filter(function (s) { return s.sexe === "F"; }).length, g2 = list.filter(function (s) { return s.sexe === "G"; }).length;
       var fond = photo ? (gi === 4) : (gi === n - 1);
       var il = document.createElement("section"); il.className = "ilot g" + gi + (fond ? " fond" : "");
@@ -7163,45 +8055,17 @@
         '<span class="ilot-eff">' + list.length + " él. · " + f + "F/" + g2 + "G</span></h2>";
       var seats = document.createElement("div"); seats.className = "seats";
       if (photo) {
-        var shape = clusterShape(gi, gi === 4 ? capFondAffichee(list, posEnr, caps[4]) : caps[4]);
-        /* Une place n'est prise que par l'élève qui l'a RÉELLEMENT enregistrée : sans cette
-           condition, les élèves sans place (défaut groupe 0, ordre 0) se recouvraient tous sur
-           la première place et un seul d'entre eux apparaissait. */
-        var byOrder = {}, dessines = {};
-        list.forEach(function (s) { var pr = posEnr[s.id]; if (pr && byOrder[pr.order] === undefined) byOrder[pr.order] = s; });
+        var shape = clusterShape(gi, rep.groupes[gi].cap), byOrder = rep.groupes[gi].parPlace;
         seats.dataset.forme = "1";                 // colonnes imposées par la forme de l'îlot
         /* Au-delà de 9 colonnes (grande classe au fond), la rangée ne tient plus en largeur
            sans écraser les noms : elle passe en défilement latéral dans sa propre carte. */
         if (shape.cols > 9) seats.dataset.large = "1";
         seats.style.gridTemplateColumns = "repeat(" + shape.cols + ",1fr)";
         seats.style.setProperty("--ncol", shape.cols);
-        var derniereRangee = 1;
         shape.cells.forEach(function (cell) {
           var s = byOrder[cell.o], el = s ? seatEl(s) : emptySlot(gi, cell.o);
-          if (s) dessines[s.id] = 1;
-          if (cell.r > derniereRangee) derniereRangee = cell.r;
           el.style.gridRow = cell.r; el.style.gridColumn = cell.c; seats.appendChild(el);
         });
-        /* Aucun élève ne disparaît du plan : ceux qui n'ont pas de place (ajoutés après coup,
-           ou deux élèves sur la même place après une fusion) sont affichés sous l'îlot, en
-           pointillé, et peuvent être glissés sur une place libre. */
-        var restes = list.filter(function (s) { return !dessines[s.id]; });
-        if (restes.length) {
-          var titre = document.createElement("div");
-          titre.className = "sansplace";
-          titre.innerHTML = "▾ " + restes.length + " élève" + (restes.length > 1 ? "s" : "") + " sans place "
-            + '<button type="button" class="sansplace-b">Les asseoir sur les places libres</button>';
-          titre.querySelector("button").addEventListener("click", function (ev) {
-            ev.stopPropagation(); asseoirSansPlace(cid);
-          });
-          titre.style.gridRow = derniereRangee + 1; seats.appendChild(titre);
-          restes.forEach(function (s, i) {
-            var el = seatEl(s); el.classList.add("hors-place");
-            el.style.gridRow = derniereRangee + 2 + Math.floor(i / shape.cols);
-            el.style.gridColumn = (i % shape.cols) + 1;
-            seats.appendChild(el);
-          });
-        }
       } else {
         if (list.length) { var capn = document.createElement("div"); capn.className = "frontcap"; capn.textContent = "▾ rang avant (côté bureau)"; seats.appendChild(capn); }
         list.forEach(function (s) { seats.appendChild(seatEl(s)); });
@@ -7211,16 +8075,64 @@
     });
     requestAnimationFrame(function(){ ajusterColonnes(); fitNames(); fitRoom(); });
   }
-  /* Asseoir les élèves qui n'ont aucune place enregistrée - typiquement ceux inscrits après
-     la constitution du plan. Règle de la maison : on ne déplace JAMAIS un élève déjà placé.
-     On ne fait donc que remplir les places libres, dans l'ordre, sans toucher au reste ;
-     Ctrl+Z annule l'opération comme n'importe quel déplacement. */
+  /* ====================== ÉLÈVES SANS PLACE SUR LE PLAN ======================
+     Une zone à part, en tête du plan : ces élèves ne comptent dans aucun îlot. Elle dit en clair
+     pourquoi ils sont là et propose les trois issues possibles - les asseoir, corriger leur nom,
+     ou les retirer de la classe s'ils n'en font pas partie. Rien n'est fait sans un clic. */
+  function nomSansPrenom(s) { return !String(s.prenom || "").trim() && String(s.nom || "").trim().split(/\s+/).length >= 2; }
+  function zoneHorsPlan(cid, rep, eleves) {
+    var hp = rep.horsPlan, cl = state.classes[cid], nomCl = cl ? cl.nom : "cette classe", pl = hp.length > 1 ? "s" : "";
+    var trop = eleves.length > CLASSE_PLAUSIBLE_MAX;
+    var sansPrenom = hp.filter(nomSansPrenom).length;
+    var il = document.createElement("section");
+    il.className = "ilot horsplan";
+    var aide = [];
+    if (trop) aide.push("<b>Avec eux, la " + esc(nomCl) + " compte " + eleves.length + " élèves</b> : c'est plus qu'une classe. "
+      + "S'ils n'en font pas partie (erreur d'import), retirez-les au lieu de les asseoir.");
+    if (sansPrenom) aide.push((sansPrenom > 1 ? sansPrenom + " d'entre eux ont" : "L'un d'eux a")
+      + " le prénom écrit dans le nom (ex. « " + esc(hp.filter(nomSansPrenom)[0].nom) + " ») : la liste a sans doute été collée avec NOM et prénom dans la même colonne.");
+    aide.push("Ils figurent dans la liste de la classe mais n'ont pas de place : glissez-les sur une place libre ＋, ou asseyez-les d'un clic. Personne d'autre ne bouge.");
+    il.innerHTML = '<h2>⚠ ' + hp.length + " élève" + pl + " de " + esc(nomCl) + " sans place sur le plan"
+      + '<span class="ilot-eff">non compté' + pl + " dans les groupes</span></h2>"
+      + '<p class="hp-aide">' + aide.join("<br>") + "</p>"
+      + '<div class="hp-actions">'
+      + '<button type="button" class="hp-b' + (trop ? "" : " prim") + '" data-hp="asseoir">Les asseoir sur les places libres</button>'
+      + (sansPrenom ? '<button type="button" class="hp-b" data-hp="separer">Séparer nom et prénom</button>' : "")
+      + '<button type="button" class="hp-b del' + (trop ? " fort" : "") + '" data-hp="retirer">Les retirer de la ' + esc(nomCl) + "</button>"
+      + '<button type="button" class="hp-b" data-hp="liste">Voir la liste de la classe</button>'
+      + "</div>";
+    var seats = document.createElement("div"); seats.className = "seats hp-seats";
+    hp.slice().sort(function (a, b) { return String(a.nom).localeCompare(String(b.nom), "fr"); }).forEach(function (s) {
+      var el = seatEl(s); el.classList.add("hors-place"); seats.appendChild(el);
+    });
+    il.appendChild(seats);
+    il.querySelectorAll("[data-hp]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var quoi = b.dataset.hp;
+        if (quoi === "asseoir") asseoirSansPlace(cid);
+        else if (quoi === "separer") separerNomPrenom(cid);
+        else if (quoi === "retirer") retirerSansPlace(cid);
+        else ouvrirListeEleves();
+      });
+    });
+    return il;
+  }
+  /* Asseoir les élèves sans place. Règle de la maison : on ne déplace JAMAIS un élève déjà assis.
+     On ne fait que remplir les places libres, dans l'ordre ; Ctrl+Z annule. */
   function asseoirSansPlace(cid) {
-    var p = plan(cid), eleves = classEleves(cid), n = p.groups;
-    var caps = D.capsFor(n, eleves.length), occupe = {};
-    eleves.forEach(function (s) { var pr = p.pos[s.id]; if (pr) occupe[pr.group + "#" + pr.order] = 1; });
-    var restes = eleves.filter(function (s) { return !p.pos[s.id]; });
+    var p = plan(cid), eleves = classEleves(cid), n = p.groups, rep = repartitionIlots(cid);
+    var restes = rep.horsPlan.slice();
     if (!restes.length) { flash("Tous les élèves ont déjà une place"); return 0; }
+    if (eleves.length > CLASSE_PLAUSIBLE_MAX && !confirm(
+      "Avec ces " + restes.length + " élèves, la " + (state.classes[cid] || {}).nom + " compte " + eleves.length + " élèves.\n\n"
+      + "Les asseoir agrandira la rangée du fond. S'ils ne font pas partie de cette classe, choisissez plutôt « Les retirer ».\n\n"
+      + "Les asseoir quand même ?")) return 0;
+    var caps = rep.caps, occupe = {};
+    rep.groupes.forEach(function (gr, g) {
+      if (rep.photo) Object.keys(gr.parPlace).forEach(function (o) { occupe[g + "#" + o] = 1; });
+      else gr.liste.forEach(function (s) { occupe[g + "#" + p.pos[s.id].order] = 1; });
+    });
     act("Asseoir les élèves sans place");
     var pose = 0;
     restes.forEach(function (s) {
@@ -7234,9 +8146,123 @@
     });
     save(); renderRoom(); hideUndo();
     flash(pose === restes.length
-      ? (pose + " élève" + (pose > 1 ? "s" : "") + " assis" + (pose > 1 ? "" : "") + " sur les places libres")
-      : (pose + " élève(s) assis, " + (restes.length - pose) + " sans place : la salle est trop petite"), 4000);
+      ? (pose + " élève" + (pose > 1 ? "s" : "") + " assis sur les places libres - personne d'autre n'a bougé")
+      : (pose + " élève(s) assis, " + (restes.length - pose) + " sans place : la salle est trop petite"), 4500);
     return pose;
+  }
+  function premierePlaceLibre(cid) {
+    var p = plan(cid), rep = repartitionIlots(cid), occupe = {};
+    rep.groupes.forEach(function (gr, g) {
+      if (rep.photo) Object.keys(gr.parPlace).forEach(function (o) { occupe[g + "#" + o] = 1; });
+      else gr.liste.forEach(function (s) { occupe[g + "#" + p.pos[s.id].order] = 1; });
+    });
+    for (var g = 0; g < rep.n; g++) for (var o = 0; o < rep.caps[g]; o++) if (!occupe[g + "#" + o]) return { group: g, order: o };
+    return null;
+  }
+  /* Liste collée avec NOM et prénom dans la même colonne : le dernier mot est le prénom. La
+     proposition est montrée en entier avant d'être appliquée ; Ctrl+Z annule. */
+  function separerNomPrenom(cid) {
+    var cands = classEleves(cid).filter(nomSansPrenom);
+    if (!cands.length) { flash("Aucun nom à séparer dans cette classe"); return 0; }
+    var props = cands.map(function (s) {
+      var mots = String(s.nom).trim().split(/\s+/), dernier = mots.pop();
+      var prenom = dernier.toLowerCase().replace(/(^|[-'\s])([a-zà-ÿ])/g, function (m, a, c) { return a + c.toUpperCase(); });
+      return { s: s, nom: mots.join(" "), prenom: prenom };
+    }).sort(function (a, b) { return a.nom.localeCompare(b.nom, "fr"); });
+    var apercu = props.slice(0, 16).map(function (x) { return "   " + x.nom + "   |   " + x.prenom; }).join("\n")
+      + (props.length > 16 ? "\n   … et " + (props.length - 16) + " autre(s)" : "");
+    if (!confirm("Séparer le nom et le prénom de " + props.length + " élève" + (props.length > 1 ? "s" : "") + " ?\n\n   NOM   |   Prénom\n" + apercu
+      + "\n\nLe sexe est déduit du prénom quand il est reconnu. Ctrl+Z annule.")) return 0;
+    act("Séparation du nom et du prénom");
+    props.forEach(function (x) {
+      x.s.nom = x.nom; x.s.prenom = x.prenom;
+      var g = guessSex(x.prenom); if (g.sure) x.s.sexe = g.sx;
+    });
+    save(); renderAll();
+    flash(props.length + " nom" + (props.length > 1 ? "s" : "") + " corrigé" + (props.length > 1 ? "s" : "") + " - vérifiez le sexe dans ⚙︎ Classe si besoin", 5000);
+    return props.length;
+  }
+  /* Retirer les élèves sans place de la classe affichée. Un élève inscrit aussi dans une autre
+     classe n'est retiré que de celle-ci et garde tout son suivi. Personne d'autre ne bouge. */
+  function retirerSansPlace(cid) {
+    var hp = repartitionIlots(cid).horsPlan, nomCl = (state.classes[cid] || {}).nom || "la classe";
+    if (!hp.length) return 0;
+    var saisies = 0;
+    hp.forEach(function (s) { Object.keys(state.matieres).forEach(function (mid) { var ed = (state.matieres[mid].eleveData || {})[s.id]; saisies += ed && ed.behavior ? ed.behavior.length : 0; }); });
+    var noms = hp.slice().sort(function (a, b) { return String(a.nom).localeCompare(String(b.nom), "fr"); })
+      .slice(0, 16).map(function (s) { return "   " + s.nom + (s.prenom ? " " + s.prenom : ""); }).join("\n") + (hp.length > 16 ? "\n   … et " + (hp.length - 16) + " autre(s)" : "");
+    if (!confirm("Retirer de la " + nomCl + " ces " + hp.length + " élève" + (hp.length > 1 ? "s" : "") + " sans place ?\n\n" + noms + "\n\n"
+      + (saisies ? saisies + " saisie" + (saisies > 1 ? "s" : "") + " les concernant ser" + (saisies > 1 ? "ont" : "a") + " retirée" + (saisies > 1 ? "s" : "") + " avec eux.\n" : "Aucune saisie ne les concerne.\n")
+      + "Les autres élèves ne changent pas de place. Ctrl+Z annule.")) return 0;
+    act("Élèves retirés de la " + nomCl);
+    retirerElevesDeClasse(cid, hp.map(function (s) { return s.id; }));
+    save(); renderAll();
+    try { if ($("dlgConfig").classList.contains("open")) renderClassAdmin(); } catch (e) {}
+    flash(hp.length + " élève" + (hp.length > 1 ? "s" : "") + " retiré" + (hp.length > 1 ? "s" : "") + " de la " + nomCl + ". Ctrl+Z pour annuler.", 5000);
+    return hp.length;
+  }
+  function retirerElevesDeClasse(cid, ids) {
+    var c = state.classes[cid]; if (!c) return;
+    ids.forEach(function (eid) {
+      var i = c.eleveIds.indexOf(eid); if (i >= 0) c.eleveIds.splice(i, 1);
+      var ailleurs = Object.keys(state.classes).some(function (k) { return k !== cid && (state.classes[k].eleveIds || []).indexOf(eid) >= 0; });
+      Object.keys(state.matieres).forEach(function (mid) {
+        var m = state.matieres[mid], pl = (m.plans || {})[cid];
+        if (pl) {
+          if (pl.pos) delete pl.pos[eid];
+          if (pl.cpos) delete pl.cpos[eid];
+          (pl.groupesLibres || []).forEach(function (g) { var j = (g.eleveIds || []).indexOf(eid); if (j >= 0) g.eleveIds.splice(j, 1); });
+        }
+        if (!ailleurs && m.eleveData) delete m.eleveData[eid];
+      });
+      if (ailleurs) return;
+      Object.keys(state.eleves).forEach(function (id) {
+        var o = state.eleves[id]; if (!o || !o.placement) return;
+        ["separer", "eloigner", "avec"].forEach(function (cle) {
+          if (!o.placement[cle]) return;
+          var j = o.placement[cle].indexOf(eid); if (j >= 0) o.placement[cle].splice(j, 1);
+        });
+      });
+      delete state.eleves[eid];
+    });
+  }
+  /* Règle de Gérard : seuls comptent les élèves dont le nom et le prénom sont dans deux champs
+     séparés. Ceux dont le nom contient aussi le prénom viennent d'une liste collée par erreur.
+     S'ils n'ont de place sur aucun plan de leur classe, ils en sont retirés - une copie de
+     sécurité est prise juste avant, et Ctrl+Z les remet. Un élève assis n'est jamais concerné.
+     Rejoué après chaque mise à jour venue de l'autre poste : ils ne reviennent pas. */
+  function exclureNomsColles(silencieux) {
+    if (!state || !state.classes) return 0;
+    var aRetirer = {}, total = 0, detail = [];
+    Object.keys(state.classes).forEach(function (cid) {
+      var remis = state.classes[cid].reinscrits || {};     // remis dans la classe par « Annuler » : on respecte ce choix
+      var ids = classEleves(cid).filter(function (s) {
+        if (!nomSansPrenom(s) || remis[s.id]) return false;
+        return !Object.keys(state.matieres || {}).some(function (mid) {
+          var pl = (state.matieres[mid].plans || {})[cid];
+          return pl && ((pl.pos && pl.pos[s.id]) || (pl.cpos && pl.cpos[s.id]));
+        });
+      }).map(function (s) { return s.id; });
+      if (ids.length) aRetirer[cid] = ids;
+    });
+    var cids = Object.keys(aRetirer);
+    if (!cids.length) return 0;
+    copieDeSecurite("avant exclusion des élèves au nom et prénom dans le même champ");
+    act("Exclusion des élèves au nom et prénom dans le même champ");
+    cids.forEach(function (cid) {
+      retirerElevesDeClasse(cid, aRetirer[cid]);
+      total += aRetirer[cid].length;
+      detail.push(aRetirer[cid].length + " en " + state.classes[cid].nom);
+    });
+    save(); renderAll();
+    if (!silencieux) flash(total + " élève" + (total > 1 ? "s" : "") + " exclu" + (total > 1 ? "s" : "") + " (" + detail.join(", ")
+      + ") : nom et prénom dans le même champ. Pour revenir en arrière : Ctrl+Z, ou 🛟 Copies de sécurité.", 9000);
+    return total;
+  }
+  /* ⚙︎ Classe, directement sur la liste des élèves de la classe affichée. */
+  function ouvrirListeEleves() {
+    closeAllDialogs(); openConfig();
+    setTimeout(function () { var b = $("admEleves"); if (b && b.scrollIntoView) b.scrollIntoView({ block: "start", behavior: "smooth" }); }, 60);
   }
   /* Combien de places DESSINER sur la rangée du fond.
      La capacité théorique du fond (capsFor) absorbe tout le débordement d'une grande classe :
@@ -7497,7 +8523,7 @@
   }
   function rangeesDePlaces() {
     var hauts = {};
-    document.querySelectorAll("#room .seat, #room .slot").forEach(function (el) {
+    document.querySelectorAll("#room .seat:not(.hors-place), #room .slot").forEach(function (el) {
       var r = el.getBoundingClientRect(); if (r.height) hauts[Math.round(r.top / 6)] = 1;
     });
     return Object.keys(hauts).length;
@@ -8651,8 +9677,15 @@
     var g = guessSex(prenom);
     var e = makeEleve({ nom: nom, prenom: prenom, sexe: (g.sx === "?" ? "?" : g.sx) });
     state.eleves[e.id] = e; state.classes[cid].eleveIds.push(e.id);
-    rebuildPlan(cid); save(); renderAll(); renderClassAdmin();
-    flash(nom.toUpperCase() + " " + prenom + " ajouté(e)" + (g.sure ? "" : " - vérifiez le sexe"));
+    /* Le nouvel élève prend la première place libre : on ne rebrasse plus toute la classe
+       (la disposition choisie par le professeur reste la sienne). Salle dessinée : comme avant. */
+    var place = null, pp = plan(cid).pos || {};
+    var dejaAssis = classEleves(cid).some(function (x) { return x.id !== e.id && pp[x.id]; });
+    if (customOn(cid) || !dejaAssis) rebuildPlan(cid);      // classe encore vide : placement complet par les règles
+    else place = premierePlaceLibre(cid);
+    if (place) { plan(cid).pos[e.id] = place; e.group = place.group; e.order = place.order; }
+    save(); renderAll(); renderClassAdmin();
+    flash(nom.toUpperCase() + " " + prenom + " ajouté(e)" + (place ? " - " + libGroupe(cid, e.id) + ", les autres n'ont pas bougé" : "") + (g.sure ? "" : " - vérifiez le sexe"), 4000);
   }
 
   function removeEleve(eid) {
@@ -8681,8 +9714,8 @@
       });
     });
     delete state.eleves[eid];
-    var cid = curClassId(); if (cid) rebuildPlan(cid);
-    save(); renderAll(); renderClassAdmin(); flash("Élève retiré");
+    /* La place libérée reste vide (＋) : retirer un élève ne rebrasse plus toute la classe. */
+    save(); renderAll(); renderClassAdmin(); flash("Élève retiré - les autres n'ont pas changé de place");
   }
 
   /* ---------- Sauvegardes datées sur Drive (chiffrées) ---------- */
@@ -8749,10 +9782,8 @@
       var data = await dechiffrerOuDemanderPhrase(blob, "La sauvegarde du " + jour);
       if (!data) return;
       LS.setRaw(KEY_REMOTEMOD, "");             // volontairement inconnu : la prochaine synchro arbitrera
-      if (fusion) { appliquerFusion(migrate(data), "sauvegarde du " + jour); return; }
-      state = migrate(data);
-      LS.set(KEY_STATE, state); marquerNonEnvoye(true);
-      renderAll(); historiqueRAZ(); closeAllDialogs();
+      if (fusion) { appliquerFusion(migrate(data), "sauvegarde du " + jour, true); return; }
+      remplacerEtat(data, "retour à la sauvegarde du " + jour, !etatVide()); closeAllDialogs();
       flash("Sauvegarde du " + jour + " restaurée", 3000);
     } catch (e) { flash("Restauration impossible : fichier illisible", 4000); }
   }
@@ -10163,7 +11194,8 @@
       return;
     }
     if (t.classList.contains("seat")) {
-      var oid = t.dataset.id, po = p.pos[oid]; if (!po) return;
+      var oid = t.dataset.id, po = p.pos[oid];
+      if (!po || t.classList.contains("hors-place")) { flash("Déposez l'élève sur une place du plan ＋ : cet élève-là n'a pas encore de place.", 4000); return; }
       var tg = ps.group, to = ps.order; ps.group = po.group; ps.order = po.order; po.group = tg; po.order = to;
       var other = state.eleves[oid]; if (other) { other.group = po.group; other.order = po.order; }
     } else {
@@ -10192,7 +11224,7 @@
       .concat(m.sessionComp.map(function (c, i) { return "Comp" + (i + 1); }))
       .concat(["Tendance7j", "Positif7j", "Négatif7j", "Q_bonne", "Q_mauvaise", "Q_pas", "Oral_bonne", "Oral_mauvaise", "Oral_pas", "Score_séance", "Score_global", "Dernière_action"]);
     var rows = [head];
-    classEleves(cid).slice().sort(function (a, b) { return (posOf(cid, a.id).group - posOf(cid, b.id).group) || a.nom.localeCompare(b.nom); }).forEach(function (s) {
+    classEleves(cid).slice().sort(function (a, b) { return (ordreGroupe(cid, a.id) - ordreGroupe(cid, b.id)) || a.nom.localeCompare(b.nom); }).forEach(function (s) {
       var d = eData(s.id), tr = trendOf(s.id);
       var troubles = state.refs.troubles.filter(function (t) { return s.troubles[t.k]; }).map(function (t) { return t.name; }).join(", ");
       var disp = state.refs.dispositifs.filter(function (t) { return s.dispositifs[t.k]; }).map(function (t) { return t.name; }).join(", ");
@@ -10200,7 +11232,7 @@
       if (s.placement.separer && s.placement.separer.length) contr.push("séparer×" + s.placement.separer.length);
       if (s.placement.avec && s.placement.avec.length) contr.push("à côté de×" + s.placement.avec.length);
       var lastTs = d.behavior.length ? d.behavior[d.behavior.length - 1].ts : 0;
-      rows.push([state.classes[cid].nom, posOf(cid, s.id).group + 1, s.nom, s.prenom, s.sexe, s.glasses ? "oui" : "", eleveBep(s) ? "oui" : "", troubles, disp, contr.join(" / ")]
+      rows.push([state.classes[cid].nom, libGroupe(cid, s.id).replace("Groupe ", ""), s.nom, s.prenom, s.sexe, s.glasses ? "oui" : "", eleveBep(s) ? "oui" : "", troubles, disp, contr.join(" / ")]
         .concat(m.sessionComp.map(function (c) { return (d.compTouched && d.compTouched[c]) ? (d.comp[c] || "S") : "non validé"; }))
         .concat([tr.score, tr.pos, tr.neg, d.q.bonne, d.q.mauvaise, d.q.pas, d.oral.bonne, d.oral.mauvaise, d.oral.pas, scoreCur(s.id), scoreGlobal(s.id), fmtTs(lastTs)]));
     });
@@ -10216,7 +11248,7 @@
     all.sort(function (a, b) { return (a.e.ts || 0) - (b.e.ts || 0); });
     all.forEach(function (o) {
       var label = labelOfBehavior(o.e);
-      rows.push([fmtTs(o.e.ts), state.classes[cid].nom, m.nom, posOf(cid, o.s.id).group + 1, o.s.nom, o.s.prenom, TL[o.e.t] || o.e.t, label, o.e.intensite ? INTENS_LABEL[o.e.intensite] : (o.e.lvl != null ? o.e.lvl : "")]);
+      rows.push([fmtTs(o.e.ts), state.classes[cid].nom, m.nom, libGroupe(cid, o.s.id).replace("Groupe ", ""), o.s.nom, o.s.prenom, TL[o.e.t] || o.e.t, label, o.e.intensite ? INTENS_LABEL[o.e.intensite] : (o.e.lvl != null ? o.e.lvl : "")]);
     });
     if (all.length <= 0) { flash("Aucune action enregistrée"); return; }
     downloadBlob(csvEscape(rows), "text/csv;charset=utf-8", "journal_" + slug(state.classes[cid].nom) + "_" + today() + ".csv");
@@ -10286,7 +11318,7 @@
   function buildReport() {
     var cid = curClassId(); if (!cid) return; var m = mat();
     var dateStr = new Date().toLocaleString("fr-FR");
-    var cards = classEleves(cid).slice().sort(function (a, b) { return (posOf(cid, a.id).group - posOf(cid, b.id).group) || a.nom.localeCompare(b.nom); }).map(function (s) {
+    var cards = classEleves(cid).slice().sort(function (a, b) { return (ordreGroupe(cid, a.id) - ordreGroupe(cid, b.id)) || a.nom.localeCompare(b.nom); }).map(function (s) {
       var d = eData(s.id), tr = trendOf(s.id), tv = transversalOf(s.id);
       var troubles = state.refs.troubles.concat(state.refs.dispositifs).filter(function (t) { return s.troubles[t.k] || s.dispositifs[t.k]; });
       var pastilles = troubles.map(function (t) { return '<span class="rp-past" style="background:' + t.c + ';color:' + textOn(t.c) + ';text-shadow:' + shadowOn(t.c) + '">' + esc(t.k) + " · " + esc(t.name) + "</span>"; }).join("") || '<span class="rp-muted">aucun</span>';
@@ -10332,7 +11364,7 @@
       var papR = state.refs.dispositifs.find(function (t) { return t.k === "PAP"; });
       var cadre = (s.dispositifs && s.dispositifs.PAP && papR) ? papR.c : (sigRefs.length ? sigRefs[0].c : "");
       return '<section class="rp-card' + (cadre ? " rp-flag" : "") + '"' + (cadre ? ' style="border-left-color:' + cadre + '"' : "") + '><header class="rp-head"><div><h2>' + esc(s.nom) + " <span>" + esc(s.prenom) + "</span>" + (sigles ? '<span class="rp-sigles">' + sigles + "</span>" : "") + "</h2>" +
-        '<div class="rp-tags"><span class="rp-tag">Groupe ' + (posOf(cid, s.id).group + 1) + "</span>" +
+        '<div class="rp-tags"><span class="rp-tag">' + libGroupe(cid, s.id) + "</span>" +
         '<span class="rp-tag">' + (s.sexe === "F" ? "Fille" : s.sexe === "G" ? "Garçon" : "-") + "</span>" +
         (s.glasses ? '<span class="rp-tag">👓 lunettes</span>' : "") +
         (eleveBep(s) ? '<span class="rp-tag rp-bep">BEP</span>' : "") +
@@ -10396,6 +11428,286 @@
     else { downloadBlob(html, "text/html;charset=utf-8", "bilan_" + slug(state.classes[cid].nom) + "_" + today() + ".html"); flash("Bilan téléchargé (ouvrez-le puis Imprimer › PDF)"); }
   }
 
+  /* ====================== CONSEIL DE CLASSE ======================
+     Un état des lieux à imprimer, pour le conseil de classe et la rencontre avec les familles.
+     1. Une synthèse de la classe : chiffres clés, qui participe, qui bavarde, les autres, un
+        tableau complet par ordre alphabétique, et la liste des élèves à besoins particuliers.
+     2. Une fiche par élève, par ordre alphabétique, trois par page au minimum : sur un même
+        graphique daté, les participations et les bavardages séance par séance (et les absences) ;
+        les remarques positives et négatives, directes et annotations, chacune datée ; les
+        absences de la période ; pour un élève à besoins particuliers, l'essentiel des aménagements.
+     Seuls comptent les élèves dont le nom et le prénom sont dans deux champs séparés. */
+  function periodesConseil() {
+    var auj = dateLocaleISO(new Date()), an = anneeScolaireDe(auj), y = +an.slice(0, 4);
+    return [
+      { k: "t1", lib: "1er trimestre", du: y + "-09-01", au: y + "-12-31" },
+      { k: "t2", lib: "2e trimestre", du: (y + 1) + "-01-01", au: (y + 1) + "-03-31" },
+      { k: "t3", lib: "3e trimestre", du: (y + 1) + "-04-01", au: (y + 1) + "-08-31" },
+      { k: "an", lib: "année " + an, du: y + "-09-01", au: (y + 1) + "-08-31" }
+    ];
+  }
+  function periodeConseilParDefaut() { return "t" + trimestreDe(dateLocaleISO(new Date())).slice(-1); }
+  function jjmmaaaa(iso) { return iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4); }
+  function trierAlpha(a, b) {
+    return String(a.nom || "").localeCompare(String(b.nom || ""), "fr", { sensitivity: "base" })
+      || String(a.prenom || "").localeCompare(String(b.prenom || ""), "fr", { sensitivity: "base" });
+  }
+  /* Tout ce qu'il faut savoir de la classe sur la période, calculé une fois. */
+  function donneesConseil(cid, per) {
+    var m = mat(), auj = dateLocaleISO(new Date());
+    var fin = per.au < auj ? per.au : auj;
+    var dans = function (iso) { return iso >= per.du && iso <= fin; };
+    var tous = classEleves(cid);
+    var eleves = tous.filter(function (s) { return !nomSansPrenom(s); }).sort(trierAlpha);
+    var exclus = tous.length - eleves.length;
+    var jours = {}, absPar = {};
+    ((((m.plans || {})[cid] || {}).appels) || []).forEach(function (a) {
+      if (!a || !a.d || !dans(a.d)) return;
+      jours[a.d] = 1;
+      (a.abs || []).forEach(function (eid) { (absPar[eid] = absPar[eid] || []).push(a); });
+    });
+    var fiches = eleves.map(function (s) {
+      var ed = (m.eleveData || {})[s.id] || {};
+      var f = { s: s, parJour: {}, part: 0, spont: 0, lecons: 0, notesLecon: [], sansRep: 0, bav: 0, pos: [], neg: [], neutres: [], abs: [], absH: 0 };
+      (ed.behavior || []).forEach(function (ev) {
+        if (!ev || !ev.ts) return;
+        var iso = dateLocaleISO(new Date(ev.ts));
+        if (!dans(iso)) return;
+        var j = f.parJour[iso] || (f.parJour[iso] = { part: 0, lecon: 0, bav: 0 });
+        if (ev.t === "oral" || ev.t === "q") {
+          jours[iso] = 1;
+          if (ev.id === "pas") f.sansRep++; else { f.part++; j.part++; if (ev.spontane) f.spont++; }
+        } else if (ev.t === "lecon") {
+          jours[iso] = 1;
+          if (ev.id === "pas" || ev.note == null) f.sansRep++; else { f.lecons++; j.lecon++; f.notesLecon.push(+ev.note); }
+        } else if (ev.t === "neg" && ev.id === "bavard") {
+          jours[iso] = 1; f.bav++; j.bav++;
+        } else if (ev.t === "pos" || ev.t === "neg") {
+          jours[iso] = 1;
+          (ev.t === "pos" ? f.pos : f.neg).push({ ts: ev.ts, txt: detailFait(ev), annot: false });
+        } else if (ev.t === "note") {
+          var ci = catInfo(ev.id), x = { ts: ev.ts, txt: String(ev.txt || ""), cat: ci.lab, annot: true };
+          if (ci.ton === "positif") f.pos.push(x); else if (ci.ton === "negatif") f.neg.push(x); else f.neutres.push(x);
+        }
+      });
+      var parTs = function (a, b) { return a.ts - b.ts; };
+      f.pos.sort(parTs); f.neg.sort(parTs); f.neutres.sort(parTs);
+      f.abs = (absPar[s.id] || []).slice().sort(function (a, b) { return (a.d + a.h) < (b.d + b.h) ? -1 : 1; });
+      f.abs.forEach(function (a) { f.absH += (+a.dur || 1); });
+      f.moyLecon = f.notesLecon.length ? f.notesLecon.reduce(function (t, n) { return t + n; }, 0) / f.notesLecon.length : null;
+      return f;
+    });
+    var listeJours = Object.keys(jours).sort();
+    /* Qui « participe », qui « bavarde » : rapporté aux séances où l'élève était PRÉSENT, pour
+       qu'un élève souvent absent ne soit pas classé à tort, et pour que la règle se dise en une
+       phrase devant une famille. Participe : au moins une participation orale pour trois séances.
+       Bavarde : au moins un bavardage noté pour quatre séances, et trois au minimum. */
+    fiches.forEach(function (f) {
+      var absJ = {}; f.abs.forEach(function (a) { absJ[a.d] = 1; });
+      f.presences = listeJours.filter(function (iso) { return !absJ[iso]; }).length;
+      f.seuilPart = Math.max(1, Math.ceil(f.presences / 3));
+      f.seuilBav = Math.max(3, Math.ceil(f.presences / 4));
+      f.participe = f.part >= f.seuilPart; f.bavarde = f.bav >= f.seuilBav;
+    });
+    var n = fiches.length || 1;
+    var moyPart = fiches.reduce(function (t, f) { return t + f.part; }, 0) / n;
+    var moyBav = fiches.reduce(function (t, f) { return t + f.bav; }, 0) / n;
+    var maxHaut = 0, maxBas = 0, maxPart = 0, maxBav = 0;
+    fiches.forEach(function (f) {
+      maxPart = Math.max(maxPart, f.part); maxBav = Math.max(maxBav, f.bav);
+      Object.keys(f.parJour).forEach(function (iso) { var j = f.parJour[iso]; maxHaut = Math.max(maxHaut, j.part + j.lecon); maxBas = Math.max(maxBas, j.bav); });
+    });
+    return { cid: cid, per: per, du: per.du, fin: fin, fiches: fiches, exclus: exclus, jours: listeJours,
+      moyPart: moyPart, moyBav: moyBav,
+      echelleHaut: Math.max(3, maxHaut), echelleBas: Math.max(2, maxBas), maxPart: Math.max(1, maxPart), maxBav: Math.max(1, maxBav) };
+  }
+  function profilConseil(f) {
+    return f.participe && f.bavarde ? "Participe · bavarde" : f.participe ? "Participe" : f.bavarde ? "Bavarde" : "-";
+  }
+  /* Le graphique d'une fiche : une colonne par séance de la classe sur la période. Vers le haut,
+     les participations orales (vert) et les leçons récitées (bleu) ; vers le bas, les bavardages
+     (rouge) ; un « A » gris sous l'axe quand l'élève était absent. Même échelle pour toute la
+     classe : les fiches se comparent d'un coup d'œil. */
+  function graphiqueConseil(f, D) {
+    var n = D.jours.length;
+    if (!n) return '<div class="cc-vide">Aucune séance enregistrée sur la période.</div>';
+    var W = 400, gauche = 4, droite = 4, haut = 44, bas = 22, y0 = 12 + haut, H = y0 + bas + 16;
+    var pas = (W - gauche - droite) / n, bw = Math.max(3, Math.min(15, pas * 0.6));
+    var saut = Math.max(1, Math.ceil(27 / pas));
+    var absJ = {}; f.abs.forEach(function (a) { absJ[a.d] = 1; });
+    var uH = haut / D.echelleHaut, uB = bas / D.echelleBas, svg = [];
+    svg.push('<line x1="' + gauche + '" y1="' + y0 + '" x2="' + (W - droite) + '" y2="' + y0 + '" stroke="#b9b4a8" stroke-width="0.8"/>');
+    D.jours.forEach(function (iso, i) {
+      var j = f.parJour[iso] || { part: 0, lecon: 0, bav: 0 };
+      var cx = gauche + i * pas + pas / 2, x = (cx - bw / 2).toFixed(1);
+      if (i % 2) svg.push('<rect x="' + (gauche + i * pas).toFixed(1) + '" y="4" width="' + pas.toFixed(1) + '" height="' + (y0 + bas - 4) + '" fill="#f6f4ef"/>');
+      if (j.part) svg.push('<rect x="' + x + '" y="' + (y0 - j.part * uH).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (j.part * uH).toFixed(1) + '" fill="#2f9e6f"/>');
+      if (j.lecon) svg.push('<rect x="' + x + '" y="' + (y0 - (j.part + j.lecon) * uH).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (j.lecon * uH).toFixed(1) + '" fill="#2f6fb0"/>');
+      if (j.part + j.lecon) svg.push('<text x="' + cx.toFixed(1) + '" y="' + (y0 - (j.part + j.lecon) * uH - 2).toFixed(1) + '" class="v">' + (j.part + j.lecon) + "</text>");
+      if (j.bav) {
+        svg.push('<rect x="' + x + '" y="' + y0 + '" width="' + bw.toFixed(1) + '" height="' + (j.bav * uB).toFixed(1) + '" fill="#d64545"/>');
+        svg.push('<text x="' + cx.toFixed(1) + '" y="' + (y0 + j.bav * uB + 8).toFixed(1) + '" class="v r">' + j.bav + "</text>");
+      }
+      if (absJ[iso]) svg.push('<text x="' + cx.toFixed(1) + '" y="' + (y0 + 9) + '" class="a">A</text>');
+      if (i % saut === 0) svg.push('<text x="' + cx.toFixed(1) + '" y="' + (H - 3) + '" class="d">' + jjmm(iso) + "</text>");
+    });
+    return '<svg class="cc-g" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Participations et bavardages par séance">' + svg.join("") + "</svg>";
+  }
+  function ligneRemarque(r, couleur) {
+    var d = new Date(r.ts), date = String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+    return '<li><b style="color:' + couleur + '">' + date + "</b> " + (r.annot ? '<span class="cc-an">' + esc(r.cat) + "</span> " : "") + esc(r.txt) + "</li>";
+  }
+  function siglesConseil(s) {
+    return state.refs.troubles.concat(state.refs.dispositifs)
+      .filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
+      .map(function (t) { return '<span class="cc-sig" style="background:' + t.c + ";color:" + textOn(t.c) + '" title="' + esc(t.name) + '">' + esc(t.k) + "</span>"; }).join("");
+  }
+  /* Aménagements : l'essentiel, pour en garder une trace devant la famille. */
+  function amenagementsConseil(s) {
+    var am = amenagementsDe(s.id), d = eData(s.id), note = String((d.amenagements && d.amenagements.texte) || "").trim();
+    var noms = state.refs.troubles.concat(state.refs.dispositifs)
+      .filter(function (t) { return (s.troubles && s.troubles[t.k]) || (s.dispositifs && s.dispositifs[t.k]); })
+      .map(function (t) { return t.name; });
+    return '<div class="cc-bep"><h4>Besoins particuliers</h4><p class="cc-bepn">' + esc(noms.join(" · ")) + "</p>"
+      + (am.length ? "<ul>" + am.slice(0, 5).map(function (a) { return "<li>" + a.icone + " " + esc(a.txt) + "</li>"; }).join("")
+          + (am.length > 5 ? "<li>… et " + (am.length - 5) + " autre(s)</li>" : "") + "</ul>"
+        : '<p class="cc-muet">Aménagements non renseignés dans cette matière.</p>')
+      + (note ? '<p class="cc-note">' + esc(note.length > 160 ? note.slice(0, 157) + "…" : note) + "</p>" : "") + "</div>";
+  }
+  function ficheConseil(f, D, nomCl, libPer) {
+    var s = f.s, bep = eleveBep(s), cadre = cadreDe(s);
+    var chiffres = [
+      '<b class="g">' + f.part + "</b> participation" + (f.part > 1 ? "s" : "") + (f.spont ? " (dont " + f.spont + " spontanée" + (f.spont > 1 ? "s" : "") + ")" : ""),
+      f.lecons ? '<b class="bl">' + f.lecons + "</b> leçon" + (f.lecons > 1 ? "s" : "") + " (moy. " + String(Math.round(f.moyLecon * 10) / 10).replace(".", ",") + "/5)" : "",
+      '<b class="r">' + f.bav + "</b> bavardage" + (f.bav > 1 ? "s" : ""),
+      "<b>" + f.abs.length + "</b> absence" + (f.abs.length > 1 ? "s" : "")
+    ].filter(Boolean).join(" · ");
+    var absTxt = f.abs.length
+      ? "<b>" + f.abs.length + " séance" + (f.abs.length > 1 ? "s" : "") + "</b> (" + heuresTxt(f.absH) + ") : " + f.abs.map(function (a) { return jjmm(a.d); }).join(", ")
+      : "Aucune absence relevée.";
+    var remarques = (f.pos.length || f.neg.length || f.neutres.length)
+      ? '<div class="cc-rem"><div><h4 class="p">Positif (' + f.pos.length + ")</h4>"
+          + (f.pos.length ? "<ul>" + f.pos.map(function (r) { return ligneRemarque(r, "#2f9e6f"); }).join("") + "</ul>" : '<p class="cc-muet">-</p>') + "</div>"
+        + '<div><h4 class="n">À reprendre (' + f.neg.length + ")</h4>"
+          + (f.neg.length ? "<ul>" + f.neg.map(function (r) { return ligneRemarque(r, "#d64545"); }).join("") + "</ul>" : '<p class="cc-muet">-</p>') + "</div>"
+        + (f.neutres.length ? '<div class="cc-neutre"><h4>Autres annotations (' + f.neutres.length + ")</h4><ul>" + f.neutres.map(function (r) { return ligneRemarque(r, "#7b8489"); }).join("") + "</ul></div>" : "")
+        + "</div>"
+      : '<p class="cc-muet cc-sansrem">Aucune remarque ni annotation sur la période.</p>';
+    /* Fiche très fournie : elle peut se poursuivre sur la page suivante plutôt que de laisser un
+       grand blanc avant elle. L'en-tête, les chiffres et le graphique restent toujours ensemble. */
+    var longue = (f.pos.length + f.neg.length + f.neutres.length) > 8;
+    return '<section class="cc-fiche' + (bep ? " cc-fbep" : "") + (longue ? " cc-longue" : "") + '"' + (cadre ? ' style="border-left-color:' + cadre.c + '"' : "") + ">"
+      + '<header><h3>' + esc(s.nom) + " <span>" + esc(s.prenom) + "</span></h3>" + siglesConseil(s)
+      + (profilConseil(f) !== "-" ? '<span class="cc-prof">' + profilConseil(f) + "</span>" : "")
+      + '<span class="cc-ref">' + esc(nomCl) + " · " + esc(libPer) + "</span></header>"
+      + '<p class="cc-chif">' + chiffres + "</p>"
+      + '<div class="cc-corps"><div class="cc-gwrap">' + graphiqueConseil(f, D) + "</div>"
+      + '<div class="cc-cote"><div class="cc-abs"><h4>Absences</h4><p>' + absTxt + "</p></div>" + (bep ? amenagementsConseil(s) : "") + "</div></div>"
+      + remarques + "</section>";
+  }
+  function listeProfil(titre, regle, fiches, valeur, classe) {
+    return '<div class="cc-liste ' + classe + '"><h3>' + titre + " (" + fiches.length + ') <span class="cc-regle">' + regle + "</span></h3>"
+      + (fiches.length ? "<ol>" + fiches.map(function (f) { return "<li><span>" + esc(f.s.nom) + " " + esc(f.s.prenom) + "</span>" + (valeur ? "<b>" + valeur(f) + "</b>" : "") + "</li>"; }).join("") + "</ol>" : '<p class="cc-muet">Personne</p>') + "</div>";
+  }
+  function barre(v, max, couleur) {
+    return '<span class="cc-bar"><i style="width:' + Math.round(100 * v / max) + "%;background:" + couleur + '"></i></span>';
+  }
+  function construireConseil(cid, k) {
+    var per = periodesConseil().filter(function (p) { return p.k === k; })[0] || periodesConseil()[0];
+    var D = donneesConseil(cid, per), m = mat(), cl = state.classes[cid], nomCl = cl ? cl.nom : "";
+    var F = D.fiches, nb = F.length;
+    var libPer = per.lib.charAt(0).toUpperCase() + per.lib.slice(1);
+    var participants = F.filter(function (f) { return f.participe; }).sort(function (a, b) { return b.part - a.part || trierAlpha(a.s, b.s); });
+    var bavards = F.filter(function (f) { return f.bavarde; }).sort(function (a, b) { return b.bav - a.bav || trierAlpha(a.s, b.s); });
+    var autres = F.filter(function (f) { return !f.participe && !f.bavarde; });
+    var somme = function (cle) { return F.reduce(function (t, f) { return t + (typeof f[cle] === "number" ? f[cle] : f[cle].length); }, 0); };
+    var bepF = F.filter(function (f) { return eleveBep(f.s); });
+    var kpi = [["Élèves", nb], ["Séances", D.jours.length], ["Participations", somme("part")], ["Bavardages", somme("bav")],
+      ["Remarques +", somme("pos")], ["Remarques −", somme("neg")], ["Absences", somme("abs")], ["Élèves BEP", bepF.length]];
+    var ens = m.enseignant ? " · " + esc(m.enseignant) : "";
+    var periodeTxt = jjmmaaaa(D.du) + " → " + jjmmaaaa(D.fin);
+    var synthese = '<section class="cc-synth">'
+      + '<div class="cc-titre"><h1>Conseil de classe · ' + esc(nomCl) + "</h1><p>" + esc(m.nom) + ens + " · " + esc(libPer) + " (" + periodeTxt + ") · édité le " + esc(horodatageLisible(new Date())) + "</p></div>"
+      + '<div class="cc-kpis">' + kpi.map(function (x) { return "<div><b>" + x[1] + "</b><span>" + x[0] + "</span></div>"; }).join("") + "</div>"
+      + '<div class="cc-listes">'
+      + listeProfil("Participent", "Au moins une participation orale pour trois séances de présence. Moyenne de la classe : " + String(Math.round(D.moyPart * 10) / 10).replace(".", ",") + ".", participants, function (f) { return f.part; }, "p")
+      + listeProfil("Bavardent", "Au moins un bavardage noté pour quatre séances de présence (3 au minimum). Moyenne de la classe : " + String(Math.round(D.moyBav * 10) / 10).replace(".", ",") + ".", bavards, function (f) { return f.bav; }, "n")
+      + listeProfil("Les autres", "Ni l'un ni l'autre sur la période.", autres, null, "a")
+      + "</div>"
+      + '<h2>Toute la classe, par ordre alphabétique</h2><table class="cc-tab"><thead><tr><th>#</th><th>Élève</th><th>BEP</th><th>Participations</th><th>Leçons</th><th>Bavardages</th><th>Rem. +</th><th>Rem. −</th><th>Absences</th><th>Profil</th></tr></thead><tbody>'
+      + F.map(function (f, i) {
+          return "<tr><td>" + (i + 1) + "</td><td><b>" + esc(f.s.nom) + "</b> " + esc(f.s.prenom) + "</td><td>" + siglesConseil(f.s) + "</td>"
+            + '<td class="nb">' + f.part + (f.spont ? '<small> (' + f.spont + " sp.)</small>" : "") + barre(f.part, D.maxPart, "#2f9e6f") + "</td>"
+            + '<td class="nb">' + (f.lecons ? f.lecons + "<small> · " + String(Math.round(f.moyLecon * 10) / 10).replace(".", ",") + "/5</small>" : "0") + "</td>"
+            + '<td class="nb">' + f.bav + barre(f.bav, D.maxBav, "#d64545") + "</td>"
+            + '<td class="nb p">' + f.pos.length + '</td><td class="nb n">' + f.neg.length + "</td>"
+            + '<td class="nb">' + (f.abs.length ? f.abs.length + "<small> (" + heuresTxt(f.absH) + ")</small>" : "0") + "</td>"
+            + "<td>" + profilConseil(f) + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      + (D.exclus ? '<p class="cc-muet">' + D.exclus + " élève" + (D.exclus > 1 ? "s" : "") + " non compté" + (D.exclus > 1 ? "s" : "") + " : nom et prénom saisis dans le même champ.</p>" : "")
+      + (bepF.length ? '<h2>Élèves à besoins particuliers (' + bepF.length + ")</h2><table class=\"cc-tab cc-tabbep\"><thead><tr><th>Élève</th><th>Dispositifs</th><th>Aménagements essentiels (" + esc(m.nom) + ")</th></tr></thead><tbody>"
+          + bepF.map(function (f) {
+              var am = amenagementsDe(f.s.id);
+              return "<tr><td><b>" + esc(f.s.nom) + "</b> " + esc(f.s.prenom) + "</td><td>" + siglesConseil(f.s) + "</td><td>"
+                + (am.length ? am.slice(0, 3).map(function (a) { return a.icone + " " + esc(a.txt); }).join(" · ") + (am.length > 3 ? " · … (" + am.length + " en tout)" : "") : '<span class="cc-muet">non renseignés</span>') + "</td></tr>";
+            }).join("") + "</tbody></table>" : "")
+      + '<p class="cc-leg"><i style="background:#2f9e6f"></i> participation orale <i style="background:#2f6fb0"></i> leçon récitée <i style="background:#d64545"></i> bavardage <b>A</b> absent. '
+      + "Graphiques : une colonne par séance de la classe, même échelle pour tous les élèves. Les remarques réunissent les comportements notés en classe et les annotations écrites.</p>"
+      + "</section>";
+    var fiches = '<div class="cc-fiches">' + F.map(function (f) { return ficheConseil(f, D, nomCl, per.lib); }).join("") + "</div>";
+    var css = "*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}"
+      + "body{font-family:-apple-system,Segoe UI,system-ui,sans-serif;color:#1f2a30;margin:0;background:#f4f2ec;font-size:9.4pt;line-height:1.3}"
+      + ".cc-top{position:sticky;top:0;z-index:2;background:#1f2a30;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:12px}"
+      + ".cc-top b{font-size:1rem}.cc-top span{color:#aeb8bd;font-size:.8rem}.cc-opt{margin-left:auto;font-size:.8rem;display:flex;gap:6px;align-items:center;cursor:pointer}.cc-top button{background:#2f6fb0;color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:.9rem;cursor:pointer}"
+      + "main{max-width:200mm;margin:0 auto;padding:10px}"
+      + ".cc-synth,.cc-fiche{background:#fff;border:1px solid #d9d4c8;border-radius:8px}"
+      + ".cc-synth{padding:5mm}.cc-titre h1{margin:0;font-size:15pt}.cc-titre p{margin:2px 0 0;color:#5b666c}"
+      + ".cc-kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:3mm 0}.cc-kpis div{background:#f4f2ec;border-radius:6px;padding:2px 4px;text-align:center}"
+      + ".cc-kpis b{display:block;font-size:12pt}.cc-kpis span{font-size:7pt;color:#5b666c;text-transform:uppercase;letter-spacing:.03em}"
+      + ".cc-liste{margin-bottom:2.4mm}.cc-liste h3{margin:0 0 .8mm;font-size:10pt}.cc-liste.p h3{color:#2f9e6f}.cc-liste.n h3{color:#d64545}.cc-liste.a h3{color:#5b666c}"
+      + ".cc-regle{font-size:7.4pt;color:#7b8489;font-weight:400}"
+      + ".cc-liste ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:0 5mm;font-size:8.2pt;counter-reset:n}"
+      + ".cc-liste li{display:flex;gap:4px;border-bottom:1px dotted #e3ded2;counter-increment:n}.cc-liste li:before{content:counter(n) '.';color:#9aa3a8;min-width:4.5mm}"
+      + ".cc-liste li span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cc-liste.p li b{color:#2f9e6f}.cc-liste.n li b{color:#d64545}"
+      + "h2{font-size:10.5pt;margin:3.5mm 0 1.5mm;border-bottom:1.5px solid #1f2a30;padding-bottom:.8mm}"
+      + ".cc-tab{width:100%;border-collapse:collapse;font-size:7.9pt}.cc-tab th{text-align:left;font-size:7pt;text-transform:uppercase;color:#5b666c;border-bottom:1px solid #b9b4a8;padding:2px 3px}"
+      + ".cc-tab td{padding:.8px 3px;border-bottom:1px solid #ece8de;vertical-align:middle}.cc-tab tr:nth-child(even) td{background:#faf9f5}.cc-tab td.nb{white-space:nowrap}.cc-tab td.p{color:#2f9e6f;font-weight:700}.cc-tab td.n{color:#d64545;font-weight:700}"
+      + ".cc-tab small{color:#7b8489}.cc-bar{display:inline-block;width:14mm;height:5px;background:#eee;border-radius:3px;margin-left:4px;vertical-align:middle;overflow:hidden}.cc-bar i{display:block;height:100%}"
+      + ".cc-tabbep td{vertical-align:top}"
+      + ".cc-sig{display:inline-block;border-radius:4px;padding:0 4px;font-size:7pt;font-weight:800;margin-right:2px;vertical-align:1px}"
+      + ".cc-leg{font-size:7.4pt;color:#5b666c;margin:4mm 0 0}.cc-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin:0 2px 0 8px;vertical-align:-1px}"
+      + ".cc-muet{color:#9aa3a8;font-style:italic}"
+      + ".cc-fiches{margin-top:10px}"
+      + ".cc-fiche{padding:2.6mm 3.4mm;margin-bottom:3mm;border-left:5px solid #d9d4c8;break-inside:avoid;page-break-inside:avoid}"
+      + ".cc-fiche.cc-longue{break-inside:auto;page-break-inside:auto}.cc-fiche header,.cc-chif,.cc-corps{break-inside:avoid;page-break-inside:avoid}.cc-fiche header,.cc-chif{break-after:avoid;page-break-after:avoid}.cc-rem li{break-inside:avoid}"
+      + ".cc-fiche header{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 6px;border-bottom:1px solid #ece8de;padding-bottom:1mm}"
+      + ".cc-fiche h3{margin:0;font-size:11.5pt}.cc-fiche h3 span{font-weight:500}"
+      + ".cc-prof{font-size:7.4pt;font-weight:800;background:#eef1f3;border-radius:10px;padding:1px 7px}.cc-ref{margin-left:auto;font-size:7pt;color:#9aa3a8}"
+      + ".cc-chif{margin:1.2mm 0;font-size:8.6pt}.cc-chif b{font-size:9.6pt}.cc-chif b.r{color:#d64545}.cc-chif b.g{color:#2f9e6f}.cc-chif b.bl{color:#2f6fb0}"
+      + ".cc-corps{display:grid;grid-template-columns:62% 1fr;gap:3mm;align-items:start}"
+      + ".cc-g{width:100%;height:auto;display:block}.cc-g text{font-size:8.5px;text-anchor:middle;fill:#5b666c}.cc-g text.v{font-weight:800;fill:#1f2a30}.cc-g text.r{fill:#d64545}.cc-g text.a{fill:#7b8489;font-weight:800}.cc-g text.d{font-size:7.5px}"
+      + ".cc-vide{height:27mm;display:flex;align-items:center;justify-content:center;color:#9aa3a8;font-style:italic;background:#faf9f5;border-radius:6px}"
+      + "h4{margin:0 0 .6mm;font-size:7.4pt;text-transform:uppercase;letter-spacing:.04em;color:#5b666c}h4.p{color:#2f9e6f}h4.n{color:#d64545}"
+      + ".cc-abs p,.cc-bep p{margin:0;font-size:8.2pt}.cc-bep{margin-top:1.6mm;background:#fdf6ea;border:1px solid #efdcb8;border-radius:6px;padding:1.4mm 2mm}"
+      + ".cc-bep ul{margin:.6mm 0 0;padding-left:4mm;font-size:8pt}.cc-bepn{font-weight:700}.cc-note{font-style:italic;color:#5b666c}"
+      + ".cc-rem{display:grid;grid-template-columns:1fr 1fr;gap:1mm 4mm;margin-top:1.4mm}.cc-rem ul{margin:0;padding-left:0;list-style:none;font-size:8.2pt}.cc-rem li{margin:.3mm 0}"
+      + ".cc-neutre{grid-column:1/-1}.cc-an{background:#eef1f3;border-radius:4px;padding:0 4px;font-size:7pt;font-weight:700}.cc-sansrem{margin:1.4mm 0 0;font-size:8pt}"
+      + "@page{size:A4 portrait;margin:8mm}"
+      + "@media print{body{background:#fff;font-size:9pt}.cc-top{display:none}main{max-width:none;padding:0}.cc-synth{border:none;padding:0}"
+      + ".cc-fiches{break-before:page;page-break-before:always;margin:0}body.unepage .cc-fiche{break-before:page;page-break-before:always}body.unepage .cc-fiche:first-child{break-before:auto;page-break-before:auto}.cc-fiche{border-radius:0;border-top:none;border-right:none;border-bottom:1px solid #b9b4a8;margin:0;padding:2mm 0 2mm 3mm}}";
+    return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Conseil de classe ' + esc(nomCl) + " - " + esc(per.lib) + "</title><style>" + css + "</style></head><body>"
+      + '<div class="cc-top"><div><b>Conseil de classe · ' + esc(nomCl) + "</b><br><span>" + esc(libPer) + " · " + nb + " élèves · 1 page de synthèse puis les fiches par ordre alphabétique</span></div>"
+      + '<label class="cc-opt" title="Pour montrer une fiche à une famille sans que les autres élèves de la page soient visibles"><input type="checkbox" onchange="document.body.classList.toggle(\'unepage\', this.checked)"> Une fiche par page (rencontre avec une famille)</label>'
+      + '<button onclick="window.print()">🖨️ Imprimer / PDF</button></div><main>' + synthese + fiches + "</main></body></html>";
+  }
+  function ouvrirConseil(k) {
+    var cid = curClassId(); if (!cid) { flash("Affichez d'abord une classe"); return; }
+    k = k || periodeConseilParDefaut();
+    var html = construireConseil(cid, k);
+    openPrintable(html, "conseil_" + slug(state.classes[cid].nom) + "_" + k + "_" + today() + ".html");
+    flash("Conseil de classe prêt : imprimez depuis le nouvel onglet", 3000);
+  }
+
   // Sauvegarde / restauration chiffrée (repli sans Drive)
   /* ---------- Plan de classe imprimable (lisible, scores + infos résumées) ---------- */
   function openPrintable(html, fallbackName) {
@@ -10435,28 +11747,18 @@
     }
 
     // Groupes : même géométrie que l'écran (îlots en L, tables du fond, places vides)
+    var repP = repartitionIlots(cid);         // même répartition qu'à l'écran
     function groupHtml(gi) {
-      var list = eleves.filter(function (s) { return posOf(cid, s.id).group === gi; }).sort(function (a, b) { return posOf(cid, a.id).order - posOf(cid, b.id).order; });
+      var list = repP.groupes[gi].liste;
       var inner;
       if (photo) {
-        /* Même règle qu'à l'écran : la rangée du fond n'est dessinée qu'à la taille utile, et
-           aucun élève sans place n'est escamoté du plan imprimé. */
-        var posEnr = p.pos || {};
-        var shape = clusterShape(gi, gi === 4 ? capFondAffichee(list, posEnr, caps[4]) : caps[4]);
-        var byOrder = {}, dessines = {};
-        list.forEach(function (s) { var pr = posEnr[s.id]; if (pr && byOrder[pr.order] === undefined) byOrder[pr.order] = s; });
+        var shape = clusterShape(gi, repP.groupes[gi].cap), byOrder = repP.groupes[gi].parPlace;
         inner = '<div class="pp-seats" style="grid-template-columns:repeat(' + shape.cols + ',1fr)">' +
           shape.cells.map(function (cell) {
             var s = byOrder[cell.o];
-            if (s) dessines[s.id] = 1;
             var g = "grid-row:" + cell.r + ";grid-column:" + cell.c;
             return s ? seatHtml(s, g) : '<div class="pp-empty" style="' + g + '"></div>';
           }).join("") + "</div>";
-        var restes = list.filter(function (s) { return !dessines[s.id]; });
-        if (restes.length) {
-          inner += '<div class="pp-sansplace">' + restes.length + " élève" + (restes.length > 1 ? "s" : "") + " sans place attribuée</div>"
-            + '<div class="pp-seats pp-flow">' + restes.map(function (s) { return seatHtml(s); }).join("") + "</div>";
-        }
       } else {
         inner = '<div class="pp-seats pp-flow">' + list.map(seatHtml).join("") + "</div>";
       }
@@ -10500,6 +11802,11 @@
     } else {
       var order = []; for (var z = n - 1; z >= 0; z--) order.push(z);
       roomHtml = '<div class="pp-room pp-stack">' + order.map(groupHtml).join("") + "</div>";
+    }
+    /* Élèves de la liste sans place : imprimés à part, jamais mêlés à un groupe. */
+    if (repP.horsPlan.length) {
+      roomHtml = '<div class="pp-sansplace">' + repP.horsPlan.length + " élève" + (repP.horsPlan.length > 1 ? "s" : "") + " de la liste sans place sur le plan</div>"
+        + '<div class="pp-seats pp-flow" style="margin:0 0 6px">' + repP.horsPlan.map(function (s) { return seatHtml(s); }).join("") + "</div>" + roomHtml;
     }
 
     var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Plan - ' + esc(state.classes[cid].nom) + '</title><style>' +
@@ -10604,7 +11911,7 @@
         var blob = JSON.parse(e.target.result);
         var data = await dechiffrerOuDemanderPhrase(blob, "Ce fichier de sauvegarde");
         if (!data) return;
-        if (etatVide()) { state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée"); return; }
+        if (etatVide()) { remplacerEtat(data, "restauration d'un fichier", false); closeAllDialogs(); flash("Sauvegarde restaurée"); return; }
         /* Par défaut on FUSIONNE : le fichier vient souvent de l'autre ordinateur, et écraser
            ferait disparaître le travail fait ici. Le remplacement reste possible, explicitement. */
         if (confirm("Ce poste contient déjà des données.\n\n"
@@ -10612,8 +11919,8 @@
           + "ne sont pas comptées deux fois.\n\n"
           + "Annuler : REMPLACER tout le contenu de ce poste par le fichier.")) {
           appliquerFusion(migrate(data), "fichier de sauvegarde");
-        } else if (confirm("Remplacer définitivement les données de ce poste ?\nLe travail fait ici et non sauvegardé ailleurs sera perdu.")) {
-          state = migrate(data); save(); renderAll(); historiqueRAZ(); closeAllDialogs(); flash("Sauvegarde restaurée (remplacement)");
+        } else if (confirm("Remplacer les données de ce poste par celles du fichier ?\nUne copie de sécurité de l'état actuel est gardée sur ce poste (⚙︎ Classe → Copies de sécurité).")) {
+          remplacerEtat(data, "remplacement par un fichier de sauvegarde", true); closeAllDialogs(); flash("Sauvegarde restaurée (remplacement)");
         }
       } catch (err) { flash("Fichier illisible"); }
     };
@@ -10660,7 +11967,12 @@
   var toastT; function flash(m, dur) { var t = $("toast"); if (!t) return; t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, dur || 1700); }
 
   /* ====================== CÂBLAGE ====================== */
-  function openExport() { if (!curClassId()) { flash("Aucune classe"); return; } $("dlgExport").classList.add("open"); }
+  function openExport() {
+    if (!curClassId()) { flash("Aucune classe"); return; }
+    var sel = $("eConseilPer"), defaut = periodeConseilParDefaut();
+    if (sel) sel.innerHTML = periodesConseil().map(function (p) { return '<option value="' + p.k + '"' + (p.k === defaut ? " selected" : "") + ">" + esc(p.lib.charAt(0).toUpperCase() + p.lib.slice(1)) + "</option>"; }).join("");
+    $("dlgExport").classList.add("open");
+  }
   function wire() {
     $("classSelect").addEventListener("change", function () {
       state.uiPrefs.classeActive = this.value;
@@ -10731,6 +12043,8 @@
     $("btnComp").addEventListener("click", openCompPicker);
     $("btnRefs").addEventListener("click", openRefs);
     $("btnExport").addEventListener("click", openExport);
+    $("btnConseil").addEventListener("click", function () { ouvrirConseil(); });
+    $("eConseil").addEventListener("click", function () { var k = $("eConseilPer").value; $("dlgExport").classList.remove("open"); ouvrirConseil(k); });
     /* Échanges d'heures et sorties : page sœur posée dans le même dossier (echanges-heures.html).
        Application installée sur iPad ou iPhone : même fenêtre, la page affiche un bouton « Plan de classe »
        pour revenir. Navigateur : nouvel onglet, le plan de classe reste ouvert à côté.
@@ -10874,7 +12188,25 @@
     $("btnFastLecon").addEventListener("click", function () { verifierCreneauAvantSaisie(startLeconMode); });
     $("dlgOralStepX").addEventListener("click", function () { $("dlgOralStep").classList.remove("open"); effacerInterroge(); if (oralMode) { oralMode.step = "who"; oralMode.eleveId = null; updateOralBanner(); } if (leconMode) updateLeconBanner(); });
     $("weekBadge").addEventListener("click", openSchedule);
-    $("driveBadge").addEventListener("click", function () { driveConnect(false); });
+    /* La pastille ouvre « Où sont mes données ? ». Seule exception : Drive configuré mais non
+       connecté, où un clic reconnecte tout de suite, comme avant. */
+    $("driveBadge").addEventListener("click", function () {
+      if (driveConfigured() && !tokenValid()) driveConnect(false); else ouvrirPanneauSauvegarde();
+    });
+    $("admEtatSauvegarde").addEventListener("click", ouvrirPanneauSauvegarde);
+    $("dlgSauvegardeX").addEventListener("click", closeAllDialogs);
+    $("svEnvoyer").addEventListener("click", function () {
+      if (!driveConfigured()) { flash("Google Drive n'est pas configuré : ⚙︎ Classe → Sauvegarde Google Drive.", 5000); return; }
+      envoyerMaintenant().then(majPanneauSauvegarde, majPanneauSauvegarde);
+    });
+    $("svExporter").addEventListener("click", function () { exportEncrypted(); });
+    $("svEffacer").addEventListener("click", function () {
+      if (!confirm("Effacer toutes les copies de sécurité gardées sur ce poste ?\n\nVos données actuelles ne sont pas touchées. Seul le retour à un état antérieur depuis ce poste ne sera plus possible.")) return;
+      Secours.listerCopies().then(function (l) { return Secours.supprimerCopies(l.map(function (c) { return c.id; })); })
+        .then(function () { LS.setRaw(KEY_COPIEJOUR, ""); renderCopies(); flash("Copies de sécurité effacées de ce poste", 3000); },
+              function () { flash("Effacement impossible", 3000); });
+    });
+    $("alerteStockageExport").addEventListener("click", function () { exportEncrypted(); });
     $("btnReconnect").addEventListener("click", function () { driveConnect(false); });
     $("admChangerCompte").addEventListener("click", function () {
       LS.setRaw(KEY_DRIVEHINT, "");
@@ -10957,10 +12289,8 @@
     $("admDriveNow").addEventListener("click", async function () {
       if (!driveConfigured()) { flash("Enregistrez d'abord votre identifiant client Google"); return; }
       if (!tokenValid()) { driveConnect(true); return; }
-      if (etatVide() && !confirm("L'application est vide sur ce poste.\nEnvoyer quand même ? Cela écrasera la sauvegarde Drive.")) return;
-      ecrasementAutorise = true;
-      await driveSave(); await driveBackupRotate(true); ecrasementAutorise = false;
-      flash("Sauvegarde envoyée sur Drive le " + horodatageLisible(new Date(), true), 5000);
+      await envoyerMaintenant();
+      renderClassAdmin();
     });
     $("admPull").addEventListener("click", async function () {
       if (!driveConfigured() || !tokenValid()) { flash("Connectez-vous à Drive d'abord (badge ☁︎)"); return; }
@@ -11080,6 +12410,9 @@
     try { renderAll(); } catch (e) { console.error("renderAll", e); }
     try { if (migrationDemoFaite) save(); } catch (e) { console.error("migrationDemo", e); }
     try { historiqueRAZ(); } catch (e) { console.error("historiqueRAZ", e); }
+    /* Mémoire de secours : reprise de ce qui n'aurait pas pu être enregistré normalement, puis
+       copie de sécurité du jour. Jamais bloquant : sans elle, tout continue comme avant. */
+    try { verifierSecours().then(function () { try { copieDuJour(); } catch (e) {} try { exclureNomsColles(); } catch (e) { console.error("exclusion", e); } }); } catch (e) { console.error("secours", e); }
     try { ensureDeviceKey(); } catch (e) { console.error("ensureDeviceKey", e); }
     try { initDrive(); } catch (e) { console.error("initDrive", e); }
     try { if (state && Object.keys(state.classes).length) autoSelectClass(); } catch (e) { console.error("autoSelectClass", e); }
@@ -11094,7 +12427,9 @@
      des fonctions de fusion, pour vérifier qu'un poste ancien ne peut rien replaquer. */
   /* Surface de test (aucune influence sur l'usage normal) : elle permet de vérifier, sans
      Google Drive, que la question de synchronisation n'interrompt jamais une saisie. */
-  window.PDCX = { fusionnerEtats: fusionnerEtats, migrate: migrate,
+  window.PDCX = { fusionnerEtats: fusionnerEtats, migrate: migrate, secours: Secours,
+    etat: function () { return state; }, copieDeSecurite: copieDeSecurite,
+    stockage: function () { return { echecLocal: stockage.echecLocal, echecSecours: stockage.echecSecours, maj: etatMaj }; },
     calendrier: {
       horsCours: function (iso) { return horsCours(iso); },
       parite: function (iso) { return parite(mat().calage, new Date(iso + "T10:00:00")); },
