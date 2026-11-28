@@ -10,7 +10,7 @@
 endobj
 4 0 obj
 <<
-/Length 8906
+/Length 8887
 >>
 stream
 0.5670000000000001 w
@@ -231,16 +231,16 @@ BT
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
 31.1811023622047259 91.2985039370078084 Td
-(- Chaque année, exportez d'EDT les emplois du temps PDF des classes \(semaines impaire et paire\), des professeurs et des salles,) Tj
-T* (puis faites-les glisser dans la zone d'import \(ou choisissez-les\). Un contrôle de cohérence s'affiche avant de les utiliser.) Tj
+(- L'onglet « Mise en route » récapitule les dix étapes de préparation de l'année \(cinq indispensables, trois recommandées, deux de) Tj
+T* (confort\) avec leur état : Fait, À vérifier ou À faire. Cliquez une ligne pour ouvrir le panneau correspondant.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
 31.1811023622047259 64.4033858267716823 Td
-(- Juste après l'import, trois réglages s'enchaînent avant d'ouvrir les autres onglets : responsables de niveau et enseignants à ne) Tj
-T* (jamais solliciter \(avec les postes « X »\), enseignants présents seulement certains jours, activités qui ne sont pas des matières.) Tj
+(- Chaque année, exportez d'EDT les emplois du temps PDF des classes \(semaines impaire et paire\), des professeurs et des salles,) Tj
+T* (puis faites-les glisser dans la zone d'import \(ou choisissez-les\). Un contrôle de cohérence s'affiche avant de les utiliser.) Tj
 ET
 BT
 /F1 7.5 Tf
@@ -268,7 +268,7 @@ endobj
 endobj
 6 0 obj
 <<
-/Length 9207
+/Length 9204
 >>
 stream
 0.5670000000000001 w
@@ -278,6 +278,16 @@ BT
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
 31.1811023622047259 803.0553543307086102 Td
+(- Juste après l'import, quatre réglages s'enchaînent avant d'ouvrir les autres onglets : responsables de niveau et enseignants à ne) Tj
+T* (jamais solliciter \(avec les postes « X »\), enseignants Pacte « remplacement de courte durée » \(RCD\), enseignants présents) Tj
+T* (seulement certains jours, activités qui ne sont pas des matières. Les étapes 6 et 7 de la Mise en route sont alors cochées ; on peut) Tj
+T* (revoir ces réglages à tout moment dans Données, Règles.) Tj
+ET
+BT
+/F1 9 Tf
+10.6199999999999992 TL
+0.235 0.298 0.4 rg
+31.1811023622047259 754.934409448818883 Td
 (- Renseignez les effectifs des classes et des groupes \(Données, Effectifs\) et déclarez les salles d'étude avec leur capacité \(onglet) Tj
 T* (Salles\) : ils servent à vérifier qu'une étude n'est pas saturée \(voir la section dédiée\).) Tj
 ET
@@ -285,7 +295,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 776.1602362204723704 Td
+31.1811023622047259 728.0392913385826432 Td
 (- Règles de remplacement : désignez les responsables de niveau \(jamais sollicités\) et les activités qui ne sont pas des matières \(KT,) Tj
 T* (culture religieuse : ni remplacées, ni comptées comme heures libérées, ni utilisées pour les échanges\).) Tj
 ET
@@ -293,7 +303,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 749.2651181102362443 Td
+31.1811023622047259 701.1441732283464034 Td
 (- Mettez à jour le calendrier : premier et dernier jour de classe, vacances, jours fériés et ponts. Indiquez aussi si la semaine en cours) Tj
 T* (est une SI ou une SP : le logiciel en déduit toutes les autres.) Tj
 ET
@@ -301,7 +311,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 722.3700000000000045 Td
+31.1811023622047259 674.2490551181101637 Td
 (- Si l'emploi du temps change en cours d'année, réimportez les trois PDF : le logiciel demande la date d'effet, compare avec l'emploi) Tj
 T* (du temps actuel et conserve l'ancien pour les dates antérieures. Vos réglages sont conservés.) Tj
 ET
@@ -309,7 +319,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 695.4748818897637648 Td
+31.1811023622047259 647.3539370078740376 Td
 (- En cours d'année, « Modifier les données » permet de renommer ou remplacer un enseignant \(arrivée d'un remplaçant, poste « X ») Tj
 T* (pourvu\) et de modifier, ajouter ou supprimer un cours dans l'emploi du temps d'une classe, avec contrôle des conflits et annulation) Tj
 T* (possible.) Tj
@@ -318,7 +328,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 657.9668503937007245 Td
+31.1811023622047259 609.8459055118109973 Td
 (- Sauvegarde : un fichier reprend toutes les données et réglages, pour les transférer sur un autre ordinateur ou les conserver avant la) Tj
 T* (réinitialisation générale de fin d'année \(double confirmation, saisie du mot EFFACER\).) Tj
 ET
@@ -326,14 +336,14 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 631.0717322834645984 Td
+31.1811023622047259 582.9507874015747575 Td
 (- Ces réglages sont conservés dans le navigateur de l'ordinateur utilisé, chiffrés.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 614.7895275590550455 Td
+31.1811023622047259 566.6685826771653183 Td
 (- Sécurité : toutes les données sont chiffrées \(AES-256\) avec la clé de cet appareil et un code d'accès demandé à chaque ouverture.) Tj
 T* (Sans le code, elles sont illisibles, même sur l'appareil ; il n'existe aucun moyen de le retrouver. Le bouton « Verrouiller » et le) Tj
 T* (verrouillage automatique protègent un poste partagé. Une sauvegarde chiffrée se restaure avec le code et, sur un autre appareil, la) Tj
@@ -343,14 +353,14 @@ BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 560.148897637795244 Td
+31.1811023622047259 512.0279527559055168 Td
 (Affichage : Mac ou PC) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 543.9914173228346499 Td
+31.1811023622047259 495.8704724409448659 Td
 (Le sélecteur « Affichage » en haut à droite propose deux présentations, interchangeables à tout moment. Le choix est mémorisé dans) Tj
 T* (ce navigateur et s'applique dès l'écran de déverrouillage.) Tj
 ET
@@ -358,14 +368,14 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 517.0962992125984101 Td
+31.1811023622047259 468.9753543307086829 Td
 (- « Mac » reprend la présentation d'origine, resserrée : coins arrondis, fond clair, police du système. Sobre et familière.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 500.8140944881889141 Td
+31.1811023622047259 452.6931496062991869 Td
 (- « PC » reprend le dessin du modèle que vous aviez retenu : bandeau foncé en tête, titres en Barlow Condensed, texte en Atkinson) Tj
 T* (Hyperlegible, une police dessinée pour la lisibilité, et des bords nets plutôt que des ombres.) Tj
 ET
@@ -373,7 +383,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 473.9189763779527311 Td
+31.1811023622047259 425.7980314960630039 Td
 (- Les deux affichent autant d'information par écran : sur une absence longue, onze journées tiennent dans la hauteur d'un écran de) Tj
 T* (portable dans l'un comme dans l'autre.) Tj
 ET
@@ -381,7 +391,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 447.0238582677165482 Td
+31.1811023622047259 398.9029133858267642 Td
 (- Les deux polices du style PC sont intégrées au fichier : aucune connexion n'est nécessaire et le rendu reste le même si le réseau de) Tj
 T* (l'établissement bloque les polices distantes.) Tj
 ET
@@ -389,14 +399,14 @@ BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 413.6090551181101773 Td
+31.1811023622047259 365.4881102362204501 Td
 (Absences) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 397.4515748031495832 Td
+31.1811023622047259 349.330629921259856 Td
 (L'onglet « Absences » couvre une absence, courte ou longue : il liste chaque heure à remplacer et, par défaut, envoie la classe en) Tj
 T* (étude. Vous cliquez un remplaçant pour retenir son nom ; les heures assurées sont des heures supplémentaires \(HSE\).) Tj
 ET
@@ -404,7 +414,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 370.5564566929134003 Td
+31.1811023622047259 322.4355118110236162 Td
 (- Pour chaque heure, les enseignants libres sont classés du plus adapté au moins adapté \(même matière et même niveau d'abord, le) Tj
 T* (premier est « suggéré »\). Un enseignant déjà retenu sur ce créneau, en arrêt, responsable de niveau ou absent ce jour-là n'est pas) Tj
 T* (proposé.) Tj
@@ -413,7 +423,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 333.04842519685036 Td
+31.1811023622047259 284.9274803149605759 Td
 (- Les résultats sont repliés : chaque journée tient sur une ligne, avec sa date, le nombre d'heures à couvrir et les pastilles d'étude. Le) Tj
 T* (triangle ouvre la journée sur ses deux demi-journées, et le triangle d'une demi-journée affiche les heures à remplacer. « Tout déplier) Tj
 T* (ou replier » bascule l'ensemble. Une demi-journée dont l'étude dépasse la capacité est signalée sur sa ligne, sans avoir à l'ouvrir.) Tj
@@ -422,7 +432,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 295.5403937007873765 Td
+31.1811023622047259 247.4194488188976493 Td
 (- L'option « Ne proposer que les collègues déjà présents sur la demi-journée », à côté de la liste des absences, retire des propositions) Tj
 T* (ceux qui n'ont aucun cours sur cette demi-journée : inutile de faire venir quelqu'un de loin pour une seule heure. Les encadrés roses) Tj
 T* (disparaissent alors des listes. Si plus personne n'est disponible, l'heure part en étude, ou en surveillance par un collègue libre si cette) Tj
@@ -432,7 +442,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 247.4194488188976493 Td
+31.1811023622047259 199.2985039370078084 Td
 (- Un remplaçant marqué « prof de la classe » a déjà cette classe dans son emploi du temps, quelle que soit la matière : il en connaît) Tj
 T* (les élèves, ce qui facilite l'heure de remplacement. La mention « prof de la classe » le rappelle sous son nom.) Tj
 ET
@@ -440,7 +450,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 220.5243307086614095 Td
+31.1811023622047259 172.4033858267716823 Td
 (- Les personnes dont l'emploi du temps ne comporte aucune matière de la nomenclature ne sont jamais proposées : intervenants des) Tj
 T* (académies sportives, vie scolaire, pastorale. Elles ne remplacent pas les professeurs, et la surveillance des études relève déjà des) Tj
 T* (personnels d'éducation. La liste est déduite des emplois du temps et s'affiche dans « Données » > « Règles de remplacement » ; un) Tj
@@ -450,7 +460,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 172.4033858267716823 Td
+31.1811023622047259 124.2824409448818415 Td
 (- Après chaque nom : « 4/18 hebdo » signifie 4 heures ce jour-là pour un total de 18 heures dans la semaine. Le compte porte sur) Tj
 T* (toutes les heures inscrites à son emploi du temps, académies et ateliers compris, pour la semaine du jour affiché \(impaire ou paire\) et) Tj
 T* (la période de l'emploi du temps \(Données, Calendrier\). « R+2 » signifie que 2 heures de remplacement lui ont déjà été retenues dans) Tj
@@ -461,19 +471,9 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 113.6695275590550409 Td
+31.1811023622047259 65.5485826771653137 Td
 (- Un remplaçant encadré en orange n'a aucun cours sur la demi-journée concernée : le retenir revient à le faire venir spécialement. Il) Tj
 T* (reste sélectionnable, le cadre est seulement un avertissement.) Tj
-ET
-BT
-/F1 9 Tf
-10.6199999999999992 TL
-0.235 0.298 0.4 rg
-31.1811023622047259 86.7744094488189148 Td
-(- Les pastilles d'étude en tête de chaque journée donnent le remplissage de chaque salle d'étude au créneau concerné : vert jusqu'à) Tj
-T* (66 %, orange jusqu'à 100 %, rouge au-delà. Le compteur « créneaux d'étude au-dessus de la capacité » reprend les créneaux en) Tj
-T* (rouge. Le cadre de chaque heure laissée en étude prend la même couleur, avec le remplissage affiché à côté de « Classe en étude » :) Tj
-T* (une heure encadrée en rouge est donc à remplacer en priorité.) Tj
 ET
 BT
 /F1 7.5 Tf
@@ -501,7 +501,7 @@ endobj
 endobj
 8 0 obj
 <<
-/Length 9415
+/Length 9223
 >>
 stream
 0.5670000000000001 w
@@ -511,6 +511,16 @@ BT
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
 31.1811023622047259 803.0553543307086102 Td
+(- Les pastilles d'étude en tête de chaque journée donnent le remplissage de chaque salle d'étude au créneau concerné : vert jusqu'à) Tj
+T* (66 %, orange jusqu'à 100 %, rouge au-delà. Le compteur « créneaux d'étude au-dessus de la capacité » reprend les créneaux en) Tj
+T* (rouge. Le cadre de chaque heure laissée en étude prend la même couleur, avec le remplissage affiché à côté de « Classe en étude » :) Tj
+T* (une heure encadrée en rouge est donc à remplacer en priorité.) Tj
+ET
+BT
+/F1 9 Tf
+10.6199999999999992 TL
+0.235 0.298 0.4 rg
+31.1811023622047259 754.934409448818883 Td
 (- « Voir et comparer les emplois du temps » ouvre, sous une heure, la semaine des remplaçants possibles côte à côte, avec l'heure à) Tj
 T* (couvrir en jaune et un résumé de leur journée. On peut en ajouter jusqu'à quatre pour choisir celui que le remplacement gêne le) Tj
 T* (moins, et le retenir directement depuis sa colonne. Retenir un remplaçant en cliquant son nom affiche aussi son emploi du temps.) Tj
@@ -520,7 +530,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 754.934409448818883 Td
+31.1811023622047259 706.8134645669290421 Td
 (- Dès qu'un remplacement est retenu, l'heure apparaît en vert sur l'emploi du temps du remplaçant \(heure supplémentaire qui s'ajoute) Tj
 T* (à son service\) et sur celui de l'absent \(heure reprise par un collègue\). Les heures laissées en étude apparaissent en violet pointillé) Tj
 T* (chez l'absent. On voit donc immédiatement qui est déjà engagé sur la semaine et sur quels créneaux, ce qui évite de solliciter deux) Tj
@@ -530,7 +540,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 706.8134645669290421 Td
+31.1811023622047259 658.6925196850393149 Td
 (- « Emplois du temps modifiés \(PDF\) » imprime ces semaines au format portrait, deux emplois du temps par page pour économiser le) Tj
 T* (papier : d'abord l'enseignant absent semaine par semaine, puis les remplaçants par ordre alphabétique. Chaque emploi du temps) Tj
 T* (porte ses heures de remplacement en vert, ses heures passées en étude en violet, et sa propre légende, de quoi découper et remettre) Tj
@@ -540,7 +550,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 658.6925196850393149 Td
+31.1811023622047259 610.5715748031495878 Td
 (- Ce calcul suppose que les salles d'étude et leur capacité sont renseignées dans l'onglet « Salles ». Tant que ce n'est pas fait, le) Tj
 T* (logiciel l'indique au lieu d'annoncer une surcharge.) Tj
 ET
@@ -548,14 +558,14 @@ BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 625.2777165354330009 Td
+31.1811023622047259 577.1567716535432737 Td
 (Salles d'étude) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 609.1202362204724068 Td
+31.1811023622047259 560.9992913385826796 Td
 (- L'onglet Salles montre, pour la semaine impaire ou paire, le remplissage de chaque salle d'étude à chaque heure, y compris les) Tj
 T* (élèves des enseignants absents saisis dans l'onglet Absences.) Tj
 ET
@@ -563,7 +573,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 582.225118110236167 Td
+31.1811023622047259 534.1041732283464398 Td
 (- Un clic sur un créneau ouvre ses dates à venir. Pour chaque cours d'absent, les remplaçants possibles sont classés : un clic sur un) Tj
 T* (nom affiche son emploi du temps, « Retenir » sous sa grille le choisit et la classe sort de l'étude.) Tj
 ET
@@ -571,21 +581,21 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 555.3299999999999272 Td
+31.1811023622047259 507.2090551181102001 Td
 (- Les autres professeurs libres à cette heure sont aussi listés ; un professeur qui viendrait exprès peut être retenu depuis sa grille.) Tj
 ET
 BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 532.5281102362204138 Td
+31.1811023622047259 484.4071653543306866 Td
 (Bilan et suivi Pacte RCD) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 516.3706299212598196 Td
+31.1811023622047259 468.2496850393700925 Td
 (- L'onglet Bilan calcule, sur la période choisie \(depuis la rentrée, une période entre deux vacances, un mois ou des dates libres\), qui a) Tj
 T* (remplacé qui et quand, à partir des absences saisies et des sorties enregistrées dans l'historique.) Tj
 ET
@@ -593,7 +603,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 489.4755118110235799 Td
+31.1811023622047259 441.3545669291338527 Td
 (- Chaque heure est calculée avec l'emploi du temps en vigueur à sa date ; le remplaçant retenu fait foi, même si les règles ont changé) Tj
 T* (depuis.) Tj
 ET
@@ -601,7 +611,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 462.5803937007873969 Td
+31.1811023622047259 414.4594488188976129 Td
 (- Le suivi Pacte RCD donne, pour chaque enseignant engagé, l'engagement de l'année \(Données, Règles\), les heures faites, prévues) Tj
 T* (et restantes, le détail par période et le rythme par rapport à l'engagement.) Tj
 ET
@@ -609,21 +619,21 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 435.6852755905511572 Td
+31.1811023622047259 387.56433070866143 Td
 (- Exports : fiche synthèse \(PDF\), suivi Pacte RCD \(PDF, une page par enseignant avec chaque heure datée\) et tableau Excel.) Tj
 ET
 BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 412.8833858267715868 Td
+31.1811023622047259 364.7624409448818597 Td
 (Effectifs et études) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 396.7259055118109927 Td
+31.1811023622047259 348.6049606299212655 Td
 (L'onglet « Données » > « Effectifs » sert à peupler les études au plus juste quand des élèves sont en option ou en demi-groupe. Les) Tj
 T* (études comptent alors l'effectif réel de chaque groupe au lieu d'une demi-classe approximative.) Tj
 ET
@@ -631,7 +641,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 369.8307874015748098 Td
+31.1811023622047259 321.7098425196850258 Td
 (- Dès que les emplois du temps sont importés, la grille des groupes se construit automatiquement à partir de l'EDT, sans effectif : les) Tj
 T* (cases bleutées indiquent, pour chaque classe, les groupes repérés dans l'emploi du temps \(LV2, latin, LLC, académies...\) dont) Tj
 T* (l'effectif reste à saisir.) Tj
@@ -640,7 +650,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 332.3227559055117695 Td
+31.1811023622047259 284.2018110236219854 Td
 (- Pour remplir les effectifs, déposez les exports Charlemagne \(format .xlsx\) : les listes « Élèves par classe et leurs options » \(une ou) Tj
 T* (plusieurs ; colonne Options séparées par des tirets\) et/ou le fichier de synthèse « effectif options » \(une ligne par classe, une colonne) Tj
 T* ( p a r   o p t i o n \) .   L ' i n f o b u l l e  $Ø   d u   t i t r e   r a p p e l l e   l e s   d o c u m e n t s   e t   l e u r   f o r m a t .   L e c t u r e   d a n s   l e   n a v i g a t e u r ,   a u c u n   n o m   d ' é l è v e   c o n s e r v é .) Tj
@@ -649,7 +659,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 294.814724409448786 Td
+31.1811023622047259 246.6937795275590588 Td
 (- Si vous chargez les deux sources, l'effectif est affiché en couleur pour une vérification rapide : vert = listes et synthèse égales,) Tj
 T* (orange = 1 ou 2 d'écart, rouge au-delà. En cas de différence, la liste de classe fait foi.) Tj
 ET
@@ -657,7 +667,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 267.9196062992125462 Td
+31.1811023622047259 219.798661417322819 Td
 (- Quand l'emploi du temps indique un demi-groupe \(marqueur GR1 ou GR2 sur la cible du cours, par exemple 3E1GR1 ou [6E4GR2]\),) Tj
 T* (l'appli compte d'office la moitié de l'effectif de la classe. La cellule est grisée et la valeur s'affiche en italique : c'est une déduction, pas) Tj
 T* (une saisie. Elle reste modifiable si le partage n'est pas exactement par moitié. C'est le cas des demi-groupes de SVT, des CPS et des) Tj
@@ -667,7 +677,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 219.798661417322819 Td
+31.1811023622047259 171.6777165354330918 Td
 (- Attention aux groupes « hors synthèse » qui restent sur fond jaune \(colonne Soutien\) : ils existent dans l'emploi du temps, ne figurent) Tj
 T* (dans aucun document d'effectifs, et l'emploi du temps n'indique pas de demi-groupe. L'appli vous demande de saisir leur effectif à la) Tj
 T* (main. Sans saisie, ils comptent pour 0 élève : toute la classe est alors comptée en étude. Saisissez-les pour un comptage juste \(par) Tj
@@ -677,7 +687,7 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 171.6777165354330918 Td
+31.1811023622047259 123.556771653543251 Td
 (- La colonne « Eff. » \(effectif de la classe\) est modifiable ; une classe sans effectif prend l'« Effectif par défaut » réglé en haut du) Tj
 T* ( t a b l e a u .   S i   e l l e   c h a n g e   p a r c e   q u ' u n   é l è v e   a r r i v e   o u   p a r t   e n   c o u r s   d ' a n n é e ,   l a   l i g n e   l e   s i g n a l e   \(&  \)   :   m e t t e z   à   j o u r   l e s   o p t i o n s ,   c a r   l a   L V 2) Tj
 T* (\(espagnol + allemand\) doit toujours égaler l'effectif de la classe.) Tj
@@ -686,26 +696,9 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 134.1696850393700515 Td
+31.1811023622047259 86.0487401574803243 Td
 (- Enregistrez avec le bouton « Enregistrer les effectifs » \(en haut ou en bas du tableau\). Si vous quittez le menu sans enregistrer une) Tj
 T* (modification, l'appli propose de sauvegarder.) Tj
-ET
-BT
-/F1 9 Tf
-10.6199999999999992 TL
-0.235 0.298 0.4 rg
-31.1811023622047259 107.2745669291336981 Td
-(- Effet sur les études : un enseignant absent qui n'avait qu'un groupe n'envoie en étude que les élèves de ce groupe ; les élèves non) Tj
-T* (inscrits à une option sont comptés en permanence avec leur nombre exact. Une LV2 ne crée jamais d'étude par elle-même : espagnol) Tj
-T* (et allemand sont enseignés en même temps, personne n'est en permanence.) Tj
-ET
-BT
-/F1 9 Tf
-10.6199999999999992 TL
-0.235 0.298 0.4 rg
-31.1811023622047259 69.7665354330708851 Td
-(- Dans la vue « Salles » > « Salles d'étude », chaque case et chaque indicateur de pic sont colorés selon le taux de remplissage de la) Tj
-T* (salle : vert jusqu'à 66 %, orange de 66 % à 100 %, rouge au-delà.) Tj
 ET
 BT
 /F1 7.5 Tf
@@ -733,30 +726,47 @@ endobj
 endobj
 10 0 obj
 <<
-/Length 2710
+/Length 3482
 >>
 stream
 0.5670000000000001 w
 0 G
 BT
+/F1 9 Tf
+10.6199999999999992 TL
+0.235 0.298 0.4 rg
+31.1811023622047259 803.0553543307086102 Td
+(- Effet sur les études : un enseignant absent qui n'avait qu'un groupe n'envoie en étude que les élèves de ce groupe ; les élèves non) Tj
+T* (inscrits à une option sont comptés en permanence avec leur nombre exact. Une LV2 ne crée jamais d'étude par elle-même : espagnol) Tj
+T* (et allemand sont enseignés en même temps, personne n'est en permanence.) Tj
+ET
+BT
+/F1 9 Tf
+10.6199999999999992 TL
+0.235 0.298 0.4 rg
+31.1811023622047259 765.5473228346456835 Td
+(- Dans la vue « Salles » > « Salles d'étude », chaque case et chaque indicateur de pic sont colorés selon le taux de remplissage de la) Tj
+T* (salle : vert jusqu'à 66 %, orange de 66 % à 100 %, rouge au-delà.) Tj
+ET
+BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 796.5356692913385359 Td
+31.1811023622047259 732.1325196850393695 Td
 (Règles appliquées) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 780.3781889763779418 Td
+31.1811023622047259 715.9750393700786617 Td
 (- Les cours sont traités en classe entière, en distinguant les semaines impaires et paires et les périodes de l'année.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 764.0959842519685026 Td
+31.1811023622047259 699.6928346456692225 Td
 (- Les enseignants d'EPS ne sont pas sollicités pour les échanges d'heures \(cours sur 2 heures, parfois hors du collège\) ; pendant une) Tj
 T* (sortie, les élèves privés d'EPS sont placés dans une salle de cours.) Tj
 ET
@@ -764,21 +774,21 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 737.2008661417322628 Td
+31.1811023622047259 672.7977165354329827 Td
 (- Physique-chimie, SVT, technologie, éducation musicale et arts plastiques se font dans leur salle spécialisée.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 720.9186614173228236 Td
+31.1811023622047259 656.5155118110235435 Td
 (- Un collègue sans cours sur la demi-journée n'est proposé qu'en dernier, avec la mention « retour exprès ».) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 704.6364566929133844 Td
+31.1811023622047259 640.2333070866141043 Td
 (- Pendant une sortie, aucune heure n'est imposée à un enseignant non concerné ou au-delà de ses heures libérées ; les responsables) Tj
 T* (de niveau et les intervenants extérieurs \(postes « X » basket, natation, triathlon\) ne sont jamais sollicités ; un enseignant présent) Tj
 T* (seulement certains jours \(X TECHNO, le mardi\) n'est sollicité que ces jours-là.) Tj
@@ -787,14 +797,14 @@ BT
 /F2 12 Tf
 14.1600000000000001 TL
 0.09 0.165 0.271 rg
-31.1811023622047259 660.6087401574802698 Td
+31.1811023622047259 596.2055905511811034 Td
 (Limites) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 644.4512598425196757 Td
+31.1811023622047259 580.0481102362205093 Td
 (- Licence accordée au COLLÈGE AMIRAL : ce logiciel est réservé à l'usage de l'établissement et vérifie la licence à chaque ouverture) Tj
 T* (\(connexion à internet nécessaire\).) Tj
 ET
@@ -802,14 +812,14 @@ BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 617.5561417322834359 Td
+31.1811023622047259 553.1529921259841558 Td
 (- Les absences, réunions ou sorties qui ne figurent pas dans EDT ne sont pas connues : vérifiez avant de diffuser.) Tj
 ET
 BT
 /F1 9 Tf
 10.6199999999999992 TL
 0.235 0.298 0.4 rg
-31.1811023622047259 601.2739370078739967 Td
+31.1811023622047259 536.8707874015747166 Td
 (- Toute proposition reste à valider avec les collègues et la direction, puis à reporter dans le logiciel de vie scolaire.) Tj
 ET
 BT
@@ -998,7 +1008,7 @@ endobj
 25 0 obj
 <<
 /Producer (jsPDF 2.5.1)
-/CreationDate (D:20261128125315+01'00')
+/CreationDate (D:20261128135009+01'00')
 >>
 endobj
 26 0 obj
@@ -1012,39 +1022,39 @@ endobj
 xref
 0 27
 0000000000 65535 f 
-0000031011 00000 n 
-0000032851 00000 n 
+0000031569 00000 n 
+0000033409 00000 n 
 0000000015 00000 n 
 0000000152 00000 n 
-0000009110 00000 n 
-0000009247 00000 n 
-0000018506 00000 n 
-0000018643 00000 n 
-0000028110 00000 n 
-0000028248 00000 n 
-0000031086 00000 n 
-0000031212 00000 n 
-0000031343 00000 n 
-0000031477 00000 n 
-0000031615 00000 n 
-0000031739 00000 n 
-0000031868 00000 n 
-0000032000 00000 n 
-0000032136 00000 n 
-0000032264 00000 n 
-0000032391 00000 n 
-0000032520 00000 n 
-0000032653 00000 n 
-0000032755 00000 n 
-0000033104 00000 n 
-0000033190 00000 n 
+0000009091 00000 n 
+0000009228 00000 n 
+0000018484 00000 n 
+0000018621 00000 n 
+0000027896 00000 n 
+0000028034 00000 n 
+0000031644 00000 n 
+0000031770 00000 n 
+0000031901 00000 n 
+0000032035 00000 n 
+0000032173 00000 n 
+0000032297 00000 n 
+0000032426 00000 n 
+0000032558 00000 n 
+0000032694 00000 n 
+0000032822 00000 n 
+0000032949 00000 n 
+0000033078 00000 n 
+0000033211 00000 n 
+0000033313 00000 n 
+0000033662 00000 n 
+0000033748 00000 n 
 trailer
 <<
 /Size 27
 /Root 26 0 R
 /Info 25 0 R
-/ID [ <D9BD2316CB3970FDD95C5CF31A7863F3> <D9BD2316CB3970FDD95C5CF31A7863F3> ]
+/ID [ <EA86244D753B7F5339641FB5DC6B1487> <EA86244D753B7F5339641FB5DC6B1487> ]
 >>
 startxref
-33294
+33852
 %%EOF
